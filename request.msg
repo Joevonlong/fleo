@@ -1,4 +1,4 @@
-message Request
+packet Request extends cPacket
 {
-    int size; // in bytes
+    unsigned int size; // in bytes
 }

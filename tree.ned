@@ -1,12 +1,14 @@
 simple Beyond
 {
     parameters:
+        @signal[request](type="long");
+        @statistic[size](title="request size"; source="request"; record=vector,stats; interpolationmode=none);
         @display("i=block/server");
     gates:
         inout gate[];
 }
 
-simple Core
+simple Core// extends Beyond
 {
     parameters:
         @display("i=block/routing");
@@ -14,7 +16,7 @@ simple Core
         inout gate[];
 }
 
-simple PoP
+simple PoP// extends Core
 {
     parameters:
         @display("i=block/switch");
@@ -25,6 +27,8 @@ simple PoP
 simple User
 {
     parameters:
+        @signal[request](type="long");
+        @statistic[size](title="request size"; source="request"; record=vector,stats; interpolationmode=none);
         @display("i=block/user");
     gates:
         inout gate;
@@ -35,15 +39,15 @@ network Tree
     types:
         channel Transit extends ned.DatarateChannel {
             datarate = 1Mbps;
-            //delay = 100ms;
+            delay = 100ms;
         }
         channel Distribution extends ned.DatarateChannel {
             datarate = 5Mbps;
-            //delay = 20ms;
+            delay = 20ms;
         }
         channel Access extends ned.DatarateChannel {
             datarate = 10Mbps;
-            //delay = 5ms;
+            delay = 5ms;
         }
     submodules:
         beyond: Beyond;

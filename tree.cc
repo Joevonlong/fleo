@@ -5,24 +5,32 @@
 
 class Beyond : public cSimpleModule
 {
+private:
+  simsignal_t requestSignal;
 protected:
   virtual void handleMessage(cMessage *msg);
 };
 
 class Core : public cSimpleModule
 {
+private:
+  simsignal_t requestSignal;
 protected:
   virtual void handleMessage(cMessage *msg);
 };
 
 class PoP : public cSimpleModule
 {
+private:
+  simsignal_t requestSignal;
 protected:
   virtual void handleMessage(cMessage *msg);
 };
 
 class User : public cSimpleModule
 {
+private:
+  simsignal_t requestSignal;
 protected:
   virtual void initialize();
 };
@@ -34,8 +42,14 @@ Define_Module(User);
 
 void User::initialize()
 {
-  cPacket *pkt = new cPacket("test", 65535, 1);
-  send(pkt, "gate$o");
+  requestSignal = registerSignal("request"); // name assigned to signal ID
+  // first request
+  Request *req = new Request("test", 0);
+  req->setSize(intuniform(1, 1<<31));
+  EV << "Size: " << req->getSize() << endl;
+  req->setBitLength(1);
+  EV << "BitLength: " << req->getBitLength() << endl;
+  send(req, "gate$o");
 }
 
 void PoP::handleMessage(cMessage *msg)
@@ -74,5 +88,9 @@ void Core::handleMessage(cMessage *msg)
 
 void Beyond::handleMessage(cMessage *msg)
 {
+  Request *req = check_and_cast<Request*>(msg);
+  unsigned int size = req->getSize();
+  EV << "Received request for " << size << "b\n";
+  emit(requestSignal, size);
   delete msg;
 }
