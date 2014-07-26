@@ -1,7 +1,7 @@
 simple Beyond
 {
     parameters:
-        @signal[request](type="long");
+        @signal[request](type="unsigned long");
         @statistic[size](title="request size"; source="request"; record=vector,stats; interpolationmode=none);
         @display("i=block/server");
     gates:
@@ -11,6 +11,8 @@ simple Beyond
 simple Core// extends Beyond
 {
     parameters:
+        @signal[request](type="unsigned long");
+        @statistic[size](title="request size"; source="request"; record=vector,stats; interpolationmode=none);
         @display("i=block/routing");
     gates:
         inout gate[];
@@ -19,6 +21,8 @@ simple Core// extends Beyond
 simple PoP// extends Core
 {
     parameters:
+        @signal[request](type="unsigned long");
+        @statistic[size](title="request size"; source="request"; record=vector,stats; interpolationmode=none);
         @display("i=block/switch");
     gates:
         inout gate[];
@@ -27,8 +31,6 @@ simple PoP// extends Core
 simple User
 {
     parameters:
-        @signal[request](type="long");
-        @statistic[size](title="request size"; source="request"; record=vector,stats; interpolationmode=none);
         @display("i=block/user");
     gates:
         inout gate;

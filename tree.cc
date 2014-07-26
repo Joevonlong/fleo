@@ -8,6 +8,7 @@ class Beyond : public cSimpleModule
 private:
   simsignal_t requestSignal;
 protected:
+  virtual void initialize();
   virtual void handleMessage(cMessage *msg);
 };
 
@@ -16,6 +17,7 @@ class Core : public cSimpleModule
 private:
   simsignal_t requestSignal;
 protected:
+  virtual void initialize();
   virtual void handleMessage(cMessage *msg);
 };
 
@@ -24,15 +26,21 @@ class PoP : public cSimpleModule
 private:
   simsignal_t requestSignal;
 protected:
+  virtual void initialize();
   virtual void handleMessage(cMessage *msg);
 };
 
 class User : public cSimpleModule
 {
+public:
+  virtual ~User();
 private:
   simsignal_t requestSignal;
+  cMessage* idleTimer;
+  virtual void idle();
 protected:
   virtual void initialize();
+  virtual void handleMessage(cMessage *msg);
 };
 
 Define_Module(Beyond);
@@ -40,20 +48,48 @@ Define_Module(Core);
 Define_Module(PoP);
 Define_Module(User);
 
+User::~User()
+{
+  cancelAndDelete(idleTimer);
+}
+
 void User::initialize()
 {
   requestSignal = registerSignal("request"); // name assigned to signal ID
-  // first request
+  idleTimer = new cMessage("idle timer");
+  idle();
+}
+
+void User::idle()
+{
+  scheduleAt(simTime()+uniform(0,20), idleTimer);
+}
+
+void User::handleMessage(cMessage *msg)
+{
+  // assume is always idleTimer for now.
+  // send request
   Request *req = new Request("test", 0);
   req->setSize(intuniform(1, 1<<31));
   EV << "Size: " << req->getSize() << endl;
   req->setBitLength(1);
   EV << "BitLength: " << req->getBitLength() << endl;
   send(req, "gate$o");
+  // idle for a bit
+  idle();
+}
+
+void PoP::initialize()
+{
+  requestSignal = registerSignal("request"); // name assigned to signal ID
 }
 
 void PoP::handleMessage(cMessage *msg)
 {
+  // logging
+  Request *req = check_and_cast<Request*>(msg);
+  unsigned int size = req->getSize();
+  emit(requestSignal, size);
   // forward to first gate (which should be towards the beyond)
   cChannel *upstream =
     gate("gate$o", 0)->
@@ -69,8 +105,17 @@ void PoP::handleMessage(cMessage *msg)
   }
 }
 
+void Core::initialize()
+{
+  requestSignal = registerSignal("request"); // name assigned to signal ID
+}
+
 void Core::handleMessage(cMessage *msg)
 {
+  // logging
+  Request *req = check_and_cast<Request*>(msg);
+  unsigned int size = req->getSize();
+  emit(requestSignal, size);
   // forward to first gate (which should be towards the beyond)
   cChannel *upstream =
     gate("gate$o", 0)->
@@ -84,6 +129,11 @@ void Core::handleMessage(cMessage *msg)
     EV << "Upstream free. Forwarding now.\n";
     send(msg, "gate$o", 0);
   }
+}
+
+void Beyond::initialize()
+{
+  requestSignal = registerSignal("request"); // name assigned to signal ID
 }
 
 void Beyond::handleMessage(cMessage *msg)
