@@ -35,7 +35,7 @@ class User : public cSimpleModule
 public:
   virtual ~User();
 private:
-  simsignal_t requestSignal;
+  simsignal_t idleSignal;
   cMessage* idleTimer;
   virtual void idle();
 protected:
@@ -55,22 +55,27 @@ User::~User()
 
 void User::initialize()
 {
-  requestSignal = registerSignal("request"); // name assigned to signal ID
+  idleSignal = registerSignal("idle"); // name assigned to signal ID
   idleTimer = new cMessage("idle timer");
   idle();
 }
 
 void User::idle()
 {
-  scheduleAt(simTime()+uniform(0,20), idleTimer);
+  simtime_t idleTime = par("idleTime"); // changed via ini
+  emit(idleSignal, idleTime);
+  EV << getFullName() <<"idling for " << idleTime << "s\n";
+  scheduleAt(simTime()+idleTime, idleTimer);
 }
 
 void User::handleMessage(cMessage *msg)
 {
   // assume is always idleTimer for now.
   // send request
-  Request *req = new Request("test", 0);
-  req->setSize(intuniform(1, 1<<31));
+  Request *req = new Request("request", 0);
+  //double requestSize = par("requestSize");
+  req->setSize(par("requestSize"));
+  //req->setSize(intuniform(1, 1<<31));
   EV << "Size: " << req->getSize() << endl;
   req->setBitLength(1);
   EV << "BitLength: " << req->getBitLength() << endl;

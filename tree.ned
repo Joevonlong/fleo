@@ -2,7 +2,7 @@ simple Beyond
 {
     parameters:
         @signal[request](type="unsigned long");
-        @statistic[size](title="request size"; source="request"; record=vector,stats; interpolationmode=none);
+        @statistic[request-size](title="request size"; source="request"; record=vector,stats; interpolationmode=none);
         @display("i=block/server");
     gates:
         inout gate[];
@@ -12,7 +12,7 @@ simple Core// extends Beyond
 {
     parameters:
         @signal[request](type="unsigned long");
-        @statistic[size](title="request size"; source="request"; record=vector,stats; interpolationmode=none);
+        @statistic[request-size](title="request size"; source="request"; record=vector,stats; interpolationmode=none);
         @display("i=block/routing");
     gates:
         inout gate[];
@@ -22,7 +22,7 @@ simple PoP// extends Core
 {
     parameters:
         @signal[request](type="unsigned long");
-        @statistic[size](title="request size"; source="request"; record=vector,stats; interpolationmode=none);
+        @statistic[request-size](title="request size"; source="request"; record=vector,stats; interpolationmode=none);
         @display("i=block/switch");
     gates:
         inout gate[];
@@ -31,6 +31,10 @@ simple PoP// extends Core
 simple User
 {
     parameters:
+        volatile double idleTime @unit(s);   // delay before next request
+        volatile double requestSize;
+        @signal[idle](type="simtime");
+        @statistic[idle](title="idle time"; source="idle"; record=vector,histogram; interpolationmode=none);
         @display("i=block/user");
     gates:
         inout gate;
