@@ -101,11 +101,11 @@ void PoP::handleMessage(cMessage *msg)
     getTransmissionChannel();
   EV << getFullName();
   if (upstream->isBusy()) {
-    EV << "Busy. Scheduled for " << upstream->getTransmissionFinishTime() << "s\n";
+    // EV << "Busy. Scheduled for " << upstream->getTransmissionFinishTime() << "s\n";
     scheduleAt(upstream->getTransmissionFinishTime(), msg);
   }
   else {
-    EV << "Upstream free. Forwarding now.\n";
+    // EV << "Upstream free. Forwarding now.\n";
     send(msg, "gate$o", 0);
   }
 }
@@ -127,11 +127,11 @@ void Core::handleMessage(cMessage *msg)
     getTransmissionChannel();
   EV << getFullName();
   if (upstream->isBusy()) {
-    EV << "Busy. Scheduled for " << upstream->getTransmissionFinishTime() << "s\n";
+    // EV << "Busy. Scheduled for " << upstream->getTransmissionFinishTime() << "s\n";
     scheduleAt(upstream->getTransmissionFinishTime(), msg);
   }
   else {
-    EV << "Upstream free. Forwarding now.\n";
+    // EV << "Upstream free. Forwarding now.\n";
     send(msg, "gate$o", 0);
   }
 }
