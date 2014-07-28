@@ -7,6 +7,8 @@ class Beyond : public cSimpleModule
 {
 private:
   simsignal_t requestSignal;
+  cTopology topo;
+  void topoHelper();
 protected:
   virtual void initialize();
   virtual void handleMessage(cMessage *msg);
@@ -70,9 +72,10 @@ void User::idle()
 
 void User::handleMessage(cMessage *msg)
 {
+  //if msg
   // assume is always idleTimer for now.
   // send request
-  Request *req = new Request("request", 0);
+  Request *req = new Request("request", getIndex()); // use user[] index as message kind
   //double requestSize = par("requestSize");
   req->setSize(par("requestSize"));
   //req->setSize(intuniform(1, 1<<31));
@@ -138,6 +141,8 @@ void Core::handleMessage(cMessage *msg)
 
 void Beyond::initialize()
 {
+  EV << getFullPath() << endl;
+  topoHelper();
   requestSignal = registerSignal("request"); // name assigned to signal ID
 }
 
@@ -145,7 +150,38 @@ void Beyond::handleMessage(cMessage *msg)
 {
   Request *req = check_and_cast<Request*>(msg);
   unsigned int size = req->getSize();
-  EV << "Received request for " << size << "b\n";
+  EV << "Received request from user " << req->getKind() << " for " << size << "b\n"; // use kind to ID sender
   emit(requestSignal, size);
+
+  // TODO reply with requested size.
+  // DONE 1. identify sender. need info in request
+  // 2. find route to sender (going down tree so routing needed)
+  // 3. queueing messages
+  // 4. add proper queues (cQueue) instead of cycling messages
+  topoHelper();
   delete msg;
 }
+
+void Beyond::topoHelper()
+{
+  topo.clear();
+  //topo.extractByModulePath(cStringTokenizer("*").asVector());
+  //topo.extractByNedTypeName(cStringTokenizer("Beyond Core PoP User").asVector());
+  topo.extractByProperty("display");
+  //EV << "topo nodes: " << topo.getNumNodes() << endl;
+for (int i=0; i<topo.getNumNodes(); i++)
+{
+  cTopology::Node *node = topo.getNode(i);
+  ev << "Node i=" << i << " is " << node->getModule()->getFullPath() << endl;
+  ev << " It has " << node->getNumOutLinks() << " conns to other nodes\n";
+  ev << " and " << node->getNumInLinks() << " conns from other nodes\n";
+
+  ev << " Connections to other modules are:\n";
+  for (int j=0; j<node->getNumOutLinks(); j++)
+  {
+    cTopology::Node *neighbour = node->getLinkOut(j)->getRemoteNode();
+    cGate *gate = node->getLinkOut(j)->getLocalGate();
+    ev << " " << neighbour->getModule()->getFullPath()
+       << " through gate " << gate->getFullName() << endl;
+  }
+}}
