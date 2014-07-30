@@ -1,11 +1,12 @@
-import fileinput
+import sys
+# import fileinput
 
 # user control
-fanout = 4
+fanout = 2
 
 indent = '        ' # 8 spaces
 def gotoSubmoduleSection():
-    for line in fileinput.input('tree.ned', inplace=1):
+    for line in base:
         print line, # comma somehow excludes \n at the end
         if 'submodules' in line:
             break
@@ -36,9 +37,14 @@ def addConnections():
             print indent+'pop['+str(i)+'].gate++ <--> Cat3 <--> user['+str(j)+'].gate;'
     print '}'
 
+base = open('treenedbase')
+ned = open('tree.ned', 'w',)
+sys.stdout = ned
 gotoSubmoduleSection()
 addSubmodules()
 addConnections()
+base.close()
+ned.close()
 
 #i=1
 #for line in fileinput.input('event_schedule.xml', inplace=1):

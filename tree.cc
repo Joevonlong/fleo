@@ -4,37 +4,31 @@
 #include "request_m.h"
 #include "reply_m.h"
 
-class Beyond : public cSimpleModule
+class Router : public cSimpleModule
+{
+protected:
+  simsignal_t requestSignal;
+  cPacketQueue *queue;
+};
+
+class Beyond : public Router
 {
 private:
-  simsignal_t requestSignal;
   //cTopology topo;
   void topoHelper();
-  cPacketQueue *queue;
 protected:
   virtual void initialize();
   virtual void handleMessage(cMessage *msg);
 };
 
-class Core : public cSimpleModule
+class InternalRouter : public Router
 {
-private:
-  simsignal_t requestSignal;
-  cPacketQueue *queue;
 protected:
   virtual void initialize();
   virtual void handleMessage(cMessage *msg);
 };
-
-class PoP : public cSimpleModule
-{
-private:
-  simsignal_t requestSignal;
-  cPacketQueue *queue;
-protected:
-  virtual void initialize();
-  virtual void handleMessage(cMessage *msg);
-};
+class Core : public InternalRouter{};
+class PoP : public InternalRouter{};
 
 class User : public cSimpleModule
 {
@@ -51,6 +45,7 @@ protected:
 };
 
 Define_Module(Beyond);
+Define_Module(Router);
 Define_Module(Core);
 Define_Module(PoP);
 Define_Module(User);
@@ -124,13 +119,13 @@ void User::handleMessage(cMessage *msg)
   }
 }
 
-void PoP::initialize()
+void InternalRouter::initialize()
 {
   requestSignal = registerSignal("request"); // name assigned to signal ID
   //queue = new cPacketQueue("Packet Queue");
 }
 
-void PoP::handleMessage(cMessage *msg)
+void InternalRouter::handleMessage(cMessage *msg)
 {
   /*
   // logging
@@ -176,40 +171,6 @@ void PoP::handleMessage(cMessage *msg)
   }
 }
 
-void Core::initialize()
-{
-  requestSignal = registerSignal("request"); // name assigned to signal ID
-  //queue = new cPacketQueue("Packet Queue");
-}
-
-void Core::handleMessage(cMessage *msg)
-{
-  if (msg->getKind() == 123) {
-    // logging
-    Request *req = check_and_cast<Request*>(msg);
-    unsigned int size = req->getSize();
-    emit(requestSignal, size);
-    // forward to first gate (which should be towards the beyond)
-    cChannel *upstream =
-      gate("gate$o", 0)->
-      getTransmissionChannel();
-    if (upstream->isBusy()) {
-      EV << "Busy. Scheduled for " << upstream->getTransmissionFinishTime() << "s\n";
-      scheduleAt(upstream->getTransmissionFinishTime(), msg);
-    }
-    else {
-      // EV << "Upstream free. Forwarding now.\n";
-      send(msg, "gate$o", 0);
-    }
-  }
-  else if (msg->getKind() == 321) {
-    Reply *reply = check_and_cast<Reply*>(msg);
-    cGate* outGate = getNextGate(this, reply);
-    send(reply, getNextGate(this, reply));
-    EV << "got reply. sending out of " << outGate->getFullName() << endl;
-  }
-}
-
 void Beyond::initialize()
 {
   topoHelper();
@@ -220,24 +181,43 @@ void Beyond::initialize()
 
 void Beyond::handleMessage(cMessage *msg)
 {
-  Request *req = check_and_cast<Request*>(msg);
-  unsigned int size = req->getSize();
-  int src = req->getSource();
-  EV << "Received request from user " << src << " for " << size << "b\n";
-  emit(requestSignal, size);
+  Reply* reply = NULL;
+  // if request
+  if (msg->getKind() == 123) {
+    Request *req = check_and_cast<Request*>(msg);
+    unsigned int size = req->getSize();
+    int src = req->getSource();
+    EV << "Received request from user " << src << " for " << size << "b\n";
+    emit(requestSignal, size);
+    delete msg;
 
-  // reply via random core
-  Reply *reply = new Reply("reply", 321);
-  reply->setBitLength(size);
-  reply->setDestination(src);
-  send(reply, "gate$o", intuniform(0, gateSize("gate")-1));
+    // construct reply
+    reply = new Reply("reply", 321);
+    reply->setBitLength(size);
+    reply->setDestination(src);
+  }
+  // if delayed reply
+  else { //(msg->getKind() == 321) {
+    reply = check_and_cast<Reply*>(msg);
+  }
+  //else {EV << "bug\n";}
+  // choose random output gate
+  cGate *outGate = gate("gate$o", intuniform(0, gateSize("gate")-1));
+  // if busy, delay till it is free but try on random channel again. so needs some redoing later.
+  cChannel *downstream = outGate->getTransmissionChannel();
+  if (downstream->isBusy()) {
+    EV << "Busy. Scheduled for " << downstream->getTransmissionFinishTime() << "s\n";
+    scheduleAt(downstream->getTransmissionFinishTime(), reply);
+  }
+  else {
+    send(reply, outGate);
+  }
 
   // TODO reply with requested size.
   // DONE 1. identify sender. need info in request
-  // 2. find route to sender (going down tree so routing needed)
+  // DONE 2. find route to sender (going down tree so routing needed)
   // 3. queueing messages
   // 3b. add proper queues (cQueue) instead of cycling messages
-  delete msg;
 }
 
 void Beyond::topoHelper()
