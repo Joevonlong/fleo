@@ -10,6 +10,14 @@ protected:
   simsignal_t requestSignal;
   cPacketQueue *queue;
 };
+class Queue : public cSimpleModule
+{
+private:
+  cPacketQueue* queue;
+protected:
+  virtual void initialize();
+  virtual void handleMessage(cMessage *msg);
+};
 
 class Beyond : public Router
 {
@@ -44,8 +52,9 @@ protected:
   virtual void handleMessage(cMessage *msg);
 };
 
-Define_Module(Beyond);
 Define_Module(Router);
+Define_Module(Queue);
+Define_Module(Beyond);
 Define_Module(Core);
 Define_Module(PoP);
 Define_Module(User);
@@ -72,6 +81,21 @@ bool selectFunction(cModule *mod, void *)
 {
   // EV << "selfunc debug:" <<  mod->getFullName() << mod->getParentModule() << simulation.getSystemModule() << endl;
   return mod->getParentModule() == simulation.getSystemModule();
+}
+
+void Queue::initialize() {
+  queue = new cPacketQueue("Packet Queue");
+}
+
+void Queue::handleMessage(cMessage *msg) {
+  // check int/ext and send to other
+  if (msg->getArrivalGate() == gate("external$i")) {
+    send(msg, gate("internal$o"));
+  }
+  else if (msg->getArrivalGate() == gate("internal$i")) {
+    send(msg, gate("external$o"));
+  }
+  else {EV << "queue handle error\n";}
 }
 
 User::~User()
