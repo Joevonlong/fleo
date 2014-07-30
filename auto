@@ -1,5 +1,4 @@
 #!/bin/bash
 
-python topolinks.py
 make
 ./tree
