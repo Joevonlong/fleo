@@ -49,6 +49,9 @@ simple User
 
 network Tree
 {
+    parameters:
+        int fanout = default(2);
+        bool coreRing = default(true);
     types:
         channel OC192 extends ned.DatarateChannel {
             datarate = 9.92Gbps;
@@ -79,3 +82,22 @@ network Tree
             delay = 5ms;
         }
     submodules:
+        beyond: Beyond;
+        core[fanout]: Core;
+        pop[fanout^2]: PoP;
+        user[fanout^3]: User;
+    connections:
+        for i=0..fanout-1 {
+            beyond.gate++ <--> OC48 <--> core[i].gate++;
+        };
+       for i=0..fanout-2 {
+           core[i].gate++ <--> OC12 <--> core[i+1].gate++ if coreRing==true;
+       }
+       core[fanout-1].gate++ <--> OC12 <--> core[0].gate++ if coreRing==true;
+        for i=0..fanout-1, for j=(i*fanout)..(i+1)*fanout-1 {
+            core[i].gate++ <--> OC3 <--> pop[j].gate++;
+        };
+        for i=0..fanout^2-1, for j=(i*fanout)..(i+1)*fanout-1 {
+            pop[i].gate++ <--> Cat3 <--> user[j].gate;
+        };
+}
