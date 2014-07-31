@@ -1,4 +1,4 @@
-#include "router.cc"
+#include "router.h"
 
 class Beyond : public Router
 {

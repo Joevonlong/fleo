@@ -1,3 +1,12 @@
+simple Buffer
+{
+    gates:
+        input fromLogic;
+        output toLogic;
+        input receive;
+        output transmit;
+}
+
 simple Router
 {
     parameters:
@@ -45,6 +54,24 @@ simple User
         @display("i=block/user");
     gates:
         inout gate;
+}
+
+network qtest
+{
+    types:
+        channel Cat3 extends ned.DatarateChannel {
+            datarate = 10kbps;
+            delay = 5ms;
+        }
+    submodules:
+        buff: Buffer;
+        outside: User;
+        logic: Beyond;
+    connections allowunconnected:
+        outside.gate$o --> Cat3 --> buff.receive;
+        outside.gate$i <-- Cat3 <-- buff.transmit;
+        logic.gate$o++ --> Cat3 --> buff.fromLogic;
+        logic.gate$i[0] <-- Cat3 <-- buff.toLogic;
 }
 
 network Tree

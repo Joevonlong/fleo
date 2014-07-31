@@ -3,17 +3,8 @@
 #include <omnetpp.h>
 #include "request_m.h"
 #include "reply_m.h"
-#include "router.cc"
 #include "routing.h"
-
-class InternalRouter : public Router
-{
-protected:
-  virtual void initialize();
-  virtual void handleMessage(cMessage *msg);
-};
-class Core : public InternalRouter{};
-class PoP : public InternalRouter{};
+#include "internal.h"
 
 Define_Module(Core);
 Define_Module(PoP);
