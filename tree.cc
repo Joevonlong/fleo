@@ -4,6 +4,7 @@
 #include "request_m.h"
 #include "reply_m.h"
 #include "router.cc"
+#include "routing.h"
 
 class InternalRouter : public Router
 {
@@ -16,8 +17,6 @@ class PoP : public InternalRouter{};
 
 Define_Module(Core);
 Define_Module(PoP);
-extern cTopology topo;
-extern cGate* getNextGate(cSimpleModule* current, Reply* reply);
 
 void InternalRouter::initialize()
 {
