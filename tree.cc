@@ -4,12 +4,29 @@
 #include "request_m.h"
 #include "reply_m.h"
 
-class Router : public cSimpleModule
+class Logic : public cSimpleModule {};
+class InternalLogic : public Logic
 {
 protected:
   simsignal_t requestSignal;
+  virtual void initialize();
+  virtual void handleMessage(cMessage *msg);
+};
+class ExternalLogic : public Logic
+{
+protected:
+  simsignal_t requestSignal;
+  virtual void initialize();
+  virtual void handleMessage(cMessage *msg);
+};
+
+class Router : public cModule
+{
+protected:
+  Logic* logic;
   cPacketQueue *queue;
 };
+
 class Queue : public cSimpleModule
 {
 private:
@@ -23,8 +40,9 @@ class Beyond : public Router
 {
 private:
   //cTopology topo;
-  void topoHelper();
+  //void topoHelper();
 protected:
+  ExternalLogic* logic;
   virtual void initialize();
   virtual void handleMessage(cMessage *msg);
 };
@@ -34,6 +52,7 @@ class InternalRouter : public Router
 protected:
   virtual void initialize();
   virtual void handleMessage(cMessage *msg);
+  InternalLogic* logic;
 };
 class Core : public InternalRouter{};
 class PoP : public InternalRouter{};
@@ -53,6 +72,7 @@ protected:
 };
 
 Define_Module(Router);
+Define_Module(Logic);
 Define_Module(Queue);
 Define_Module(Beyond);
 Define_Module(Core);
@@ -77,6 +97,36 @@ cGate* getNextGate(cSimpleModule* current, Reply* reply) {
   return next->getLocalGate();
 }
 
+void topoHelper()
+{
+  topo.clear();
+  // 4 methods:
+  //topo.extractByModulePath(cStringTokenizer("*").asVector());
+  topo.extractByNedTypeName(cStringTokenizer("Core PoP User").asVector());
+  //topo.extractByProperty("display");
+  //topo.extractFromNetwork(selectFunction, NULL);
+  EV << topo.getNumNodes() << " nodes in routing topology\n";
+  /*
+  EV << "topo nodes: " << topo.getNumNodes() << endl;
+  for (int i=0; i<topo.getNumNodes(); i++)
+    {
+      cTopology::Node *node = topo.getNode(i);
+      ev << "Node i=" << i << " is " << node->getModule()->getFullPath() << endl;
+      ev << " It has " << node->getNumOutLinks() << " conns to other nodes\n";
+      ev << " and " << node->getNumInLinks() << " conns from other nodes\n";
+
+      ev << " Connections to other modules are:\n";
+      for (int j=0; j<node->getNumOutLinks(); j++)
+        {
+          cTopology::Node *neighbour = node->getLinkOut(j)->getRemoteNode();
+          cGate *gate = node->getLinkOut(j)->getLocalGate();
+          ev << " " << neighbour->getModule()->getFullPath()
+             << " through gate " << gate->getFullName() << endl;
+        }
+    }
+  */
+}
+
 bool selectFunction(cModule *mod, void *)
 {
   // EV << "selfunc debug:" <<  mod->getFullName() << mod->getParentModule() << simulation.getSystemModule() << endl;
@@ -89,11 +139,11 @@ void Queue::initialize() {
 
 void Queue::handleMessage(cMessage *msg) {
   // check int/ext and send to other
-  if (msg->getArrivalGate() == gate("external$i")) {
-    send(msg, gate("internal$o"));
+  if (msg->getArrivalGate() == gate("outward$i")) {
+    send(msg, gate("inward$o"));
   }
-  else if (msg->getArrivalGate() == gate("internal$i")) {
-    send(msg, gate("external$o"));
+  else if (msg->getArrivalGate() == gate("inward$i")) {
+    send(msg, gate("outward$o"));
   }
   else {EV << "queue handle error\n";}
 }
@@ -143,13 +193,13 @@ void User::handleMessage(cMessage *msg)
   }
 }
 
-void InternalRouter::initialize()
+void InternalLogic::initialize()
 {
   requestSignal = registerSignal("request"); // name assigned to signal ID
   //queue = new cPacketQueue("Packet Queue");
 }
 
-void InternalRouter::handleMessage(cMessage *msg)
+void InternalLogic::handleMessage(cMessage *msg)
 {
   /*
   // logging
@@ -195,7 +245,7 @@ void InternalRouter::handleMessage(cMessage *msg)
   }
 }
 
-void Beyond::initialize()
+void ExternalLogic::initialize()
 {
   topoHelper();
   EV << "gatesize" << gateSize("gate") << endl;
@@ -203,7 +253,7 @@ void Beyond::initialize()
   //queue = new cPacketQueue("Packet Queue");
 }
 
-void Beyond::handleMessage(cMessage *msg)
+void ExternalLogic::handleMessage(cMessage *msg)
 {
   Reply* reply = NULL;
   // if request
@@ -243,34 +293,3 @@ void Beyond::handleMessage(cMessage *msg)
   // 3. queueing messages
   // 3b. add proper queues (cQueue) instead of cycling messages
 }
-
-void Beyond::topoHelper()
-{
-  topo.clear();
-  // 4 methods:
-  //topo.extractByModulePath(cStringTokenizer("*").asVector());
-  topo.extractByNedTypeName(cStringTokenizer("Core PoP User").asVector());
-  //topo.extractByProperty("display");
-  //topo.extractFromNetwork(selectFunction, NULL);
-  EV << topo.getNumNodes() << " nodes in routing topology\n";
-  /*
-  EV << "topo nodes: " << topo.getNumNodes() << endl;
-  for (int i=0; i<topo.getNumNodes(); i++)
-    {
-      cTopology::Node *node = topo.getNode(i);
-      ev << "Node i=" << i << " is " << node->getModule()->getFullPath() << endl;
-      ev << " It has " << node->getNumOutLinks() << " conns to other nodes\n";
-      ev << " and " << node->getNumInLinks() << " conns from other nodes\n";
-
-      ev << " Connections to other modules are:\n";
-      for (int j=0; j<node->getNumOutLinks(); j++)
-        {
-          cTopology::Node *neighbour = node->getLinkOut(j)->getRemoteNode();
-          cGate *gate = node->getLinkOut(j)->getLocalGate();
-          ev << " " << neighbour->getModule()->getFullPath()
-             << " through gate " << gate->getFullName() << endl;
-        }
-    }
-  */
-}
-

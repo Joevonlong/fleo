@@ -1,33 +1,36 @@
 module Router
 {
+    gates:
+        inout gate[];
+    submodules:
+        logic: Logic;
+        queue[sizeof(gate)]: Queue;
+    connections allowunconnected:
+        for i=0..sizeof(gate)-1 {
+            gate[i] <--> queue[i].outward;
+            queue[i].inward <--> logic.bus++;
+        }
+}
+
+simple Logic
+{
     parameters:
         @signal[request](type="unsigned long");
         @statistic[request-size](title="request size"; source="request"; record=vector,stats; interpolationmode=none);
     gates:
-        inout gate[];
-    submodules:
-        //cpu : CPU;
-        queue[sizeof(gate)]: Queue;
-    connections allowunconnected:
-        for i=0..sizeof(gate)-1 {
-            gate[i] <--> queue[i].external;
-        }
+        inout bus[];
 }
-
-//simple CPU
 
 simple Queue
 {
     gates:
-        inout internal;
-        inout external;
+        inout inward;
+        inout outward;
 }
 
 module Beyond extends Router
 {
     parameters:
-        @signal[request](type="unsigned long");
-        @statistic[request-size](title="request size"; source="request"; record=vector,histogram; interpolationmode=none);
         @display("i=block/server");
     @class(Beyond);
 }
