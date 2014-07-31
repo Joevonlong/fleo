@@ -40,20 +40,6 @@ void Beyond::handleMessage(cMessage *msg)
   //else {EV << "bug\n";}
   // choose random output gate
   cGate *outGate = gate("gate$o", intuniform(0, gateSize("gate")-1));
-  // if busy, delay till it is free but try on random channel again. so needs some redoing later.
-  cChannel *downstream = outGate->getTransmissionChannel();
-  if (downstream->isBusy()) {
-    EV << "Busy. Scheduled for " << downstream->getTransmissionFinishTime() << "s\n";
-    scheduleAt(downstream->getTransmissionFinishTime(), reply);
-  }
-  else {
-    send(reply, outGate);
-  }
-
-  // TODO reply with requested size.
-  // DONE 1. identify sender. need info in request
-  // DONE 2. find route to sender (going down tree so routing needed)
-  // 3. queueing messages
-  // 3b. add proper queues (cQueue) instead of cycling messages
+  send(reply, outGate);
 }
 

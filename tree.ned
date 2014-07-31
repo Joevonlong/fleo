@@ -70,8 +70,8 @@ network qtest
     connections allowunconnected:
         outside.gate$o --> Cat3 --> buff.receive;
         outside.gate$i <-- Cat3 <-- buff.transmit;
-        logic.gate$o++ --> Cat3 --> buff.fromLogic;
-        logic.gate$i[0] <-- Cat3 <-- buff.toLogic;
+        logic.gate$o++ --> buff.fromLogic;
+        logic.gate$i[0] <-- buff.toLogic;
 }
 
 network Tree

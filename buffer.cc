@@ -1,35 +1,43 @@
-#include <stdio.h>
 #include <omnetpp.h>
 #include "buffer.h"
 
 Define_Module(Buffer);
 
 void Buffer::initialize() {
-    queue = new cPacketQueue();
     fromLogicID = gateBaseId("fromLogic");
     toLogicID = gateBaseId("toLogic");
     receiveID = gateBaseId("receive");
     transmitID = gateBaseId("transmit");
+    transmitDone = new cMessage("transmitDone");
+    queue = new cPacketQueue("queue");
 }
 
 void Buffer::handleMessage(cMessage* msg) {
-    //which gate did it come from?
-    if (msg->getArrivalGateId() == receiveID) {
-        EV << "receive id\n";
+    if (msg == transmitDone) {
+        if (queue->front() != NULL) {
+            send(queue->pop(), transmitID);
+            scheduleAt(gate(transmitID)->getTransmissionChannel()->getTransmissionFinishTime(), transmitDone);
+        }
+    }
+    else if (msg->getArrivalGateId() == receiveID) {
         send(msg, toLogicID);
     }
     else if (msg->getArrivalGateId() == fromLogicID) {
-        EV << "fromlogid id\n";
-        send(msg, transmitID);
+        cPacket* pkt = check_and_cast<cPacket*>(msg);
+        cChannel* transmissionChannel =
+            gate(transmitID)->
+            getTransmissionChannel();
+        if (transmissionChannel->isBusy()) {
+            queue->insert(pkt);
+        }
+        else {
+            send(msg, transmitID);
+            scheduleAt(transmissionChannel->getTransmissionFinishTime(), transmitDone);
+        }
     }
     else {
-        EV << "error in buffer handlemsg\n";
+        throw std::invalid_argument("unhandled message");
     }
-    return;
-    //cChannel *upstream =
-      //  gate("gate$o", 0)->
-        //getTransmissionChannel();
-
 }
 
 //    if (upstream->isBusy()) {
