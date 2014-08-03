@@ -6,3 +6,4 @@ protected:
   simsignal_t requestSignal;
   cPacketQueue *queue;
 };
+

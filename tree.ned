@@ -1,3 +1,9 @@
+simple Logic
+{
+    gates:
+        inout gate[];
+}
+
 simple Buffer
 {
     gates:
@@ -44,6 +50,20 @@ simple PoP extends InternalRouter
     @class(PoP);
 }
 
+module PoPShell
+{
+    parameters:
+        @display("i=block/switch");
+    gates:
+        inout gate[];
+    submodules:
+        pop: PoP;
+    connections:
+        for i=0..sizeof(gate)-1 {
+            pop.gate++ <--> gate++;
+        }
+}
+
 simple User
 {
     parameters:
@@ -57,6 +77,24 @@ simple User
 }
 
 network qtest
+{
+    types:
+        channel Cat3 extends ned.DatarateChannel {
+            datarate = 10kbps;
+            delay = 5ms;
+        }
+    submodules:
+        buff: Buffer;
+        outside: User;
+        logic: Beyond;
+    connections allowunconnected:
+        outside.gate$o --> Cat3 --> buff.receive;
+        outside.gate$i <-- Cat3 <-- buff.transmit;
+        logic.gate$o++ --> buff.fromLogic;
+        logic.gate$i[0] <-- buff.toLogic;
+}
+
+network shelltest
 {
     types:
         channel Cat3 extends ned.DatarateChannel {
@@ -110,8 +148,8 @@ network Tree
         }
     submodules:
         beyond: Beyond;
-        core[fanout]: Core;
-        pop[fanout^2]: PoP;
+        core[fanout]: PoPShell;
+        pop[fanout^2]: PoPShell;
         user[fanout^3]: User;
     connections:
         for i=0..fanout-1 {

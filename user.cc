@@ -1,22 +1,8 @@
 #include <stdio.h>
 #include <string.h>
-#include <omnetpp.h>
 #include "request_m.h"
 #include "reply_m.h"
-
-class User : public cSimpleModule
-{
-public:
-  virtual ~User();
-private:
-  simsignal_t idleSignal;
-  cMessage* idleTimer;
-  virtual void idle();
-  cPacketQueue *queue;
-protected:
-  virtual void initialize();
-  virtual void handleMessage(cMessage *msg);
-};
+#include "user.h"
 
 Define_Module(User);
 
