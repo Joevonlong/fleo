@@ -10,12 +10,12 @@ cGate* getNextGate(cSimpleModule* current, Reply* reply) {
 //EV << "userPath " << userPath << endl;
   cTopology::Node *userNode =
     topo.getNodeFor(simulation.getModuleByPath(userPath));
-  //EV << "usernode " << userNode << endl;
+//  EV << "usernode " << userNode << endl;
   topo.calculateUnweightedSingleShortestPathsTo(userNode);
   cTopology::Node *currentNode = topo.getNodeFor(current);
-  //EV << "currentnode " << currentNode << endl;
+//  EV << "currentnode " << currentNode << endl;
   cTopology::LinkOut *next = currentNode->getPath(0);
-  //EV << "next " << next << endl;
+//  EV << "next " << next << endl;
   return next->getLocalGate();
 }
 
@@ -30,7 +30,7 @@ void topoSetup()
   topo.clear();
   // 4 methods:
   //topo.extractByModulePath(cStringTokenizer("*").asVector());
-  topo.extractByNedTypeName(cStringTokenizer("Core PoP User").asVector());
+  topo.extractByNedTypeName(cStringTokenizer("Buffer PoP User").asVector());
   //topo.extractByProperty("display");
   //topo.extractFromNetwork(selectFunction, NULL);
   EV << topo.getNumNodes() << " nodes in routing topology\n";

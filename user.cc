@@ -9,7 +9,6 @@ Define_Module(User);
 User::~User()
 {
   cancelAndDelete(idleTimer);
-  //delete queue;
 }
 
 void User::initialize()
@@ -17,7 +16,6 @@ void User::initialize()
   idleSignal = registerSignal("idle"); // name assigned to signal ID
   idleTimer = new cMessage("idle timer");
   idle();
-//queue = new cPacketQueue("Packet Queue");
 }
 
 void User::idle()

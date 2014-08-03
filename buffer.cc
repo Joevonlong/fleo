@@ -3,9 +3,15 @@
 
 Define_Module(Buffer);
 
+Buffer::~Buffer()
+{
+  cancelAndDelete(transmitDone);
+  delete queue;
+}
+
 void Buffer::initialize() {
-    fromLogicID = gateBaseId("fromLogic");
-    toLogicID = gateBaseId("toLogic");
+    fromLogicID = gateBaseId("logicIO$i");
+    toLogicID = gateBaseId("logicIO$o");
     receiveID = gateBaseId("receive");
     transmitID = gateBaseId("transmit");
     transmitDone = new cMessage("transmitDone");
@@ -27,6 +33,7 @@ void Buffer::handleMessage(cMessage* msg) {
         cChannel* transmissionChannel =
             gate(transmitID)->
             getTransmissionChannel();
+        // EV << transmissionChannel->info() << endl;
         if (transmissionChannel->isBusy()) {
             queue->insert(pkt);
         }

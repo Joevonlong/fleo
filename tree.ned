@@ -7,8 +7,7 @@ simple Logic
 simple Buffer
 {
     gates:
-        input fromLogic;
-        output toLogic;
+        inout logicIO;
         input receive;
         output transmit;
 }
@@ -55,12 +54,34 @@ module PoPShell
     parameters:
         @display("i=block/switch");
     gates:
-        inout gate[];
+        input in[];
+        output out[];
     submodules:
         pop: PoP;
+        buffer[sizeof(in)]: Buffer;
     connections:
-        for i=0..sizeof(gate)-1 {
-            pop.gate++ <--> gate++;
+        for i=0..sizeof(in)-1 {
+            pop.gate++ <--> buffer[i].logicIO;
+            buffer[i].transmit --> out++;
+            buffer[i].receive <-- in++;
+        }
+}
+
+module BeyondShell
+{
+    parameters:
+        @display("i=block/switch");
+    gates:
+        input in[];
+        output out[];
+    submodules:
+        beyond: Beyond;
+        buffer[sizeof(in)]: Buffer;
+    connections:
+        for i=0..sizeof(in)-1 {
+            beyond.gate++ <--> buffer[i].logicIO;
+            buffer[i].transmit --> out++;
+            buffer[i].receive <-- in++;
         }
 }
 
@@ -90,26 +111,7 @@ network qtest
     connections allowunconnected:
         outside.gate$o --> Cat3 --> buff.receive;
         outside.gate$i <-- Cat3 <-- buff.transmit;
-        logic.gate$o++ --> buff.fromLogic;
-        logic.gate$i[0] <-- buff.toLogic;
-}
-
-network shelltest
-{
-    types:
-        channel Cat3 extends ned.DatarateChannel {
-            datarate = 10kbps;
-            delay = 5ms;
-        }
-    submodules:
-        buff: Buffer;
-        outside: User;
-        logic: Beyond;
-    connections allowunconnected:
-        outside.gate$o --> Cat3 --> buff.receive;
-        outside.gate$i <-- Cat3 <-- buff.transmit;
-        logic.gate$o++ --> buff.fromLogic;
-        logic.gate$i[0] <-- buff.toLogic;
+        logic.gate++ <--> buff.LogicIO;
 }
 
 network Tree
@@ -147,22 +149,28 @@ network Tree
             delay = 5ms;
         }
     submodules:
-        beyond: Beyond;
+        beyond: BeyondShell;
         core[fanout]: PoPShell;
         pop[fanout^2]: PoPShell;
         user[fanout^3]: User;
     connections:
         for i=0..fanout-1 {
-            beyond.gate++ <--> OC48 <--> core[i].gate++;
+            beyond.out++ --> OC48 --> core[i].in++;
+            beyond.in++ <-- OC48 <-- core[i].out++;
         };
        for i=0..fanout-2 {
-           core[i].gate++ <--> OC12 <--> core[i+1].gate++ if coreRing==true;
+           core[i].out++ --> OC12 --> core[i+1].in++ if coreRing==true;
+           core[i].in++ <-- OC12 <-- core[i+1].out++ if coreRing==true;
        }
-       core[fanout-1].gate++ <--> OC12 <--> core[0].gate++ if coreRing==true;
+       core[fanout-1].out++ --> OC12 --> core[0].in++ if coreRing==true;
+       core[fanout-1].in++ <-- OC12 <-- core[0].out++ if coreRing==true;
         for i=0..fanout-1, for j=(i*fanout)..(i+1)*fanout-1 {
-            core[i].gate++ <--> OC3 <--> pop[j].gate++;
+            core[i].out++ --> OC3 --> pop[j].in++;
+            core[i].in++ <-- OC3 <-- pop[j].out++;
         };
         for i=0..fanout^2-1, for j=(i*fanout)..(i+1)*fanout-1 {
-            pop[i].gate++ <--> Cat3 <--> user[j].gate;
+            pop[i].out++ --> Cat3 --> user[j].gate$i;
+            pop[i].in++ <-- Cat3 <-- user[j].gate$o;
         };
 }
+

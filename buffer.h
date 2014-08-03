@@ -2,6 +2,8 @@
 
 class Buffer : public cSimpleModule
 {
+public:
+  virtual ~Buffer();
 private:
   int fromLogicID;
   int toLogicID;
