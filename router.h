@@ -1,9 +1,11 @@
+#pragma once
 #include <omnetpp.h>
 
 class Router : public cSimpleModule
 {
 protected:
   simsignal_t requestSignal;
-  cPacketQueue *queue;
+public:
+  std::map<int, cGate*> nextGate; // maps user index to next cGate*
 };
 

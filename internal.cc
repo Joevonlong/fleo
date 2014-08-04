@@ -56,7 +56,7 @@ void InternalRouter::handleMessage(cMessage *msg)
   else if (msg->getKind() == 321) {
     Reply *reply = check_and_cast<Reply*>(msg);
     cGate* outGate = getNextGate(this, reply);
-    send(reply, getNextGate(this, reply));
+    send(reply, outGate);
     EV << "got reply. sending out of " << outGate->getFullName() << endl;
   }
 }

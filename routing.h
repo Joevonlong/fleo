@@ -1,7 +1,7 @@
-#include <omnetpp.h>
 #include "reply_m.h"
+#include "router.h"
 
 extern cTopology topo;
-cGate* getNextGate(cSimpleModule* current, Reply* reply);
+cGate* getNextGate(Router* current, Reply* reply);
 void topoSetup();
 

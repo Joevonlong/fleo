@@ -2,21 +2,33 @@
 
 cTopology topo;
 
-cGate* getNextGate(cSimpleModule* current, Reply* reply) {
+cGate* getNextGate(Router* current, Reply* reply) {
+  // get destination user index
   short userIndex = reply->getDestination();
 //EV << "userindex " << userIndex << endl;
-  char userPath[20];
-  sprintf(userPath, "Tree.user[%d]", userIndex);
-//EV << "userPath " << userPath << endl;
-  cTopology::Node *userNode =
+
+  //check if answer is not cached
+  if (!current->nextGate[userIndex]) {
+    EV << "next gate not cached\n";
+    char userPath[20];
+    sprintf(userPath, "Tree.user[%d]", userIndex);
+    //EV << "userPath " << userPath << endl;
+    cTopology::Node *userNode =
     topo.getNodeFor(simulation.getModuleByPath(userPath));
-//  EV << "usernode " << userNode << endl;
-  topo.calculateUnweightedSingleShortestPathsTo(userNode);
-  cTopology::Node *currentNode = topo.getNodeFor(current);
-//  EV << "currentnode " << currentNode << endl;
-  cTopology::LinkOut *next = currentNode->getPath(0);
-//  EV << "next " << next << endl;
-  return next->getLocalGate();
+    //  EV << "usernode " << userNode << endl;
+    topo.calculateUnweightedSingleShortestPathsTo(userNode);
+    cTopology::Node *currentNode = topo.getNodeFor(current);
+    //  EV << "currentnode " << currentNode << endl;
+    cTopology::LinkOut *next = currentNode->getPath(0);
+    //  EV << "next " << next << endl;
+
+    // cache the answer
+    current->nextGate[userIndex] = next->getLocalGate();
+  }
+  else {
+    EV << "next gate is cached\n";
+  }
+  return current->nextGate[userIndex];
 }
 
 bool selectFunction(cModule *mod, void *)
