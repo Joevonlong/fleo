@@ -60,3 +60,4 @@ void InternalRouter::handleMessage(cMessage *msg)
     EV << "got reply. sending out of " << outGate->getFullName() << endl;
   }
 }
+
