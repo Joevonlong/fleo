@@ -1,0 +1,4 @@
+#!/bin/bash
+
+./tree -u Cmdenv -c Tree
+

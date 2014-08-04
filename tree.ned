@@ -70,7 +70,7 @@ module PoPShell
 module BeyondShell
 {
     parameters:
-        @display("i=block/switch");
+        @display("i=block/server");
     gates:
         input in[];
         output out[];
@@ -95,23 +95,6 @@ simple User
         @display("i=block/user");
     gates:
         inout gate;
-}
-
-network qtest
-{
-    types:
-        channel Cat3 extends ned.DatarateChannel {
-            datarate = 10kbps;
-            delay = 5ms;
-        }
-    submodules:
-        buff: Buffer;
-        outside: User;
-        logic: Beyond;
-    connections allowunconnected:
-        outside.gate$o --> Cat3 --> buff.receive;
-        outside.gate$i <-- Cat3 <-- buff.transmit;
-        logic.gate++ <--> buff.LogicIO;
 }
 
 network Tree
@@ -150,7 +133,7 @@ network Tree
         }
     submodules:
         beyond: BeyondShell;
-        core[fanout]: PoPShell;
+        core[fanout]: PoPShell {@display("i=block/routing");};
         pop[fanout^2]: PoPShell;
         user[fanout^3]: User;
     connections:

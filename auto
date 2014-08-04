@@ -1,5 +1,5 @@
 #!/bin/bash
 
-opp_makemake -f
+opp_makemake -f --deep
 make
 ./tree
