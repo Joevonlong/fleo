@@ -1,6 +1,6 @@
-#include "router.h"
+#include "logic.h"
 
-class Beyond : public Router
+class BeyondLogic : public Logic
 {
 protected:
   virtual void initialize();

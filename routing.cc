@@ -2,7 +2,7 @@
 
 cTopology topo;
 
-cGate* getNextGate(Router* current, Reply* reply) {
+cGate* getNextGate(Logic* current, Reply* reply) {
   // get destination user index
   short userIndex = reply->getDestination();
 //EV << "userindex " << userIndex << endl;
@@ -42,7 +42,7 @@ void topoSetup()
   topo.clear();
   // 4 methods:
   //topo.extractByModulePath(cStringTokenizer("*").asVector());
-  topo.extractByNedTypeName(cStringTokenizer("Buffer PoP User").asVector());
+  topo.extractByNedTypeName(cStringTokenizer("Buffer PoPLogic CoreLogic User").asVector());
   //topo.extractByProperty("display");
   //topo.extractFromNetwork(selectFunction, NULL);
   EV << topo.getNumNodes() << " nodes in routing topology\n";

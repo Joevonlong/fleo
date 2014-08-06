@@ -1,9 +1,11 @@
+#pragma once
 #include <omnetpp.h>
 
 class Logic : public cSimpleModule
 {
 protected:
-  virtual void initialize();
-  virtual void handleMessage(cMessage *msg);
+  simsignal_t requestSignal;
+public:
+  std::map<int, cGate*> nextGate; // maps user index to next cGate*
 };
 

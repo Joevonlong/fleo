@@ -6,9 +6,9 @@
 #include "routing.h"
 #include "beyond.h"
 
-Define_Module(Beyond);
+Define_Module(BeyondLogic);
 
-void Beyond::initialize()
+void BeyondLogic::initialize()
 {
   topoSetup();
   EV << "gatesize" << gateSize("gate") << endl;
@@ -16,7 +16,7 @@ void Beyond::initialize()
   //queue = new cPacketQueue("Packet Queue");
 }
 
-void Beyond::handleMessage(cMessage *msg)
+void BeyondLogic::handleMessage(cMessage *msg)
 {
   Reply* reply = NULL;
   // if request

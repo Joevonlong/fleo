@@ -6,16 +6,16 @@
 #include "routing.h"
 #include "internal.h"
 
-Define_Module(Core);
-Define_Module(PoP);
+Define_Module(CoreLogic);
+Define_Module(PoPLogic);
 
-void InternalRouter::initialize()
+void InternalLogic::initialize()
 {
   requestSignal = registerSignal("request"); // name assigned to signal ID
   //queue = new cPacketQueue("Packet Queue");
 }
 
-void InternalRouter::handleMessage(cMessage *msg)
+void InternalLogic::handleMessage(cMessage *msg)
 {
   /*
   // logging

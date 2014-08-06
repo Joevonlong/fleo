@@ -1,12 +1,12 @@
 #include <omnetpp.h>
-#include "router.h"
+#include "logic.h"
 
-class InternalRouter : public Router
+class InternalLogic : public Logic
 {
 protected:
   virtual void initialize();
   virtual void handleMessage(cMessage *msg);
 };
-class Core : public InternalRouter{};
-class PoP : public InternalRouter{};
+class CoreLogic : public InternalLogic{};
+class PoPLogic : public InternalLogic{};
 

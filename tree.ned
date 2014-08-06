@@ -1,9 +1,3 @@
-simple Logic
-{
-    gates:
-        inout gate[];
-}
-
 simple Buffer
 {
     gates:
@@ -12,7 +6,7 @@ simple Buffer
         output transmit;
 }
 
-simple Router
+simple Logic
 {
     parameters:
         @signal[request](type="unsigned long");
@@ -21,67 +15,81 @@ simple Router
         inout gate[];
 }
 
-simple Beyond extends Router
+simple BeyondLogic extends Logic
 {
     parameters:
         @signal[request](type="unsigned long");
         @statistic[request-size](title="request size"; source="request"; record=vector,histogram; interpolationmode=none);
         @display("i=block/server");
-    @class(Beyond);
+    @class(BeyondLogic);
 }
 
-simple InternalRouter extends Router
+simple InternalLogic extends Logic
 {
-    @class(InternalRouter);
+    @class(InternalLogic);
 }
 
-simple Core extends InternalRouter
+simple CoreLogic extends InternalLogic
 {
     parameters:
         @display("i=block/routing");
-    @class(Core);
+    @class(CoreLogic);
 }
 
-simple PoP extends InternalRouter
+simple PoPLogic extends InternalLogic
 {
     parameters:
         @display("i=block/switch");
-    @class(PoP);
+    @class(PoPLogic);
 }
 
-module PoPShell
+module Router
 {
-    parameters:
-        @display("i=block/switch");
     gates:
         input in[];
         output out[];
     submodules:
-        pop: PoP;
         buffer[sizeof(in)]: Buffer;
     connections:
         for i=0..sizeof(in)-1 {
-            pop.gate++ <--> buffer[i].logicIO;
             buffer[i].transmit --> out++;
             buffer[i].receive <-- in++;
         }
 }
 
-module BeyondShell
+module PoP extends Router
+{
+    parameters:
+        @display("i=block/switch");
+    submodules:
+        pop: PoPLogic;
+    connections:
+        for i=0..sizeof(in)-1 {
+            pop.gate++ <--> buffer[i].logicIO;
+        }
+}
+
+module Core extends Router
+{
+    parameters:
+        @display("i=block/routing");
+    submodules:
+        core: CoreLogic;
+    connections:
+        for i=0..sizeof(in)-1 {
+            core.gate++ <--> buffer[i].logicIO;
+        }
+}
+
+module Beyond extends Router
 {
     parameters:
         @display("i=block/server");
-    gates:
-        input in[];
-        output out[];
     submodules:
-        beyond: Beyond;
-        buffer[sizeof(in)]: Buffer;
+        beyond: BeyondLogic;
     connections:
         for i=0..sizeof(in)-1 {
             beyond.gate++ <--> buffer[i].logicIO;
-            buffer[i].transmit --> out++;
-            buffer[i].receive <-- in++;
         }
 }
 
@@ -132,9 +140,9 @@ network Tree
             delay = 5ms;
         }
     submodules:
-        beyond: BeyondShell;
-        core[fanout]: PoPShell {@display("i=block/routing");};
-        pop[fanout^2]: PoPShell;
+        beyond: Beyond;
+        core[fanout]: Core;
+        pop[fanout^2]: PoP;
         user[fanout^3]: User;
     connections:
         for i=0..fanout-1 {

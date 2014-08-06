@@ -1,7 +1,7 @@
 #include "reply_m.h"
-#include "router.h"
+#include "logic.h"
 
 extern cTopology topo;
-cGate* getNextGate(Router* current, Reply* reply);
+cGate* getNextGate(Logic* current, Reply* reply);
 void topoSetup();
 
