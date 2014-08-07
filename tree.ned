@@ -1,3 +1,23 @@
+channel MyDatarateChannel extends ned.DatarateChannel
+{
+//    inherited:
+//    @class(cDatarateChannel);
+//    @signal[channelBusy](type=long);
+//    @signal[messageSent](type=cMessage);
+//    @signal[messageDiscarded](type=cMessage);
+//    @statistic[busy](source=channelBusy;record=vector?;interpolationmode=sample-hold);
+//    @statistic[utilization](source="timeavg(channelBusy)";record=last?);
+//    @statistic[packets](source="constant1(messageSent)";record=count?;interpolationmode=none);
+//    @statistic[packetBytes](source="packetBytes(messageSent)";record=sum?;unit=B;interpolationmode=none);
+//    @statistic[packetsDiscarded](source="constant1(messageDiscarded)";record=count?;interpolationmode=none);
+//    @statistic[throughput](source="sumPerDuration(packetBits(messageSent))";record=last?;unit=bps);
+//    bool disabled = default(false);
+//    double delay = default(0s) @unit(s); // propagation delay
+//    double datarate = default(0bps) @unit(bps); // bits per second; 0=infinite
+//    double ber = default(0); // bit error rate (BER)
+//    double per = default(0); // packet error rate (PER)
+}
+
 simple Buffer
 {
     gates:
@@ -9,8 +29,8 @@ simple Buffer
 simple Logic
 {
     parameters:
-        @signal[request](type="unsigned long");
-        @statistic[request-size](title="request size"; source="request"; record=vector,stats; interpolationmode=none);
+        @signal[request](type="double");
+        @statistic[request-size](title="request size"; source="request"; record=vector,histogram; interpolationmode=none);
     gates:
         inout gate[];
 }
@@ -18,8 +38,6 @@ simple Logic
 simple BeyondLogic extends Logic
 {
     parameters:
-        @signal[request](type="unsigned long");
-        @statistic[request-size](title="request size"; source="request"; record=vector,histogram; interpolationmode=none);
         @display("i=block/server");
     @class(BeyondLogic);
 }
@@ -99,7 +117,7 @@ simple User
         volatile double idleTime @unit(s);   // delay before next request
         volatile double requestSize;
         @signal[idle](type="simtime");
-        @statistic[idle](title="idle time"; source="idle"; record=vector,histogram; interpolationmode=none);
+        @statistic[idle](title="idle time"; source="idle"; record=vector,min,max,mean,count; interpolationmode=none);
         @display("i=block/user");
     gates:
         inout gate;
@@ -111,31 +129,31 @@ network Tree
         int fanout = default(2);
         bool coreRing = default(true);
     types:
-        channel OC192 extends ned.DatarateChannel {
+        channel OC192 extends MyDatarateChannel {
             datarate = 9.92Gbps;
             delay = 20ms;
         }
-        channel OC48 extends ned.DatarateChannel {
+        channel OC48 extends MyDatarateChannel {
             datarate = 2.488Gbps;
             delay = 15ms;
         }
-        channel OC12 extends ned.DatarateChannel {
+        channel OC12 extends MyDatarateChannel {
             datarate = 622Mbps;
             delay = 10ms;
         }
-        channel OC3 extends ned.DatarateChannel {
+        channel OC3 extends MyDatarateChannel {
             datarate = 155Mbps;
             delay = 5ms;
         }
-        channel Cat5 extends ned.DatarateChannel {
+        channel Cat5 extends MyDatarateChannel {
             datarate = 100Mbps;
             delay = 5ms;
         }
-        channel T3 extends ned.DatarateChannel {
+        channel T3 extends MyDatarateChannel {
             datarate = 45Mbps;
             delay = 5ms;
         }
-        channel Cat3 extends ned.DatarateChannel {
+        channel Cat3 extends MyDatarateChannel {
             datarate = 10Mbps;
             delay = 5ms;
         }

@@ -4,6 +4,7 @@
 #include "request_m.h"
 #include "reply_m.h"
 #include "routing.h"
+#include "parse.h"
 #include "beyond.h"
 
 Define_Module(BeyondLogic);
@@ -11,6 +12,8 @@ Define_Module(BeyondLogic);
 void BeyondLogic::initialize()
 {
   topoSetup();
+  loadVideoLengthFile();
+  // TODO move the 2 setup funcs above to a better place
   EV << "gatesize" << gateSize("gate") << endl;
   requestSignal = registerSignal("request"); // name assigned to signal ID
   //queue = new cPacketQueue("Packet Queue");
@@ -22,10 +25,10 @@ void BeyondLogic::handleMessage(cMessage *msg)
   // if request
   if (msg->getKind() == 123) {
     Request *req = check_and_cast<Request*>(msg);
-    unsigned int size = req->getSize();
+    int64 size = req->getSize();
     int src = req->getSource();
     EV << "Received request from user " << src << " for " << size << "b\n";
-    emit(requestSignal, size);
+    emit(requestSignal, (unsigned long)size);
     delete msg;
 
     // construct reply

@@ -3,6 +3,7 @@
 #include "request_m.h"
 #include "reply_m.h"
 #include "user.h"
+#include "parse.h"
 
 Define_Module(User);
 
@@ -28,18 +29,14 @@ void User::idle()
 
 void User::handleMessage(cMessage *msg)
 {
-  //if msg
-  if (msg->isSelfMessage()) {
-    // send request
+  if (msg->isSelfMessage()) { // if idle timer is back
     Request *req = new Request("request", 123); // use user[] index as message kind
-    //double requestSize = par("requestSize");
-    req->setSize(par("requestSize"));
-    //req->setSize(intuniform(1, 1<<31));
+    //req->setSize(par("requestSize"));
+    req->setSize(getVideoSize());
     EV << "Sending request for " << req->getSize() << " bits\n";
     req->setSource(getIndex());
     req->setBitLength(1); // request packet 1 bit long only
     send(req, "gate$o");
-    // idle for a bit
     idle();
   }
   else { // else received reply

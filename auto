@@ -2,5 +2,6 @@
 
 opp_makemake -f --deep
 make
+python parse_yt_daum.py
 ./tree
 
