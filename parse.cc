@@ -18,13 +18,13 @@ void loadVideoLengthFile() {
 //    getline(daumFood, line);
 //    parse first line
     daumFood >> arraySize >> tmp >> viewsTotal;
-//    EV << tmp[0] << tmp[1] << tmp[2] << arraySize << '\n';
+//    EV << viewsTotal << '\n';
     lengths = new int64[arraySize];
     views = new unsigned long[arraySize];
 
     unsigned long i = 0;
     while (daumFood >> lengths[i] >> views[i]) {
-        EV << lengths[i] << '\t' << views[i] << endl;
+        //EV << lengths[i] << '\t' << views[i] << endl;
         i++;
     }
     daumFood.close();
@@ -38,5 +38,10 @@ int64 getVideoSize() {
         i++;
     }
     i--;
-    return lengths[i];
+    if (lengths[i] > (int64)11529215046068) { // 2^63/800k
+        return ((int64)1<<62)-1;
+    }
+    else {
+        return 800*1000*lengths[i];
+    }
 }

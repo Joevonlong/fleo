@@ -29,7 +29,7 @@ simple Buffer
 simple Logic
 {
     parameters:
-        @signal[request](type="double");
+        @signal[request](type="int64");
         @statistic[request-size](title="request size"; source="request"; record=vector,histogram; interpolationmode=none);
     gates:
         inout gate[];
