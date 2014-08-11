@@ -3,20 +3,14 @@
 #include <omnetpp.h>
 #include "request_m.h"
 #include "reply_m.h"
-#include "routing.h"
-#include "parse.h"
 #include "beyond.h"
 
 Define_Module(BeyondLogic);
 
 void BeyondLogic::initialize()
 {
-  topoSetup();
-  loadVideoLengthFile();
-  // TODO move the 2 setup funcs above to a better place
   EV << "gatesize" << gateSize("gate") << endl;
   requestSignal = registerSignal("request"); // name assigned to signal ID
-  //queue = new cPacketQueue("Packet Queue");
 }
 
 void BeyondLogic::handleMessage(cMessage *msg)

@@ -5,7 +5,7 @@
 #include "parse.h"
 
 unsigned long arraySize;
-int viewsTotal;
+unsigned int viewsTotal;
 int64* lengths;
 unsigned long* views;
 
@@ -32,7 +32,7 @@ void loadVideoLengthFile() {
 
 int64 getVideoSize() {
     int i = 0;
-    int view = intuniform(1, viewsTotal);
+    unsigned int view = intuniform(1, viewsTotal);
     while (view >= 0) {
         view -= views[i];
         i++;

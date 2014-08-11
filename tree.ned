@@ -1,3 +1,5 @@
+simple Global {}
+
 channel MyDatarateChannel extends ned.DatarateChannel
 {
 //    inherited:
@@ -130,7 +132,7 @@ network Tree
         bool coreRing = default(true);
     types:
         channel OC192 extends MyDatarateChannel {
-            datarate = 9.92Gbps;
+            datarate = 9.953Gbps;
             delay = 20ms;
         }
         channel OC48 extends MyDatarateChannel {
@@ -138,11 +140,11 @@ network Tree
             delay = 15ms;
         }
         channel OC12 extends MyDatarateChannel {
-            datarate = 622Mbps;
+            datarate = 622.08Mbps;
             delay = 10ms;
         }
         channel OC3 extends MyDatarateChannel {
-            datarate = 155Mbps;
+            datarate = 155.52Mbps;
             delay = 5ms;
         }
         channel Cat5 extends MyDatarateChannel {
@@ -158,6 +160,7 @@ network Tree
             delay = 5ms;
         }
     submodules:
+        global: Global;
         beyond: Beyond;
         core[fanout]: Core;
         pop[fanout^2]: PoP;
