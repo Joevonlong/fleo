@@ -9,7 +9,7 @@ void Global::initialize()
     topoSetup();
     loadVideoLengthFile();
     EV << sizeof(SIM_API int) << endl;
-    EV << sizeof(int) << endl;
+    EV << intRandMax() << endl;
     EV << sizeof(uint64_t) << endl;
     EV << UINT64_MAX << endl;
 }

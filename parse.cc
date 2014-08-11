@@ -14,20 +14,20 @@ int* views;
 void loadVideoLengthFile() {
     std::string line;
     unsigned long tmp;
-    std::ifstream daumFood; // default: input from file
-    daumFood.open("daum_food_freqs.txt");
+    std::ifstream freqFile; // default: input from file
+    freqFile.open("yt_ent_freqs.txt");
 
 //    parse first line
-    daumFood >> arraySize >> tmp >> viewsTotal;
+    freqFile >> arraySize >> tmp >> viewsTotal;
     lengths = new uint64_t[arraySize];
     views = new int[arraySize];
 
     unsigned long i = 0;
-    while (daumFood >> lengths[i] >> views[i]) {
+    while (freqFile >> lengths[i] >> views[i]) {
         //EV << lengths[i] << '\t' << views[i] << endl;
         i++;
     }
-    daumFood.close();
+    freqFile.close();
 }
 
 uint64_t getVideoSize() {
