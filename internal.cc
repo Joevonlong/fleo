@@ -38,8 +38,8 @@ void InternalLogic::handleMessage(cMessage *msg)
   if (msg->getKind() == 123) {
     // logging
     Request *req = check_and_cast<Request*>(msg);
-    int64 size = req->getSize();
-    emit(requestSignal, (unsigned long)size);
+    uint64_t size = req->getSize();
+    emit(requestSignal, (double)size);
 //    cChannel *upstream =
 //      gate("gate$o", 0)->
 //      getTransmissionChannel();

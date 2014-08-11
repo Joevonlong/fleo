@@ -1,6 +1,6 @@
 packet Request extends cPacket
 {
-    int64 size; // in bytes
+    uint64_t size; // in bytes
     int source;
     int destination;
 }

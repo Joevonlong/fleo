@@ -4,10 +4,12 @@
 #include <omnetpp.h>
 #include "parse.h"
 
+const uint64_t bitRate = 800000;
+
 unsigned long arraySize;
-unsigned int viewsTotal;
-int64* lengths;
-unsigned long* views;
+int viewsTotal;
+uint64_t* lengths;
+int* views;
 
 void loadVideoLengthFile() {
     std::string line;
@@ -15,12 +17,10 @@ void loadVideoLengthFile() {
     std::ifstream daumFood; // default: input from file
     daumFood.open("daum_food_freqs.txt");
 
-//    getline(daumFood, line);
 //    parse first line
     daumFood >> arraySize >> tmp >> viewsTotal;
-//    EV << viewsTotal << '\n';
-    lengths = new int64[arraySize];
-    views = new unsigned long[arraySize];
+    lengths = new uint64_t[arraySize];
+    views = new int[arraySize];
 
     unsigned long i = 0;
     while (daumFood >> lengths[i] >> views[i]) {
@@ -30,18 +30,20 @@ void loadVideoLengthFile() {
     daumFood.close();
 }
 
-int64 getVideoSize() {
+uint64_t getVideoSize() {
     int i = 0;
-    unsigned int view = intuniform(1, viewsTotal);
+    // intuniform returns SIM_API int which is 32 bits. If total views exceeds
+    // 4.2bil this would fail.
+    int view = intuniform(1, viewsTotal); // crashes if unsigned
     while (view >= 0) {
         view -= views[i];
         i++;
     }
     i--;
-    if (lengths[i] > (int64)11529215046068) { // 2^63/800k
-        return ((int64)1<<62)-1;
+    if (lengths[i] >= UINT64_MAX/bitRate) { // 2^64/800k
+        return UINT64_MAX;
     }
     else {
-        return 800*1000*lengths[i];
+        return lengths[i]*bitRate;
     }
 }

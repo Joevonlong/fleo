@@ -19,10 +19,10 @@ void BeyondLogic::handleMessage(cMessage *msg)
   // if request
   if (msg->getKind() == 123) {
     Request *req = check_and_cast<Request*>(msg);
-    int64 size = req->getSize();
+    uint64_t size = req->getSize();
     int src = req->getSource();
     EV << "Received request from user " << src << " for " << size << "b\n";
-    emit(requestSignal, (unsigned long)size);
+    emit(requestSignal, (double)size);
     delete msg;
 
     // construct reply
