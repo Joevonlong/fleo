@@ -1,5 +1,7 @@
 import collections
 
+MAXLENGTH = 36000
+
 # 1. vids of same length treated as same vid: add views
 # 2. put highest number of views at top of file. faster access?
 # 3. lookup table?
@@ -40,8 +42,18 @@ infile = open(ifn)
 outfile = open(ofn, 'w')
 count = collections.Counter()
 for l in infile:
-    length = int(l.split('|')[1].split(':')[0])*60 +\
-             int(l.split('|')[1].split(':')[1])
+    hms = [int(hms) for hms in l.split('|')[1].split(':')]
+    if len(hms) == 1:
+        length = hms[0]
+    elif len(hms) == 2:
+        length = hms[0]*60 + hms[1]
+    elif len(hms) == 3:
+        length = hms[0]*3600 + hms[1]*60 + hms[2]
+    else:
+        print('unpaused time')
+    if length > MAXLENGTH:
+        length = MAXLENGTH
+        print('length cut')
     views = int(l.split('|')[2])
     count[length] += views
 outfile.write(str(len(count)) +'\t' +
@@ -60,8 +72,18 @@ infile = open(ifn)
 outfile = open(ofn, 'w')
 count = collections.Counter()
 for l in infile:
-    length = int(l.split('|')[1].split(':')[0])*60 +\
-             int(l.split('|')[1].split(':')[1])
+    hms = [int(hms) for hms in l.split('|')[1].split(':')]
+    if len(hms) == 1:
+        length = hms[0]
+    elif len(hms) == 2:
+        length = hms[0]*60 + hms[1]
+    elif len(hms) == 3:
+        length = hms[0]*3600 + hms[1]*60 + hms[2]
+    else:
+        print('unpaused time')
+    if length > MAXLENGTH:
+        length = MAXLENGTH
+        print('length cut')
     views = int(l.split('|')[2])
     count[length] += views
 outfile.write(str(len(count)) +'\t' +

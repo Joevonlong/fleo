@@ -15,7 +15,7 @@ void loadVideoLengthFile() {
     std::string line;
     unsigned long tmp;
     std::ifstream freqFile; // default: input from file
-    freqFile.open("yt_ent_freqs.txt");
+    freqFile.open("yt_sci_freqs.txt");
 
 //    parse first line
     freqFile >> arraySize >> tmp >> viewsTotal;
@@ -32,8 +32,10 @@ void loadVideoLengthFile() {
 
 uint64_t getVideoSize() {
     int i = 0;
-    // intuniform returns SIM_API int which is 32 bits. If total views exceeds
-    // 4.2bil this would fail.
+    // intuniform returns SIM_API int which is signed 32 bits. If total views
+    // exceed 2.1 bil this would fail.
+    // YT ent has 3.7 bil views. could try to hack in unsigned int or move to
+    // different randomiser.
     int view = intuniform(1, viewsTotal); // crashes if unsigned
     while (view >= 0) {
         view -= views[i];
