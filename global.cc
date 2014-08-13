@@ -8,8 +8,6 @@ void Global::initialize()
 {
     topoSetup();
     loadVideoLengthFile();
-    EV << sizeof(SIM_API int) << endl;
-    EV << sizeof(uint64_t) << endl;
-    EV << UINT64_MAX << endl;
+    EV << std::max(2,5) << endl;
 }
 

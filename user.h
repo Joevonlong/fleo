@@ -7,7 +7,8 @@ public:
 private:
   simsignal_t idleSignal;
   cMessage* idleTimer;
-  virtual void idle();
+  void idle();
+  void sendRequest();
   uint64_t requestingBits;
 protected:
   virtual void initialize();
