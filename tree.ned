@@ -40,8 +40,8 @@ simple Logic
 simple BeyondLogic extends Logic
 {
     parameters:
-        @signal[request](type="double");
-        @statistic[request-size](title="request size"; source="request"; record=vector,histogram; interpolationmode=none);
+//        @signal[request](type="double");
+  //      @statistic[request-size](title="request size"; source="request"; record=vector,histogram; interpolationmode=none);
         @display("i=block/server");
     @class(BeyondLogic);
 }

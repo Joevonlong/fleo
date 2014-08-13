@@ -7,6 +7,8 @@
 
 Define_Module(User);
 
+const uint64_t packetBitSize = 1000000; // 1Mb
+
 User::~User()
 {
   cancelAndDelete(idleTimer);
@@ -14,6 +16,7 @@ User::~User()
 
 void User::initialize()
 {
+  requestingBits = 0;
   idleSignal = registerSignal("idle"); // name assigned to signal ID
   idleTimer = new cMessage("idle timer");
   idle();
@@ -30,19 +33,28 @@ void User::idle()
 void User::handleMessage(cMessage *msg)
 {
   if (msg->isSelfMessage()) { // if idle timer is back
+    uint64_t size = getVideoSize();
+    EV << "Starting request for " << size << " bits\n";
+    requestingBits = size;
     Request *req = new Request("request", 123); // use user[] index as message kind
-    //req->setSize(par("requestSize"));
-    req->setSize(getVideoSize());
-    EV << "Sending request for " << req->getSize() << " bits\n";
+    req->setSize(size); //req->setSize(par("requestSize"));
     req->setSource(getIndex());
     req->setBitLength(1); // request packet 1 bit long only
     send(req, "gate$o");
-    idle();
   }
   else { // else received reply
     Reply* reply = check_and_cast<Reply*>(msg);
-    EV << getFullName() << " received reply of size " << reply->getBitLength() << endl;
+    uint64_t size = reply->getBitLength();
     delete reply;
+    EV << getFullName() << " received reply of size " << size;
+    requestingBits -= size;
+    if (requestingBits == 0) {
+      EV << ". Request fulfilled.\n";
+      idle();
+    }
+    else {
+      EV << ". Still waiting for " << requestingBits << endl;
+    }
   }
 }
 

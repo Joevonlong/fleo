@@ -8,7 +8,7 @@ private:
   simsignal_t idleSignal;
   cMessage* idleTimer;
   virtual void idle();
-  cPacketQueue *queue;
+  uint64_t requestingBits;
 protected:
   virtual void initialize();
   virtual void handleMessage(cMessage *msg);
