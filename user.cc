@@ -11,13 +11,14 @@ const uint64_t packetBitSize = 1000000; // 1Mb
 
 User::~User()
 {
-  cancelAndDelete(idleTimer);
+  
 }
 
 void User::initialize()
 {
   requestingBits = 0;
-  idleSignal = registerSignal("idle"); // name assigned to signal ID
+  requestHistogram.setName("Request Size");
+//  requestHistogram.setRange(0, UINT64_MAX);
   idleTimer = new cMessage("idle timer");
   idle();
 }
@@ -44,6 +45,8 @@ void User::handleMessage(cMessage *msg)
   if (msg->isSelfMessage()) { // if idle timer is back
     uint64_t size = getVideoSize();
     EV << "Starting request for " << size << " bits\n";
+    //emit(requestSignal, static_cast<double>(size));
+    requestHistogram.collect(size);
     requestingBits = size;
     sendRequest();
   }
@@ -62,5 +65,11 @@ void User::handleMessage(cMessage *msg)
       idle();
     }
   }
+}
+
+void User::finish()
+{
+  requestHistogram.record();
+  cancelAndDelete(idleTimer);
 }
 

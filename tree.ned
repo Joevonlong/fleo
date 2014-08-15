@@ -122,6 +122,8 @@ simple User
         volatile double requestSize;
         @signal[idle](type="simtime");
         @statistic[idle](title="idle time"; source="idle"; record=vector,min,max,mean,count; interpolationmode=none);
+//        @signal[request](type="double");
+  //      @statistic[request-size](title="request size"; source="request"; record=vector,histogram; interpolationmode=none);
         @display("i=block/user");
     gates:
         inout gate;

@@ -6,8 +6,10 @@ Define_Module(Global);
 
 void Global::initialize()
 {
+    idleSignal = registerSignal("idle"); // name assigned to signal ID
+    requestSignal = registerSignal("request"); // name assigned to signal ID
     topoSetup();
     loadVideoLengthFile();
-    EV << std::max(2,5) << endl;
+    EV << static_cast<double>(UINT64_MAX) << endl;
 }
 

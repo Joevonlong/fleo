@@ -11,7 +11,7 @@ Define_Module(PoPLogic);
 
 void InternalLogic::initialize()
 {
-  requestSignal = registerSignal("request"); // name assigned to signal ID
+//  requestSignal = registerSignal("request"); // name assigned to signal ID
   //queue = new cPacketQueue("Packet Queue");
 }
 

@@ -10,7 +10,6 @@ Define_Module(BeyondLogic);
 void BeyondLogic::initialize()
 {
   EV << "gatesize" << gateSize("gate") << endl;
-  requestSignal = registerSignal("request"); // name assigned to signal ID
 }
 
 void BeyondLogic::handleMessage(cMessage *msg)
