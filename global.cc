@@ -4,6 +4,9 @@
 
 Define_Module(Global);
 
+simsignal_t idleSignal;
+simsignal_t requestSignal;
+
 void Global::initialize()
 {
     idleSignal = registerSignal("idle"); // name assigned to signal ID
