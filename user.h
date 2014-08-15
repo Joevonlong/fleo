@@ -11,7 +11,7 @@ private:
   void sendRequest();
   uint64_t requestingBits;
 protected:
-  cVarHistogram requestHistogram;
+  cDoubleHistogram requestHistogram;
   virtual void initialize();
   virtual void handleMessage(cMessage *msg);
   virtual void finish();

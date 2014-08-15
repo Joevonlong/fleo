@@ -11,13 +11,14 @@ const uint64_t packetBitSize = 1000000; // 1Mb
 
 User::~User()
 {
-  
+  cancelAndDelete(idleTimer);
 }
 
 void User::initialize()
 {
   requestingBits = 0;
   requestHistogram.setName("Request Size");
+  requestHistogram.setRangeAutoUpper(0);
   requestHistogram.setNumCells(100);
 //  requestHistogram.setRange(0, UINT64_MAX);
   idleTimer = new cMessage("idle timer");
@@ -71,6 +72,5 @@ void User::handleMessage(cMessage *msg)
 void User::finish()
 {
   requestHistogram.record();
-  cancelAndDelete(idleTimer);
 }
 
