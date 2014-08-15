@@ -18,6 +18,7 @@ void User::initialize()
 {
   requestingBits = 0;
   requestHistogram.setName("Request Size");
+  requestHistogram.setNumCells(100);
 //  requestHistogram.setRange(0, UINT64_MAX);
   idleTimer = new cMessage("idle timer");
   idle();
