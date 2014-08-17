@@ -20,6 +20,35 @@ channel MyDatarateChannel extends ned.DatarateChannel
 //    double per = default(0); // packet error rate (PER)
 }
 
+channel OC192 extends MyDatarateChannel {
+    datarate = 9.953Gbps;
+    delay = 20ms;
+}
+channel OC48 extends MyDatarateChannel {
+    datarate = 2.488Gbps;
+    delay = 15ms;
+}
+channel OC12 extends MyDatarateChannel {
+    datarate = 622.08Mbps;
+    delay = 10ms;
+}
+channel OC3 extends MyDatarateChannel {
+    datarate = 155.52Mbps;
+    delay = 5ms;
+}
+channel Cat5 extends MyDatarateChannel {
+    datarate = 100Mbps;
+    delay = 5ms;
+}
+channel T3 extends MyDatarateChannel {
+    datarate = 45Mbps;
+    delay = 5ms;
+}
+channel Cat3 extends MyDatarateChannel {
+    datarate = 10Mbps;
+    delay = 5ms;
+}
+
 simple Buffer
 {
     gates:
@@ -82,7 +111,7 @@ module Router
 module PoP extends Router
 {
     parameters:
-        @display("i=block/switch");
+        @display("i=block/switch,blue");
     submodules:
         pop: PoPLogic;
     connections:
@@ -94,7 +123,7 @@ module PoP extends Router
 module Core extends Router
 {
     parameters:
-        @display("i=block/routing");
+        @display("i=block/routing,red");
     submodules:
         core: CoreLogic;
     connections:
@@ -135,34 +164,6 @@ network Tree
         int fanout = default(2);
         bool coreRing = default(true);
     types:
-        channel OC192 extends MyDatarateChannel {
-            datarate = 9.953Gbps;
-            delay = 20ms;
-        }
-        channel OC48 extends MyDatarateChannel {
-            datarate = 2.488Gbps;
-            delay = 15ms;
-        }
-        channel OC12 extends MyDatarateChannel {
-            datarate = 622.08Mbps;
-            delay = 10ms;
-        }
-        channel OC3 extends MyDatarateChannel {
-            datarate = 155.52Mbps;
-            delay = 5ms;
-        }
-        channel Cat5 extends MyDatarateChannel {
-            datarate = 100Mbps;
-            delay = 5ms;
-        }
-        channel T3 extends MyDatarateChannel {
-            datarate = 45Mbps;
-            delay = 5ms;
-        }
-        channel Cat3 extends MyDatarateChannel {
-            datarate = 10Mbps;
-            delay = 5ms;
-        }
     submodules:
         global: Global;
         beyond: Beyond;
@@ -174,12 +175,12 @@ network Tree
             beyond.out++ --> OC48 --> core[i].in++;
             beyond.in++ <-- OC48 <-- core[i].out++;
         };
-       for i=0..fanout-2 {
-           core[i].out++ --> OC12 --> core[i+1].in++ if coreRing==true;
-           core[i].in++ <-- OC12 <-- core[i+1].out++ if coreRing==true;
-       }
-       core[fanout-1].out++ --> OC12 --> core[0].in++ if coreRing==true;
-       core[fanout-1].in++ <-- OC12 <-- core[0].out++ if coreRing==true;
+        for i=0..fanout-2 {
+            core[i].out++ --> OC12 --> core[i+1].in++ if coreRing==true;
+            core[i].in++ <-- OC12 <-- core[i+1].out++ if coreRing==true;
+        }
+        core[fanout-1].out++ --> OC12 --> core[0].in++ if coreRing==true;
+        core[fanout-1].in++ <-- OC12 <-- core[0].out++ if coreRing==true;
         for i=0..fanout-1, for j=(i*fanout)..(i+1)*fanout-1 {
             core[i].out++ --> OC3 --> pop[j].in++;
             core[i].in++ <-- OC3 <-- pop[j].out++;
