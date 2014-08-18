@@ -35,12 +35,13 @@ class AS:
     def __init__(self):
         self.nodes = []
         self.exts = []
-        self.names = {}
+        self.uids = {}
         self.links = set()
         self.link_count = 0
 
     def add_node(self, node):
         self.nodes.append(node)
+        self.uids[node.uid] = node
         self.link_count += node.num_neigh + node.ext # counts both ways
         uid = node.uid
         # avoid adding reverse of existing tuple/link
@@ -61,23 +62,23 @@ file0 = archive.extractfile(asn+'.cch')
 # 398 @Perth,+Australia + 	(2) -> <3856> <3888> 	=139.130.73.113 r0
 
 uid_re = re.compile(r'(?P<uid>\d+) '
-                  r'@(?P<loc>\S+) '
-                  r'(?P<dns>\+)? '
-                  r'(?P<bb>bb)?\t'
-                  r'\((?P<num_neigh>\d+)\) '
-                  r'(&(?P<ext>\d+) )?-> '
-                  r'(<(?P<nuid>[\d<> ]+)> )?'
-                  r'(\{(?P<euid>[-\d{} ]+)\} )?\t'
-                  r'=(?P<name_alias>\S+) '
-                  r'r(?P<rn>\d+)'
-                  )
+                    r'@(?P<loc>\S+) '
+                    r'(?P<dns>\+)? '
+                    r'(?P<bb>bb)?\t'
+                    r'\((?P<num_neigh>\d+)\) '
+                    r'(&(?P<ext>\d+) )?-> '
+                    r'(<(?P<nuid>[\d<> ]+)> )?'
+                    r'(\{(?P<euid>[-\d{} ]+)\} )?\t'
+                    r'=(?P<name_alias>\S+) '
+                    r'r(?P<rn>\d+)'
+                    )
 
 euid_re = re.compile(r'-(?P<euid>\d+) '
                      r'=(?P<address>\S+) '
                      r'r(?P<rn>\d+)'
                      )
 
-as1221 = AS()
+asys = AS()
 exts = []
 for line in file0:
     m = uid_re.match(line.decode('UTF-8'))
@@ -92,7 +93,7 @@ for line in file0:
         else:
             name = m.group('name_alias')
             alias = None
-        as1221.add_node(
+        asys.add_node(
             Node(int(m.group('uid')), m.group('loc'), m.group('dns'),
                  m.group('bb'), int(m.group('num_neigh')), m.group('ext'),
                  [int(x) for x in m.group('nuid').split('> <')], ext_uids,
@@ -107,43 +108,45 @@ for line in file0:
             )
         continue
     print(line) # unrecognised line
-print(len(as1221.nodes))
+print(len(asys.nodes))
 print(len(exts))
 
+uid_to_index = {}
 def write_to_ned():
     f = open('as'+asn+'.ned', 'w')
     f.write('network AS'+asn+'\n{\n')
     # python nodes linked by uid, but ned uses list index. need to map.
-    uid_to_index = {}
     bb_index = 0
     access_index = 0
-    for node in as1221.nodes:
+    for node in asys.nodes:
         if node.bb:
             uid_to_index[node.uid] = ('bb', bb_index)
             bb_index += 1
         else:
             uid_to_index[node.uid] = ('access', access_index)
             access_index += 1
-#    for i in range(len(as1221.nodes)):
-#        uid_to_index[as1221.nodes[i].uid] = i
+#    for i in range(len(asys.nodes)):
+#        uid_to_index[asys.nodes[i].uid] = i
     f.write(' '*4+'submodules:\n')
-    f.write(' '*8+'backbone['+str(bb_index)+']: Core;\n')
-    f.write(' '*8+'access['+str(access_index)+']: PoP;\n')
+    for node in asys.nodes:
+        if node.bb:
+            f.write(' '*8+'core'+str(node.uid)+': Core;\n')
+        else:
+            f.write(' '*8+'access'+str(node.uid)+': PoP;\n')
     f.write(' '*4+'connections:\n')
-    for (n1,n2) in as1221.links:
-        if uid_to_index[n1][0] == 'bb':
-            left = 'backbone['+str(uid_to_index[n1][1])
+    for (n1,n2) in asys.links:
+        if asys.uids[n1].bb:
+            left = 'core'
         else: # 'access'
-            left = 'access['+str(uid_to_index[n1][1])
-        if uid_to_index[n2][0] == 'bb':
-            right = 'backbone['+str(uid_to_index[n2][1])
+            left = 'access'
+        if asys.uids[n2].bb:
+            right = 'core'
         else: # 'access'
-            right = 'access['+str(uid_to_index[n2][1])
-        f.write(' '*8+left+'].out++ --> OC12 --> '+right+'].in++;\n')
-        f.write(' '*8+left+'].in++ <-- OC12 <-- '+right+'].out++;\n')
-
-#        f.write(' '*8+'internal['+str(uid_to_index[n1])+'].out++ --> OC12 --> internal['+str(uid_to_index[n2])+'].in++;\n')
-#        f.write(' '*8+'internal['+str(uid_to_index[n1])+'].in++ <-- OC12 <-- internal['+str(uid_to_index[n2])+'].out++;\n')
+            right = 'access'
+        f.write(' '*8+left+str(n1)+'.out++ --> OC12 --> '
+                +right+str(n2)+'.in++;\n')
+        f.write(' '*8+left+str(n1)+'.in++ <-- OC12 <-- '
+                +right+str(n2)+'.out++;\n')
     f.write('}\n\n')
     f.close()
 
