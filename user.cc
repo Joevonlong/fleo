@@ -7,6 +7,7 @@
 
 Define_Module(User);
 
+const bool message_switching = true;
 const uint64_t packetBitSize = 1000000; // 1Mb
 
 User::~User()
@@ -36,7 +37,12 @@ void User::idle()
 void User::sendRequest()
 {
   Request *req = new Request("request", 123); // use user[] index as message kind
-  req->setSize(std::min(requestingBits, packetBitSize)); //req->setSize(par("requestSize"));
+  if (message_switching) {
+    req->setSize(requestingBits);
+  }
+  else {
+    req->setSize(std::min(requestingBits, packetBitSize)); //req->setSize(par("requestSize"));
+  }
   req->setSource(getIndex());
   req->setBitLength(1); // request packet 1 bit long only
   send(req, "gate$o");

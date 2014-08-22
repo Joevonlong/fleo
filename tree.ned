@@ -96,6 +96,9 @@ simple PoPLogic extends InternalLogic
 
 module Router
 {
+    parameters:
+        string name;
+        int rn;
     gates:
         input in[];
         output out[];
@@ -123,7 +126,7 @@ module PoP extends Router
 module Core extends Router
 {
     parameters:
-        @display("i=block/routing,red");
+        @display("i=block/routing,yellow");
     submodules:
         core: CoreLogic;
     connections:
@@ -135,7 +138,7 @@ module Core extends Router
 module Beyond extends Router
 {
     parameters:
-        @display("i=block/server");
+        @display("i=block/server,red");
     submodules:
         beyond: BeyondLogic;
     connections:
@@ -147,6 +150,8 @@ module Beyond extends Router
 simple User
 {
     parameters:
+        string name;
+        int rn;
         volatile double idleTime @unit(s);   // delay before next request
         volatile double requestSize;
         @signal[idle](type="simtime");

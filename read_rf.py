@@ -22,6 +22,7 @@ class Node:
         self.name = name
         self.alias = True if alias=='!' else False
         self.rn = int(rn)
+        self.assignment = None
         if len(nuids) != num_neigh:
             print("len(nuids) != num_neigh")
 
@@ -48,6 +49,38 @@ class AS:
         for nuid in node.nuids:
             if (nuid,uid) not in self.links:
                 self.links.add((uid,nuid))
+
+    # first seen if more than 1
+    def get_most_connected(self):
+        max_neigh = 0
+        most_conn_node = None
+        for node in self.nodes:
+            if node.num_neigh > max_neigh:
+                max_neigh = node.num_neigh
+                most_conn_node = node
+        print('node '+str(most_conn_node.uid)+' is the most connected.')
+        self.most_connected = most_conn_node
+        return most_conn_node
+
+    def prune_unreachable_from(self, uid):
+        if isinstance(uid, Node):
+            uid = uid.uid
+        reachable_uids = set([uid])
+        reachable_links = set()
+        prev_num_reachable = -1
+        while prev_num_reachable != len(reachable_uids):
+            prev_num_reachable = len(reachable_uids)
+            print(str(prev_num_reachable)+' nodes reachable')
+            for n1,n2 in self.links:
+                if n1 in reachable_uids:
+                    reachable_uids.add(n2)
+                    reachable_links.add((n1,n2))
+                elif n2 in reachable_uids:
+                    reachable_uids.add(n1)
+                    reachable_links.add((n1,n2))
+        print(str(len(reachable_uids))+' nodes reachable')
+        self.nodes = [self.uids[uid] for uid in reachable_uids]
+        self.links = reachable_links
 
 fn = "rocketfuel_maps_cch.tar.gz"
 archive = tarfile.open(fn)
@@ -108,31 +141,42 @@ for line in file0:
             )
         continue
     print(line) # unrecognised line
-print(len(asys.nodes))
-print(len(exts))
+print(str(len(asys.nodes))+' internal nodes')
+print(str(len(exts))+' external nodes')
 
-uid_to_index = {}
 def write_to_ned():
     f = open('as'+asn+'.ned', 'w')
     f.write('network AS'+asn+'\n{\n')
-    # python nodes linked by uid, but ned uses list index. need to map.
-    bb_index = 0
-    access_index = 0
+
+    # take most connected node to be server
+    asys.get_most_connected().assignment = 'beyond'
+
+    # prune nodes and links unable to reach server
+    asys.prune_unreachable_from(asys.most_connected)
+
+    # singly connected nodes will be users
     for node in asys.nodes:
-        if node.bb:
-            uid_to_index[node.uid] = ('bb', bb_index)
-            bb_index += 1
-        else:
-            uid_to_index[node.uid] = ('access', access_index)
-            access_index += 1
-#    for i in range(len(asys.nodes)):
-#        uid_to_index[asys.nodes[i].uid] = i
+        if node.num_neigh == 1:
+            node.assignment = 'user'
+
+    # submodule section
     f.write(' '*4+'submodules:\n')
+    f.write(' '*8+'global: Global;\n')
     for node in asys.nodes:
-        if node.bb:
-            f.write(' '*8+'core'+str(node.uid)+': Core;\n')
+        if node.assignment == 'beyond':
+            f.write(' '*8+'beyond'+str(node.uid)+': Beyond{name="'
+                    +node.name+'"; rn='+str(node.rn)+';};\n')
+        elif node.assignment == 'user':
+            f.write(' '*8+'user'+str(node.uid)+': User{name="'
+                    +node.name+'"; rn='+str(node.rn)+';};\n')
+        elif node.bb:
+            f.write(' '*8+'core'+str(node.uid)+': Core{name="'
+                    +node.name+'"; rn='+str(node.rn)+';};\n')
         else:
-            f.write(' '*8+'access'+str(node.uid)+': PoP;\n')
+            f.write(' '*8+'access'+str(node.uid)+': PoP{name="'
+                    +node.name+'"; rn='+str(node.rn)+';};\n')
+
+    # connection section
     f.write(' '*4+'connections:\n')
     for (n1,n2) in asys.links:
         if asys.uids[n1].bb:
@@ -143,10 +187,29 @@ def write_to_ned():
             right = 'core'
         else: # 'access'
             right = 'access'
+        # override if beyond
+        if asys.uids[n1].assignment == 'beyond':
+            left = 'beyond'
+        if asys.uids[n2].assignment == 'beyond':
+            right = 'beyond'
+        # override if user
+        if asys.uids[n1].assignment == 'user':
+            f.write(' '*8+'user'+str(n1)+'.gate$o --> OC12 --> '
+                    +right+str(n2)+'.in++;\n')
+            f.write(' '*8+'user'+str(n1)+'.gate$i <-- OC12 <-- '
+                    +right+str(n2)+'.out++;\n')
+            continue
+        if asys.uids[n2].assignment == 'user':
+            f.write(' '*8+left+str(n1)+'.out++ --> OC12 --> '
+                    +'user'+str(n2)+'.gate$i;\n')
+            f.write(' '*8+left+str(n1)+'.in++ <-- OC12 <-- '
+                    +'user'+str(n2)+'.gate$o;\n')
+            continue
         f.write(' '*8+left+str(n1)+'.out++ --> OC12 --> '
                 +right+str(n2)+'.in++;\n')
         f.write(' '*8+left+str(n1)+'.in++ <-- OC12 <-- '
                 +right+str(n2)+'.out++;\n')
+
     f.write('}\n\n')
     f.close()
 
