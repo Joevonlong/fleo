@@ -4,6 +4,7 @@
 #include "reply_m.h"
 #include "user.h"
 #include "parse.h"
+#include "routing.h"
 
 Define_Module(User);
 
@@ -17,6 +18,7 @@ User::~User()
 
 void User::initialize()
 {
+    EV << getFullPath() << endl;
   requestingBits = 0;
   requestHistogram.setName("Request Size");
   requestHistogram.setRangeAutoUpper(0);
@@ -43,7 +45,8 @@ void User::sendRequest()
   else {
     req->setSize(std::min(requestingBits, packetBitSize)); //req->setSize(par("requestSize"));
   }
-  req->setSource(getIndex());
+  req->setSource(getFullPath().c_str());
+  req->setDestination(beyondPath.c_str());
   req->setBitLength(1); // request packet 1 bit long only
   send(req, "gate$o");
 }

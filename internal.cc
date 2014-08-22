@@ -50,7 +50,9 @@ void InternalLogic::handleMessage(cMessage *msg)
 //    else {
 //      // EV << "Upstream free. Forwarding now.\n";
     // forward to first gate (which should be towards the beyond)
-      send(msg, "gate$o", 0);
+      cGate* outGate = getNextGate(this, req);
+      send(req, outGate);
+      //send(msg, "gate$o", 0);
 //    }
   }
   else if (msg->getKind() == 321) {

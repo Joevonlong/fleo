@@ -84,7 +84,7 @@ class AS:
 
 fn = "rocketfuel_maps_cch.tar.gz"
 archive = tarfile.open(fn)
-asn = '4755'
+asn = '1221'
 file0 = archive.extractfile(asn+'.cch')
 
 # lines to consider:
@@ -141,8 +141,8 @@ for line in file0:
             )
         continue
     print(line) # unrecognised line
-print(str(len(asys.nodes))+' internal nodes')
-print(str(len(exts))+' external nodes')
+print('parsed '+str(len(asys.nodes))+' internal nodes')
+print('parsed '+str(len(exts))+' external nodes')
 
 def write_to_ned():
     f = open('as'+asn+'.ned', 'w')
@@ -153,11 +153,15 @@ def write_to_ned():
 
     # prune nodes and links unable to reach server
     asys.prune_unreachable_from(asys.most_connected)
+    print(str(len(asys.nodes))+' internal nodes after pruning unreachables')
 
     # singly connected nodes will be users
+    user_count = 0
     for node in asys.nodes:
         if node.num_neigh == 1:
             node.assignment = 'user'
+            user_count += 1
+    print(str(user_count)+' nodes assigned as users')
 
     # submodule section
     f.write(' '*4+'submodules:\n')

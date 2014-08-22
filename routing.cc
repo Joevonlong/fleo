@@ -2,19 +2,47 @@
 
 cTopology topo;
 
-cGate* getNextGate(Logic* current, Reply* reply) {
-  // get destination user index
-  short userIndex = reply->getDestination();
+cGate* getNextGate(Logic* current, Request* request) {
+  const char* dest = request->getDestination();
 //EV << "userindex " << userIndex << endl;
 
   //check if answer is not cached
-  if (!current->nextGate[userIndex]) {
+  if (!current->nextGate[dest]) {
     EV << "next gate not cached\n";
-    char userPath[20];
-    sprintf(userPath, "Tree.user[%d]", userIndex);
+//    char userPath[20];
+//    sprintf(userPath, "Tree.user[%d]", userIndex);
+    //EV << "userPath " << userPath << endl;
+    cTopology::Node *destNode =
+      topo.getNodeFor(simulation.getModuleByPath(dest));
+    //  EV << "usernode " << userNode << endl;
+    topo.calculateUnweightedSingleShortestPathsTo(destNode);
+    cTopology::Node *currentNode = topo.getNodeFor(current);
+    //  EV << "currentnode " << currentNode << endl;
+    cTopology::LinkOut *next = currentNode->getPath(0);
+    //  EV << "next " << next << endl;
+
+    // cache the answer
+    current->nextGate[dest] = next->getLocalGate();
+  }
+  else {
+    EV << "next gate is cached\n";
+  }
+  return current->nextGate[dest];
+}
+
+cGate* getNextGate(Logic* current, Reply* reply) {
+  // get destination user index
+  const char* dest = reply->getDestination();
+//EV << "userindex " << userIndex << endl;
+
+  //check if answer is not cached
+  if (!current->nextGate[dest]) {
+    EV << "next gate not cached\n";
+//    char userPath[20];
+//    sprintf(userPath, "Tree.user[%d]", userIndex);
     //EV << "userPath " << userPath << endl;
     cTopology::Node *userNode =
-    topo.getNodeFor(simulation.getModuleByPath(userPath));
+      topo.getNodeFor(simulation.getModuleByPath(dest));
     //  EV << "usernode " << userNode << endl;
     topo.calculateUnweightedSingleShortestPathsTo(userNode);
     cTopology::Node *currentNode = topo.getNodeFor(current);
@@ -23,12 +51,12 @@ cGate* getNextGate(Logic* current, Reply* reply) {
     //  EV << "next " << next << endl;
 
     // cache the answer
-    current->nextGate[userIndex] = next->getLocalGate();
+    current->nextGate[dest] = next->getLocalGate();
   }
   else {
     EV << "next gate is cached\n";
   }
-  return current->nextGate[userIndex];
+  return current->nextGate[dest];
 }
 
 bool selectFunction(cModule *mod, void *)
@@ -42,7 +70,7 @@ void topoSetup()
   topo.clear();
   // 4 methods:
   //topo.extractByModulePath(cStringTokenizer("*").asVector());
-  topo.extractByNedTypeName(cStringTokenizer("Buffer PoPLogic CoreLogic User").asVector());
+  topo.extractByNedTypeName(cStringTokenizer("Buffer PoPLogic CoreLogic BeyondLogic User").asVector());
   //topo.extractByProperty("display");
   //topo.extractFromNetwork(selectFunction, NULL);
   EV << topo.getNumNodes() << " nodes in routing topology\n";

@@ -6,6 +6,6 @@ class Logic : public cSimpleModule
 {
 protected:
 public:
-  std::map<int, cGate*> nextGate; // maps user index to next cGate*
+  std::map<std::string, cGate*> nextGate; // maps user index to next cGate*
 };
 
