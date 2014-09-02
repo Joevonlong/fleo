@@ -2,6 +2,11 @@ import fileinput
 import tarfile
 import re
 
+fn = "rocketfuel_maps_cch.tar.gz"
+archive = tarfile.open(fn)
+asn = '4755'
+file0 = archive.extractfile(asn+'.cch')
+
 class Node:
     """Properties follow those detailed in README.cch"""
     def __init__(self, uid, loc, dns, bb, num_neigh, ext, nuids, euids, name, alias, rn):
@@ -81,11 +86,6 @@ class AS:
         print(str(len(reachable_uids))+' nodes reachable')
         self.nodes = [self.uids[uid] for uid in reachable_uids]
         self.links = reachable_links
-
-fn = "rocketfuel_maps_cch.tar.gz"
-archive = tarfile.open(fn)
-asn = '1221'
-file0 = archive.extractfile(asn+'.cch')
 
 # lines to consider:
 # 1 @Adelaide,+Australia  	(1) -> <1787> 	=firstc1-new.link.telstra.net.136.130.139.in-addr.! r1
@@ -198,16 +198,16 @@ def write_to_ned():
             right = 'beyond'
         # override if user
         if asys.uids[n1].assignment == 'user':
-            f.write(' '*8+'user'+str(n1)+'.gate$o --> OC12 --> '
+            f.write(' '*8+'user'+str(n1)+'.out --> OC12 --> '
                     +right+str(n2)+'.in++;\n')
-            f.write(' '*8+'user'+str(n1)+'.gate$i <-- OC12 <-- '
+            f.write(' '*8+'user'+str(n1)+'.in <-- OC12 <-- '
                     +right+str(n2)+'.out++;\n')
             continue
         if asys.uids[n2].assignment == 'user':
             f.write(' '*8+left+str(n1)+'.out++ --> OC12 --> '
-                    +'user'+str(n2)+'.gate$i;\n')
+                    +'user'+str(n2)+'.in;\n')
             f.write(' '*8+left+str(n1)+'.in++ <-- OC12 <-- '
-                    +'user'+str(n2)+'.gate$o;\n')
+                    +'user'+str(n2)+'.out;\n')
             continue
         f.write(' '*8+left+str(n1)+'.out++ --> OC12 --> '
                 +right+str(n2)+'.in++;\n')

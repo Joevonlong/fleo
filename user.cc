@@ -48,7 +48,7 @@ void User::sendRequest()
   req->setSource(getFullPath().c_str());
   req->setDestination(beyondPath.c_str());
   req->setBitLength(1); // request packet 1 bit long only
-  send(req, "gate$o");
+  send(req, "out");
 }
 
 void User::handleMessage(cMessage *msg)
