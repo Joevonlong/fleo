@@ -8,23 +8,24 @@ const uint64_t bitRate = 800000;
 
 unsigned long arraySize;
 int viewsTotal;
+std::vector<std::string> videoIDs;
 uint64_t* lengths;
 int* cumulativeViews;
 
 void loadVideoLengthFile() {
-    std::string line;
     unsigned long tmp;
     std::ifstream freqFile; // default: input from file
-    freqFile.open("yt_sci_freqs.txt");
+    freqFile.open("freqs_yt_sci.txt");
 
     // parse first line (metadata)
     freqFile >> arraySize >> tmp >> viewsTotal;
+    videoIDs = std::vector<std::string>(arraySize);
     lengths = new uint64_t[arraySize];
     cumulativeViews = new int[arraySize];
 
     // parse subsequent lines
     unsigned long i = 0;
-    while (freqFile >> lengths[i] >> tmp) {
+    while (freqFile >> videoIDs[i] >> lengths[i] >> tmp) {
         //EV << lengths[i] << '\t' << cumulativeViews[i] << endl;
         // keep rolling sum to avoid repeated subtractions in getVideoSize()
         if (i != 0) {
