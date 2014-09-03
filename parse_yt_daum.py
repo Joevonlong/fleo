@@ -6,91 +6,59 @@ MAXLENGTH = 36000
 # 2. put highest number of views at top of file. faster access?
 # 3. lookup table?
 
-# Daum Food and Travel Categories
-# Format: video_id | upload_date | length | user_id | recommended | views
-def parse_daum():
+def parse(videoID_index, length_index, views_index):
     infile = open(ifn)
     outfile = open(ofn, 'w')
-    count = collections.Counter()
+    vids = []
 
     for l in infile:
-        length = int(l.split('|')[2])
-        views = int(l.split('|')[5][:-1])
-        count[length] += views
-
-    outfile.write(str(len(count)) +'\t' +
-                  str(sum(count.keys())) +'\t' +
-                  str(sum(count.values())) +'\n')
-    for l,v in count.most_common():
-        outfile.write(str(l) +'\t' +str(v) +'\n')
+        l = l.rstrip()
+        # video ID
+        videoID = l.split('|')[videoID_index]
+        # video length
+        hms = [int(hms) for hms in l.split('|')[length_index].split(':')]
+        if len(hms) == 1:
+            length = hms[0]
+        elif len(hms) == 2:
+            length = hms[0]*60 + hms[1]
+        elif len(hms) == 3:
+            length = hms[0]*3600 + hms[1]*60 + hms[2]
+        else:
+            print('unparsed time')
+        if length > MAXLENGTH:
+            print('length cut from ' + str(length) + ' to ' + str(MAXLENGTH))
+            length = MAXLENGTH
+        # video view count
+        views = int(l.split('|')[views_index])
+        vids.append((videoID, length, views))
+    # sort by descending viewcount to speed up lookups
+    vids.sort(key=lambda x:x[2], reverse=True)
+    # write metadata
+    outfile.write(str(len(vids)) +'\t' +
+                  str(sum([v[1] for v in vids])) +'\t' +
+                  str(sum([v[2] for v in vids])) +'\n')
+    for vid, l, v in vids:
+        outfile.write(vid + '\t' + str(l) +'\t' +str(v) +'\n')
 
     infile.close()
     outfile.close()
 
+# Daum Food and Travel Categories
+# Format: video_id | upload_date | length | user_id | recommended | views
 ifn = "yt_daum_data/Daum_Food_20070403.txt"
 ofn = "daum_food_freqs.txt"
-parse_daum()
+parse(0, 2, 5)
 ifn = "yt_daum_data/Daum_Travel_20070412.txt"
 ofn = "daum_travel_freqs.txt"
-parse_daum()
-
+parse(0, 2, 5)
 # YouTube Entertainment Category
 # Format: url | length | views | ratings | stars
 ifn = "yt_daum_data/YoutubeEntDec212006.txt"
 ofn = "yt_ent_freqs.txt"
-infile = open(ifn)
-outfile = open(ofn, 'w')
-count = collections.Counter()
-for l in infile:
-    hms = [int(hms) for hms in l.split('|')[1].split(':')]
-    if len(hms) == 1:
-        length = hms[0]
-    elif len(hms) == 2:
-        length = hms[0]*60 + hms[1]
-    elif len(hms) == 3:
-        length = hms[0]*3600 + hms[1]*60 + hms[2]
-    else:
-        print('unpaused time')
-    if length > MAXLENGTH:
-        length = MAXLENGTH
-        print('length cut')
-    views = int(l.split('|')[2])
-    count[length] += views
-outfile.write(str(len(count)) +'\t' +
-              str(sum(count.keys())) +'\t' +
-              str(sum(count.values())) +'\n')
-for l,v in count.most_common():
-    outfile.write(str(l) +'\t' +str(v) +'\n')
-infile.close()
-outfile.close()
-
+parse(0, 1, 2)
 # YouTube Science & Technology Category
 # Format: url | length | views1 | ratings1 | user_id | upload_date | views2 | comments2 | favorited2 | ratings2 | stars2 | honors2 | links2 | related2
 ifn = "yt_daum_data/YoutubeSciJan162007.txt"
 ofn = "yt_sci_freqs.txt"
-infile = open(ifn)
-outfile = open(ofn, 'w')
-count = collections.Counter()
-for l in infile:
-    hms = [int(hms) for hms in l.split('|')[1].split(':')]
-    if len(hms) == 1:
-        length = hms[0]
-    elif len(hms) == 2:
-        length = hms[0]*60 + hms[1]
-    elif len(hms) == 3:
-        length = hms[0]*3600 + hms[1]*60 + hms[2]
-    else:
-        print('unpaused time')
-    if length > MAXLENGTH:
-        length = MAXLENGTH
-        print('length cut')
-    views = int(l.split('|')[2])
-    count[length] += views
-outfile.write(str(len(count)) +'\t' +
-              str(sum(count.keys())) +'\t' +
-              str(sum(count.values())) +'\n')
-for l,v in count.most_common():
-    outfile.write(str(l) +'\t' +str(v) +'\n')
-infile.close()
-outfile.close()
+parse(0, 1, 2)
 
