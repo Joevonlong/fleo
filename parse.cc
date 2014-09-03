@@ -9,7 +9,7 @@ const uint64_t bitRate = 800000;
 unsigned long arraySize;
 int viewsTotal;
 uint64_t* lengths;
-int* views;
+int* cumulativeViews;
 
 void loadVideoLengthFile() {
     std::string line;
@@ -17,14 +17,22 @@ void loadVideoLengthFile() {
     std::ifstream freqFile; // default: input from file
     freqFile.open("yt_sci_freqs.txt");
 
-//    parse first line
+    // parse first line (metadata)
     freqFile >> arraySize >> tmp >> viewsTotal;
     lengths = new uint64_t[arraySize];
-    views = new int[arraySize];
+    cumulativeViews = new int[arraySize];
 
+    // parse subsequent lines
     unsigned long i = 0;
-    while (freqFile >> lengths[i] >> views[i]) {
-        //EV << lengths[i] << '\t' << views[i] << endl;
+    while (freqFile >> lengths[i] >> tmp) {
+        //EV << lengths[i] << '\t' << cumulativeViews[i] << endl;
+        // keep rolling sum to avoid repeated subtractions in getVideoSize()
+        if (i != 0) {
+            cumulativeViews[i] = cumulativeViews[i-1] + tmp;
+        }
+        else {
+            cumulativeViews[i] = tmp;
+        }
         i++;
     }
     freqFile.close();
@@ -37,11 +45,9 @@ uint64_t getVideoSize() {
     // YT ent has 3.7 bil views. could try to hack in unsigned int or move to
     // different randomiser.
     int view = intuniform(1, viewsTotal); // crashes if unsigned
-    while (view >= 0) {
-        view -= views[i];
+    while (view >= cumulativeViews[i]) {
         i++;
     }
-    i--;
     if (lengths[i] >= UINT64_MAX/bitRate) { // 2^64/800k
         return UINT64_MAX;
     }
