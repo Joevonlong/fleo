@@ -4,7 +4,7 @@ import re
 
 fn = "rocketfuel_maps_cch.tar.gz"
 archive = tarfile.open(fn)
-asn = '4755'
+asn = '1221.r0'
 file0 = archive.extractfile(asn+'.cch')
 
 class Node:
@@ -20,16 +20,17 @@ class Node:
         self.ext = int(ext) if ext else 0
         self.nuids = [int(nuid) for nuid in nuids]
         if len(nuids) != self.num_neigh:
-            raise ValueError
+            pass
+            #print("len(nuids) != num_neigh")
+            #raise ValueError
         self.euids = [int(euid) for euid in euids]
         if len(self.euids) != self.ext:
-            raise ValueError
+            pass
+            #raise ValueError(self.uid, self.euids, self.ext)
         self.name = name
         self.alias = True if alias=='!' else False
         self.rn = int(rn)
         self.assignment = None
-        if len(nuids) != num_neigh:
-            print("len(nuids) != num_neigh")
 
 class Ext:
     def __init__(self, euid, address, rn):
@@ -99,9 +100,9 @@ uid_re = re.compile(r'(?P<uid>\d+) '
                     r'(?P<dns>\+)? '
                     r'(?P<bb>bb)?\t'
                     r'\((?P<num_neigh>\d+)\) '
-                    r'(&(?P<ext>\d+) )?-> '
+                    r'(&(?P<ext>\d+) )?->\s+'
                     r'(<(?P<nuid>[\d<> ]+)> )?'
-                    r'(\{(?P<euid>[-\d{} ]+)\} )?\t'
+                    r'(\{(?P<euid>[-\d{} ]+)\} )?\s'
                     r'=(?P<name_alias>\S+) '
                     r'r(?P<rn>\d+)'
                     )
@@ -140,7 +141,8 @@ for line in file0:
             Ext(int(m.group('euid')), m.group('address'), int(m.group('rn')))
             )
         continue
-    print(line) # unrecognised line
+    print('unrecognised line:')
+    print(line)
 print('parsed '+str(len(asys.nodes))+' internal nodes')
 print('parsed '+str(len(exts))+' external nodes')
 
