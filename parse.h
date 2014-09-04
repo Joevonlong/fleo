@@ -1,3 +1,3 @@
 void loadVideoLengthFile();
-unsigned long long getVideoSize();
-
+uint64_t getVideoSize();
+int getCustomVideoID();

@@ -46,19 +46,19 @@ def parse(videoID_index, length_index, views_index):
 # Daum Food and Travel Categories
 # Format: video_id | upload_date | length | user_id | recommended | views
 ifn = "yt_daum_data/Daum_Food_20070403.txt"
-ofn = "daum_food_freqs.txt"
+ofn = "freqs_daum_food.txt"
 parse(0, 2, 5)
 ifn = "yt_daum_data/Daum_Travel_20070412.txt"
-ofn = "daum_travel_freqs.txt"
+ofn = "freqs_daum_travel.txt"
 parse(0, 2, 5)
 # YouTube Entertainment Category
 # Format: url | length | views | ratings | stars
 ifn = "yt_daum_data/YoutubeEntDec212006.txt"
-ofn = "yt_ent_freqs.txt"
+ofn = "freqs_yt_ent.txt"
 parse(0, 1, 2)
 # YouTube Science & Technology Category
 # Format: url | length | views1 | ratings1 | user_id | upload_date | views2 | comments2 | favorited2 | ratings2 | stars2 | honors2 | links2 | related2
 ifn = "yt_daum_data/YoutubeSciJan162007.txt"
-ofn = "yt_sci_freqs.txt"
+ofn = "freqs_yt_sci.txt"
 parse(0, 1, 2)
 
