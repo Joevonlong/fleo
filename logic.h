@@ -4,8 +4,9 @@
 
 class Logic : public cSimpleModule
 {
-protected:
 public:
-  std::map<std::string, cGate*> nextGate; // maps user index to next cGate*
+    std::map<std::string, cGate*> nextGate; // maps user index to next cGate*
+protected:
+    int64_t checkCache(int customID);
 };
 

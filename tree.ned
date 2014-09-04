@@ -145,6 +145,7 @@ module Beyond extends Router
         @display("i=block/server,red");
     submodules:
         beyond: BeyondLogic;
+        cache: Cache;
     connections:
         for i=0..sizeof(in)-1 {
             beyond.gate++ <--> buffer[i].logicIO;

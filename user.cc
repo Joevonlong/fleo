@@ -39,7 +39,7 @@ void User::idle()
 void User::sendRequest()
 {
     Request *req = new Request("request", requestKind); // use user[] index as message kind
-    req->setCustomID(getCustomVideoID());
+    req->setCustomID(getRandCustomVideoID());
     if (message_switching) {
         req->setSize(requestingBits);
     }

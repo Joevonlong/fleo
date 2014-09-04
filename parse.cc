@@ -57,7 +57,7 @@ uint64_t getVideoSize() {
     }
 }
 
-int getCustomVideoID() {
+int getRandCustomVideoID() {
     int i = 0;
     // intuniform returns SIM_API int which is signed 32 bits. If total views
     // exceed 2.1 bil this would fail.
@@ -68,5 +68,13 @@ int getCustomVideoID() {
         i++;
     }
     return i;
+}
+
+unsigned long getMaxCustomVideoID() {
+    return arraySize;
+}
+
+uint64_t getVideoBitSize(int customID) {
+    return lengths[customID]*bitRate;
 }
 

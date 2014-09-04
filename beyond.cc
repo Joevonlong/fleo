@@ -5,14 +5,20 @@
 #include "reply_m.h"
 #include "beyond.h"
 #include "routing.h"
+#include "cache.h"
+#include "parse.h"
 
 Define_Module(BeyondLogic);
 std::string beyondPath;
 
 void BeyondLogic::initialize()
 {
-  EV << "gatesize" << gateSize("gate") << endl;
-  beyondPath = getFullPath();
+    beyondPath = getFullPath();
+    // populate cache with all content
+    Cache* cache = (Cache*)(getParentModule()->getSubmodule("cache"));
+    for (unsigned long maxID = getMaxCustomVideoID(); maxID != ULONG_MAX; maxID--) {
+        cache->setCached(maxID, true);
+    }
 }
 
 void BeyondLogic::handleMessage(cMessage *msg)
@@ -21,6 +27,9 @@ void BeyondLogic::handleMessage(cMessage *msg)
   // if request
   if (msg->getKind() == requestKind) {
     Request *req = check_and_cast<Request*>(msg);
+
+    EV << "cache check result: " << checkCache(req->getCustomID()) << endl;
+
     uint64_t size = req->getSize();
     const char* msgSrc = req->getSource();
     char* newDest = strdup(msgSrc); //new char[strlen(msgSrc)];
