@@ -57,6 +57,8 @@ simple Buffer
         output transmit;
 }
 
+simple Cache {}
+
 simple Logic
 {
     parameters:
@@ -77,6 +79,8 @@ simple BeyondLogic extends Logic
 
 simple InternalLogic extends Logic
 {
+    parameters:
+        bool isCache = default(false);
     @class(InternalLogic);
 }
 
@@ -97,8 +101,8 @@ simple PoPLogic extends InternalLogic
 module Router
 {
     parameters:
-        string name;
-        int rn;
+        string name = default("");
+        int rn = default(-1);
     gates:
         input in[];
         output out[];
@@ -150,8 +154,8 @@ module Beyond extends Router
 simple User
 {
     parameters:
-        string name;
-        int rn;
+        string name = default("");
+        int rn = default(-1);
         volatile double idleTime @unit(s);   // delay before next request
         volatile double requestSize;
         @signal[idle](type="simtime");
@@ -160,13 +164,14 @@ simple User
   //      @statistic[request-size](title="request size"; source="request"; record=vector,histogram; interpolationmode=none);
         @display("i=block/user");
     gates:
-        inout gate;
+        input in;
+        output out;
 }
 
 network Tree
 {
     parameters:
-        int fanout = default(2);
+        int fanout;
         bool coreRing = default(true);
     types:
     submodules:
@@ -191,8 +196,14 @@ network Tree
             core[i].in++ <-- OC3 <-- pop[j].out++;
         };
         for i=0..fanout^2-1, for j=(i*fanout)..(i+1)*fanout-1 {
-            pop[i].out++ --> Cat3 --> user[j].gate$i;
-            pop[i].in++ <-- Cat3 <-- user[j].gate$o;
+            pop[i].out++ --> Cat3 --> user[j].in;
+            pop[i].in++ <-- Cat3 <-- user[j].out;
         };
+}
+
+network Test
+{
+    submodules:
+        tree: Tree;
 }
 
