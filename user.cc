@@ -38,17 +38,18 @@ void User::idle()
 
 void User::sendRequest()
 {
-  Request *req = new Request("request", 123); // use user[] index as message kind
-  if (message_switching) {
-    req->setSize(requestingBits);
-  }
-  else {
-    req->setSize(std::min(requestingBits, packetBitSize)); //req->setSize(par("requestSize"));
-  }
-  req->setSource(getFullPath().c_str());
-  req->setDestination(beyondPath.c_str());
-  req->setBitLength(1); // request packet 1 bit long only
-  send(req, "out");
+    Request *req = new Request("request", requestKind); // use user[] index as message kind
+    req->setCustomID(getCustomVideoID());
+    if (message_switching) {
+        req->setSize(requestingBits);
+    }
+    else {
+        req->setSize(std::min(requestingBits, packetBitSize)); //req->setSize(par("requestSize"));
+    }
+    req->setSource(getFullPath().c_str());
+    req->setDestination(beyondPath.c_str());
+    req->setBitLength(1); // request packet 1 bit long only
+    send(req, "out");
 }
 
 void User::handleMessage(cMessage *msg)

@@ -19,7 +19,7 @@ void BeyondLogic::handleMessage(cMessage *msg)
 {
   Reply* reply = NULL;
   // if request
-  if (msg->getKind() == 123) {
+  if (msg->getKind() == requestKind) {
     Request *req = check_and_cast<Request*>(msg);
     uint64_t size = req->getSize();
     const char* msgSrc = req->getSource();
@@ -30,7 +30,7 @@ void BeyondLogic::handleMessage(cMessage *msg)
     delete msg;
 
     // construct reply
-    reply = new Reply("reply", 321);
+    reply = new Reply("reply", replyKind);
     reply->setBitLength(size);
     reply->setDestination(newDest);
   }

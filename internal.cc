@@ -35,7 +35,7 @@ void InternalLogic::handleMessage(cMessage *msg)
     send(msg, "gate$o", 0);
   }
   */
-  if (msg->getKind() == 123) {
+  if (msg->getKind() == requestKind) {
     // logging
     Request *req = check_and_cast<Request*>(msg);
     uint64_t size = req->getSize();
@@ -55,7 +55,7 @@ void InternalLogic::handleMessage(cMessage *msg)
       //send(msg, "gate$o", 0);
 //    }
   }
-  else if (msg->getKind() == 321) {
+  else if (msg->getKind() == replyKind) {
     Reply *reply = check_and_cast<Reply*>(msg);
     cGate* outGate = getNextGate(this, reply);
     send(reply, outGate);
