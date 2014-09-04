@@ -4,7 +4,7 @@ import re
 
 fn = "rocketfuel_maps_cch.tar.gz"
 archive = tarfile.open(fn)
-asn = '1221.r1'
+asn = '1221'
 file0 = archive.extractfile(asn+'.cch')
 
 class Node:
@@ -152,7 +152,7 @@ print('parsed '+str(len(exts))+' external nodes')
 
 def write_to_ned():
     f = open('as'+asn+'.ned', 'w')
-    f.write('network AS'+asn+'\n{\n')
+    f.write('network AS'+asn.replace('.','')+'\n{\n')
 
     # take most connected node to be server
     asys.get_most_connected().assignment = 'beyond'
