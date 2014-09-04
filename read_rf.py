@@ -4,7 +4,7 @@ import re
 
 fn = "rocketfuel_maps_cch.tar.gz"
 archive = tarfile.open(fn)
-asn = '1221.r0'
+asn = '1221.r1'
 file0 = archive.extractfile(asn+'.cch')
 
 class Node:
@@ -102,12 +102,12 @@ uid_re = re.compile(r'(?P<uid>\d+) '
                     r'\((?P<num_neigh>\d+)\) '
                     r'(&(?P<ext>\d+) )?->\s+'
                     r'(<(?P<nuid>[\d<> ]+)> )?'
-                    r'(\{(?P<euid>[-\d{} ]+)\} )?\s'
+                    r'(\{(?P<euid>[-\d{} ]+)\} )?\s?'
                     r'=(?P<name_alias>\S+) '
                     r'r(?P<rn>\d+)'
                     )
 
-euid_re = re.compile(r'-(?P<euid>\d+) '
+euid_re = re.compile(r'-(?P<euid>\d+)\s+'
                      r'=(?P<address>\S+) '
                      r'r(?P<rn>\d+)'
                      )
@@ -117,6 +117,10 @@ exts = []
 for line in file0:
     m = uid_re.match(line.decode('UTF-8'))
     if m != None:
+        if m.group('nuid'):
+            neigh_uids = [int(x) for x in m.group('nuid').split('> <')]
+        else:
+            neigh_uids = []
         if m.group('euid'):
             ext_uids = [int(x) for x in m.group('euid').split('} {')]
         else:
@@ -130,7 +134,7 @@ for line in file0:
         asys.add_node(
             Node(int(m.group('uid')), m.group('loc'), m.group('dns'),
                  m.group('bb'), int(m.group('num_neigh')), m.group('ext'),
-                 [int(x) for x in m.group('nuid').split('> <')], ext_uids,
+                 neigh_uids, ext_uids,
                  name, alias, int(m.group('rn'))
                  )
             )
