@@ -36,12 +36,14 @@ void BeyondLogic::handleMessage(cMessage *msg)
     strcpy(newDest, msgSrc);
     EV << "Received request from user " << msgSrc << " for " << size << "b\n";
     emit(requestSignal, (double)size);
-    delete msg;
 
     // construct reply
     reply = new Reply("reply", replyKind);
-    reply->setBitLength(size);
+    EV << "reply size: " << checkCache(req->getCustomID()) << endl;
+    reply->setBitLength(checkCache(req->getCustomID()));
     reply->setDestination(newDest);
+
+    delete msg;
   }
   // choose gate using routing
   cGate* outGate = getNextGate(this, reply);
