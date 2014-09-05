@@ -1,11 +1,14 @@
 import fileinput
 import tarfile
 import re
+import collections
 
+# global vars
 fn = "rocketfuel_maps_cch.tar.gz"
 archive = tarfile.open(fn)
 asn = '1221'
 file0 = archive.extractfile(asn+'.cch')
+num_replica = 10
 
 class Node:
     """Properties follow those detailed in README.cch"""
@@ -74,6 +77,7 @@ class AS:
         reachable_uids = set([uid])
         reachable_links = set()
         prev_num_reachable = -1
+        print('Pruning unreachable nodes...')
         while prev_num_reachable != len(reachable_uids):
             prev_num_reachable = len(reachable_uids)
             print(str(prev_num_reachable)+' nodes reachable')
@@ -84,7 +88,8 @@ class AS:
                 elif n2 in reachable_uids:
                     reachable_uids.add(n1)
                     reachable_links.add((n1,n2))
-        print(str(len(reachable_uids))+' nodes reachable')
+        print('No more reachable nodes: ' +
+              str(len(reachable_uids)) + ' nodes reached')
         self.nodes = [self.uids[uid] for uid in reachable_uids]
         self.links = reachable_links
 
@@ -114,46 +119,43 @@ euid_re = re.compile(r'-(?P<euid>\d+)\s+'
 
 asys = AS()
 exts = []
-for line in file0:
-    m = uid_re.match(line.decode('UTF-8'))
-    if m != None:
-        if m.group('nuid'):
-            neigh_uids = [int(x) for x in m.group('nuid').split('> <')]
-        else:
-            neigh_uids = []
-        if m.group('euid'):
-            ext_uids = [int(x) for x in m.group('euid').split('} {')]
-        else:
-            ext_uids = []
-        if m.group('name_alias')[-1] == '!':
-            name = m.group('name_alias')[:-1]
-            alias = '!'
-        else:
-            name = m.group('name_alias')
-            alias = None
-        asys.add_node(
-            Node(int(m.group('uid')), m.group('loc'), m.group('dns'),
-                 m.group('bb'), int(m.group('num_neigh')), m.group('ext'),
-                 neigh_uids, ext_uids,
-                 name, alias, int(m.group('rn'))
-                 )
-            )
-        continue
-    m = euid_re.match(line.decode('UTF-8'))
-    if m != None:
-        exts.append(
-            Ext(int(m.group('euid')), m.group('address'), int(m.group('rn')))
-            )
-        continue
-    print('unrecognised line:')
-    print(line)
-print('parsed '+str(len(asys.nodes))+' internal nodes')
-print('parsed '+str(len(exts))+' external nodes')
+def parse():
+    for line in file0:
+        m = uid_re.match(line.decode('UTF-8'))
+        if m != None:
+            if m.group('nuid'):
+                neigh_uids = [int(x) for x in m.group('nuid').split('> <')]
+            else:
+                neigh_uids = []
+            if m.group('euid'):
+                ext_uids = [int(x) for x in m.group('euid').split('} {')]
+            else:
+                ext_uids = []
+            if m.group('name_alias')[-1] == '!':
+                name = m.group('name_alias')[:-1]
+                alias = '!'
+            else:
+                name = m.group('name_alias')
+                alias = None
+            asys.add_node(
+                Node(int(m.group('uid')), m.group('loc'), m.group('dns'),
+                     m.group('bb'), int(m.group('num_neigh')), m.group('ext'),
+                     neigh_uids, ext_uids, name, alias, int(m.group('rn'))
+                     )
+                )
+            continue
+        m = euid_re.match(line.decode('UTF-8'))
+        if m != None:
+            exts.append(
+                Ext(int(m.group('euid')), m.group('address'), int(m.group('rn')))
+                )
+            continue
+        print('unrecognised line:')
+        print(line)
+    print('parsed '+str(len(asys.nodes))+' internal nodes')
+    print('parsed '+str(len(exts))+' external nodes')
 
-def write_to_ned():
-    f = open('as'+asn+'.ned', 'w')
-    f.write('network AS'+asn.replace('.','')+'\n{\n')
-
+def manip_topo():
     # take most connected node to be server
     asys.get_most_connected().assignment = 'beyond'
 
@@ -168,6 +170,29 @@ def write_to_ned():
             node.assignment = 'user'
             user_count += 1
     print(str(user_count)+' nodes assigned as users')
+
+    # place a replica in descending order of cities/locs with most users
+    # - find candidate replica positions (most connected nodes)
+    loc_centres = {}
+    for n in asys.nodes:
+        if n.loc in loc_centres.keys():
+            if n.num_neigh > loc_centres[n.loc].num_neigh:
+                loc_centres[n.loc] = n
+        else:
+            loc_centres[n.loc] = n
+    # - order cities/locs by number of users
+    loc_users = collections.Counter()
+    for n in asys.nodes:
+        if n.assignment == 'user':
+            loc_users[n.loc] += 1
+    # - place cache in centres of locs with most users
+    for (loc, users) in loc_users.most_common()[:num_replica]:
+        loc_centres[loc].has_cache = True
+        print('cache assigned to UID '+str(loc_centres[loc].uid)+' for '+loc)
+
+def write_to_ned():
+    f = open('as'+asn+'.ned', 'w')
+    f.write('network AS'+asn.replace('.','')+'\n{\n')
 
     # submodule section
     f.write(' '*4+'submodules:\n')
@@ -223,5 +248,11 @@ def write_to_ned():
     f.write('}\n\n')
     f.close()
 
-write_to_ned()
+def main():
+    parse()
+    manip_topo()
+    write_to_ned()
+
+if __name__ == '__main__':
+    main()
 
