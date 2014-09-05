@@ -8,7 +8,7 @@ fn = "rocketfuel_maps_cch.tar.gz"
 archive = tarfile.open(fn)
 asn = '1221'
 file0 = archive.extractfile(asn+'.cch')
-num_replica = 10
+num_replica = 15
 
 class Node:
     """Properties follow those detailed in README.cch"""
@@ -188,7 +188,8 @@ def manip_topo():
     # - place cache in centres of locs with most users
     for (loc, users) in loc_users.most_common()[:num_replica]:
         loc_centres[loc].has_cache = True
-        print('cache assigned to UID '+str(loc_centres[loc].uid)+' for '+loc)
+        print('cache assigned to UID '+str(loc_centres[loc].uid)+
+              ' for '+loc+' ('+str(users)+' users)')
 
 def write_to_ned():
     f = open('as'+asn+'.ned', 'w')
@@ -200,16 +201,19 @@ def write_to_ned():
     for node in asys.nodes:
         if node.assignment == 'beyond':
             f.write(' '*8+'beyond'+str(node.uid)+': Beyond{name="'
-                    +node.name+'"; rn='+str(node.rn)+';};\n')
+                    +node.name+'"; rn='+str(node.rn)+';')
         elif node.assignment == 'user':
             f.write(' '*8+'user'+str(node.uid)+': User{name="'
-                    +node.name+'"; rn='+str(node.rn)+';};\n')
+                    +node.name+'"; rn='+str(node.rn)+';')
         elif node.bb:
             f.write(' '*8+'core'+str(node.uid)+': Core{name="'
-                    +node.name+'"; rn='+str(node.rn)+';};\n')
+                    +node.name+'"; rn='+str(node.rn)+';')
         else:
             f.write(' '*8+'access'+str(node.uid)+': PoP{name="'
-                    +node.name+'"; rn='+str(node.rn)+';};\n')
+                    +node.name+'"; rn='+str(node.rn)+';')
+        if (getattr(node, 'has_cache', False) == True):
+            f.write(' hasCache=true; @display("i=block/routing,green");')
+        f.write('};\n')
 
     # connection section
     f.write(' '*4+'connections:\n')

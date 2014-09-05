@@ -79,8 +79,6 @@ simple BeyondLogic extends Logic
 
 simple InternalLogic extends Logic
 {
-    parameters:
-        bool isCache = default(false);
     @class(InternalLogic);
 }
 
@@ -103,11 +101,13 @@ module Router
     parameters:
         string name = default("");
         int rn = default(-1);
+        bool hasCache = default(false);
     gates:
         input in[];
         output out[];
     submodules:
         buffer[sizeof(in)]: Buffer;
+        cache: Cache;
     connections:
         for i=0..sizeof(in)-1 {
             buffer[i].transmit --> out++;
@@ -145,7 +145,6 @@ module Beyond extends Router
         @display("i=block/server,red");
     submodules:
         beyond: BeyondLogic;
-        cache: Cache;
     connections:
         for i=0..sizeof(in)-1 {
             beyond.gate++ <--> buffer[i].logicIO;
