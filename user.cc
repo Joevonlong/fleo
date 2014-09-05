@@ -40,12 +40,7 @@ void User::sendRequest()
 {
     Request *req = new Request("request", requestKind); // use user[] index as message kind
     req->setCustomID(getRandCustomVideoID());
-    if (message_switching) {
-        req->setSize(requestingBits);
-    }
-    else {
-        req->setSize(std::min(requestingBits, packetBitSize)); //req->setSize(par("requestSize"));
-    }
+    EV << "Sending request for Custom ID " << req->getCustomID() << endl;
     req->setSource(getFullPath().c_str());
     req->setDestination(beyondPath.c_str());
     req->setBitLength(1); // request packet 1 bit long only
@@ -55,11 +50,10 @@ void User::sendRequest()
 void User::handleMessage(cMessage *msg)
 {
   if (msg->isSelfMessage()) { // if idle timer is back
-    uint64_t size = getVideoSize();
-    EV << "Starting request for " << size << " bits\n";
+    //uint64_t size = getVideoSize();
     //emit(requestSignal, static_cast<double>(size));
-    requestHistogram.collect(size);
-    requestingBits = size;
+    //requestHistogram.collect(size);
+    //requestingBits = size;
     sendRequest();
   }
   else { // else received reply

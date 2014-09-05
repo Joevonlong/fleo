@@ -38,8 +38,9 @@ void InternalLogic::handleMessage(cMessage *msg)
   if (msg->getKind() == requestKind) {
     // logging
     Request *req = check_and_cast<Request*>(msg);
-    uint64_t size = req->getSize();
-    emit(requestSignal, (double)size);
+    //uint64_t size = req->getSize();
+    //emit(requestSignal, (double)size);
+
 //    cChannel *upstream =
 //      gate("gate$o", 0)->
 //      getTransmissionChannel();

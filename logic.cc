@@ -5,17 +5,14 @@
 Define_Module(Logic);
 
 int64_t Logic::checkCache(int customID) {
-    Cache* cache = (Cache*)(getParentModule()->getSubmodule("cache"));
-    if (cache == NULL) {
+    if (getParentModule()->par("hasCache").boolValue() == false) {
         return -1; // module has no cache
     }
+    else if (((Cache*)(getParentModule()->getSubmodule("cache")))->isCached(customID)) {
+        return getVideoBitSize(customID); // should be video's bitsize
+    }
     else {
-        if (cache->isCached(customID)) {
-            return getVideoBitSize(customID); // should be video's bitsize
-        }
-        else {
-            return 0; // requested item is not cached
-        }
+        return 0; // requested item is not cached
     }
 }
 
