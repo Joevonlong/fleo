@@ -100,6 +100,7 @@ module Router
 {
     parameters:
         string name = default("");
+        string loc = default("");
         int rn = default(-1);
         bool hasCache = default(false);
     gates:
@@ -155,6 +156,7 @@ simple User
 {
     parameters:
         string name = default("");
+        string loc = default("");
         int rn = default(-1);
         volatile double idleTime @unit(s);   // delay before next request
         volatile double requestSize;

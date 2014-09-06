@@ -6,7 +6,7 @@ import collections
 # global vars
 fn = "rocketfuel_maps_cch.tar.gz"
 archive = tarfile.open(fn)
-asn = '1221'
+asn = '1221.r0'
 file0 = archive.extractfile(asn+'.cch')
 num_replica = 15
 
@@ -187,6 +187,8 @@ def manip_topo():
             loc_users[n.loc] += 1
     # - place cache in centres of locs with most users
     for (loc, users) in loc_users.most_common()[:num_replica]:
+        if loc_centres[loc].assignment == 'user':
+            continue # in case only 1 node in loc which is also user
         loc_centres[loc].has_cache = True
         print('cache assigned to UID '+str(loc_centres[loc].uid)+
               ' for '+loc+' ('+str(users)+' users)')
@@ -201,16 +203,18 @@ def write_to_ned():
     for node in asys.nodes:
         if node.assignment == 'beyond':
             f.write(' '*8+'beyond'+str(node.uid)+': Beyond{name="'
-                    +node.name+'"; rn='+str(node.rn)+';')
+                    +node.name+'";')
         elif node.assignment == 'user':
             f.write(' '*8+'user'+str(node.uid)+': User{name="'
-                    +node.name+'"; rn='+str(node.rn)+';')
+                    +node.name+'";')
         elif node.bb:
             f.write(' '*8+'core'+str(node.uid)+': Core{name="'
-                    +node.name+'"; rn='+str(node.rn)+';')
+                    +node.name+'";')
         else:
             f.write(' '*8+'access'+str(node.uid)+': PoP{name="'
-                    +node.name+'"; rn='+str(node.rn)+';')
+                    +node.name+'";')
+        f.write(' loc="'+node.loc+'";')
+        f.write(' rn='+str(node.rn)+';')
         if (getattr(node, 'has_cache', False) == True):
             f.write(' hasCache=true; @display("i=block/routing,green");')
         f.write('};\n')
