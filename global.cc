@@ -8,15 +8,42 @@ simsignal_t idleSignal;
 simsignal_t requestSignal;
 int requestKind;
 int replyKind;
+std::map<std::string, std::string> locCaches;
 
-void Global::initialize()
+int Global::numInitStages () const {return 2;}
+
+void Global::initialize(int stage)
 {
-    idleSignal = registerSignal("idle"); // name assigned to signal ID
-    requestSignal = registerSignal("request"); // name assigned to signal ID
-    requestKind = 123;
-    replyKind = 321;
-    topoSetup();
-    loadVideoLengthFile();
-    EV << static_cast<double>(UINT64_MAX) << endl;
+    if (stage == 0) {
+        idleSignal = registerSignal("idle"); // name assigned to signal ID
+        requestSignal = registerSignal("request"); // name assigned to signal ID
+        requestKind = 123;
+        replyKind = 321;
+        topoSetup();
+        loadVideoLengthFile();
+        EV << static_cast<double>(UINT64_MAX) << endl;
+    }
+    else if (stage == 1) {
+        loadCacheLocs();
+    }
+}
+
+void Global::loadCacheLocs() {
+    for (cModule::SubmoduleIterator i(getParentModule()); !i.end(); i++) {
+        cModule *subModule = i();
+        if (strstr(subModule->getName(), "pop") ||
+            strstr(subModule->getName(), "access") ||
+            strstr(subModule->getName(), "core") ||
+            strstr(subModule->getName(), "beyond")) {
+            EV << subModule->par("hasCache").boolValue() << endl;
+            if (subModule->par("hasCache").boolValue() == true) {
+                locCaches[subModule->par("loc").stringValue()] = subModule->getFullName();
+            }
+        }
+    }
+    EV << "locCaches.size() is " << locCaches.size() << endl;
+    for (std::map<std::string, std::string>::iterator it=locCaches.begin(); it!=locCaches.end(); it++) {
+        EV << it->first << " => " << it->second << endl;
+    }
 }
 
