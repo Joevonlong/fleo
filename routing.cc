@@ -3,17 +3,17 @@
 cTopology topo;
 
 cGate* getNextGate(Logic* current, Request* request) {
-  const char* dest = request->getDestination();
-  //EV << dest << endl;
+  int destID = request->getDestinationID();
+  //EV << destID << endl;
 
   // check if answer is not cached
-  if (!current->nextGate[dest]) {
+  if (!current->nextGate[destID]) {
     EV << "next gate not cached\n";
 //    char userPath[20];
 //    sprintf(userPath, "Tree.user[%d]", userIndex);
     //EV << "userPath " << userPath << endl;
     cTopology::Node *destNode =
-      topo.getNodeFor(simulation.getModuleByPath(dest));
+      topo.getNodeFor(simulation.getModule(destID));
     EV << "destnode " << destNode << endl;
     topo.calculateUnweightedSingleShortestPathsTo(destNode);
     cTopology::Node *currentNode = topo.getNodeFor(current);
@@ -22,27 +22,26 @@ cGate* getNextGate(Logic* current, Request* request) {
     //  EV << "next " << next << endl;
 
     // cache the answer
-    current->nextGate[dest] = next->getLocalGate();
+    current->nextGate[destID] = next->getLocalGate();
   }
   else {
     EV << "next gate is cached\n";
   }
-  return current->nextGate[dest];
+  return current->nextGate[destID];
 }
 
 cGate* getNextGate(Logic* current, Reply* reply) {
   // get destination user index
-  const char* dest = reply->getDestination();
-//EV << "userindex " << userIndex << endl;
+  int destID = reply->getDestinationID();
 
   //check if answer is not cached
-  if (!current->nextGate[dest]) {
+  if (!current->nextGate[destID]) {
     EV << "next gate not cached\n";
 //    char userPath[20];
 //    sprintf(userPath, "Tree.user[%d]", userIndex);
     //EV << "userPath " << userPath << endl;
     cTopology::Node *userNode =
-      topo.getNodeFor(simulation.getModuleByPath(dest));
+      topo.getNodeFor(simulation.getModule(destID));
     //  EV << "usernode " << userNode << endl;
     topo.calculateUnweightedSingleShortestPathsTo(userNode);
     cTopology::Node *currentNode = topo.getNodeFor(current);
@@ -51,12 +50,12 @@ cGate* getNextGate(Logic* current, Reply* reply) {
     //  EV << "next " << next << endl;
 
     // cache the answer
-    current->nextGate[dest] = next->getLocalGate();
+    current->nextGate[destID] = next->getLocalGate();
   }
   else {
     EV << "next gate is cached\n";
   }
-  return current->nextGate[dest];
+  return current->nextGate[destID];
 }
 
 bool selectFunction(cModule *mod, void *)

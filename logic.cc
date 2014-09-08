@@ -8,7 +8,7 @@ Define_Module(Logic);
 void Logic::registerSelfIfCache() {
 //    if (hasPar("hasCache")) {
         if (getParentModule()->par("hasCache").boolValue() == true) {
-            locCaches[getParentModule()->par("loc").stringValue()] = getFullPath();
+            locCaches[getParentModule()->par("loc").stringValue()] = getId();
         }
   //  }
 }

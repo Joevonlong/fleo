@@ -41,8 +41,8 @@ void User::sendRequest()
     Request *req = new Request("request", requestKind); // use user[] index as message kind
     req->setCustomID(getRandCustomVideoID());
     EV << "Sending request for Custom ID " << req->getCustomID() << endl;
-    req->setSource(getFullPath().c_str());
-    req->setDestination(locCaches[par("loc").stringValue()].c_str());
+    req->setSourceID(getId());
+    req->setDestinationID(locCaches[par("loc")]);
     req->setBitLength(1); // request packet 1 bit long only
     send(req, "out");
 }

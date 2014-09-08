@@ -38,17 +38,16 @@ void BeyondLogic::handleMessage(cMessage *msg)
     Request *req = check_and_cast<Request*>(msg);
 
     //uint64_t size = req->getSize();
-    const char* msgSrc = req->getSource();
-    char* newDest = strdup(msgSrc); //new char[strlen(msgSrc)];
-    strcpy(newDest, msgSrc);
-    EV << "Received request from user " << msgSrc << " for item #" << req->getCustomID() << endl;
+    int reqSrcID = req->getSourceID();
+    EV << "Received request from user " << simulation.getModule(reqSrcID)->getFullPath() << " for item #" << req->getCustomID() << endl;
     //emit(requestSignal, (double)size);
 
     // construct reply
     reply = new Reply("reply", replyKind);
     EV << "reply size: " << checkCache(req->getCustomID()) << endl;
     reply->setBitLength(checkCache(req->getCustomID()));
-    reply->setDestination(newDest);
+    reply->setSourceID(getId());
+    reply->setDestinationID(reqSrcID);
 
     delete msg;
   }

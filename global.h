@@ -7,7 +7,7 @@ extern simsignal_t requestSignal;
 extern int requestKind;
 extern int replyKind;
 
-extern std::map<std::string, std::string> locCaches;
+extern std::map<std::string, int> locCaches;
 
 class Global : public cSimpleModule
 {

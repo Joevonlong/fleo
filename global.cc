@@ -8,7 +8,7 @@ simsignal_t idleSignal;
 simsignal_t requestSignal;
 int requestKind;
 int replyKind;
-std::map<std::string, std::string> locCaches;
+std::map<std::string, int> locCaches;
 
 int Global::numInitStages () const {return 2;}
 
@@ -38,7 +38,7 @@ void Global::loadCacheLocs() {
         }
     }
     EV << "locCaches.size() is " << locCaches.size() << endl;
-    for (std::map<std::string, std::string>::iterator it=locCaches.begin(); it!=locCaches.end(); it++) {
+    for (std::map<std::string, int>::iterator it=locCaches.begin(); it!=locCaches.end(); it++) {
         EV << it->first << " => " << it->second << endl;
     }
 }
