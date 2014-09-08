@@ -11,14 +11,22 @@
 Define_Module(BeyondLogic);
 std::string beyondPath;
 
-void BeyondLogic::initialize()
+int BeyondLogic::numInitStages() const {return 1;}
+
+void BeyondLogic::initialize(int stage)
 {
-    beyondPath = getFullPath();
-    // populate cache with all content
-    getParentModule()->par("hasCache").setBoolValue(true);
-    Cache* cache = (Cache*)(getParentModule()->getSubmodule("cache"));
-    for (unsigned long maxID = getMaxCustomVideoID(); maxID != ULONG_MAX; maxID--) {
-        cache->setCached(maxID, true);
+    if (stage == 0) {
+        beyondPath = getFullPath();
+        EV << beyondPath << endl;
+        registerSelfIfCache();
+        // populate cache with all content
+        getParentModule()->par("hasCache").setBoolValue(true);
+        Cache* cache = (Cache*)(getParentModule()->getSubmodule("cache"));
+        for (unsigned long maxID = getMaxCustomVideoID(); maxID != ULONG_MAX; maxID--) {
+            cache->setCached(maxID, true);
+        }
+    }
+    else if (stage == 1) {
     }
 }
 

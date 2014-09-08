@@ -195,7 +195,7 @@ def manip_topo():
               ' for '+loc+' ('+str(users)+' users)')
 
 def write_to_ned():
-    f = open('as'+asn+'.ned', 'w')
+    f = open('AS'+asn+'.ned', 'w')
     f.write('network AS'+asn.replace('.','')+'\n{\n')
 
     # submodule section

@@ -9,8 +9,13 @@
 Define_Module(CoreLogic);
 Define_Module(PoPLogic);
 
-void InternalLogic::initialize()
+int InternalLogic::numInitStages() const {return 1;}
+
+void InternalLogic::initialize(int stage)
 {
+    if(stage == 0) {
+        registerSelfIfCache();
+    }
 //  requestSignal = registerSignal("request"); // name assigned to signal ID
   //queue = new cPacketQueue("Packet Queue");
 }

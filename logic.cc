@@ -1,8 +1,17 @@
 #include "cache.h"
 #include "logic.h"
 #include "parse.h"
+#include "global.h"
 
 Define_Module(Logic);
+
+void Logic::registerSelfIfCache() {
+//    if (hasPar("hasCache")) {
+        if (getParentModule()->par("hasCache").boolValue() == true) {
+            locCaches[getParentModule()->par("loc").stringValue()] = getFullPath();
+        }
+  //  }
+}
 
 int64_t Logic::checkCache(int customID) {
     if (getParentModule()->par("hasCache").boolValue() == false) {

@@ -5,6 +5,7 @@
 #include "user.h"
 #include "parse.h"
 #include "routing.h"
+#include "global.h"
 
 Define_Module(User);
 
@@ -18,14 +19,13 @@ User::~User()
 
 void User::initialize()
 {
-    EV << getFullPath() << endl;
-  requestingBits = 0;
-  requestHistogram.setName("Request Size");
-  requestHistogram.setRangeAutoUpper(0);
-  requestHistogram.setNumCells(100);
+    requestingBits = 0;
+    requestHistogram.setName("Request Size");
+    requestHistogram.setRangeAutoUpper(0);
+    requestHistogram.setNumCells(100);
 //  requestHistogram.setRange(0, UINT64_MAX);
-  idleTimer = new cMessage("idle timer");
-  idle();
+    idleTimer = new cMessage("idle timer");
+    idle();
 }
 
 void User::idle()
@@ -42,7 +42,7 @@ void User::sendRequest()
     req->setCustomID(getRandCustomVideoID());
     EV << "Sending request for Custom ID " << req->getCustomID() << endl;
     req->setSource(getFullPath().c_str());
-    req->setDestination(beyondPath.c_str());
+    req->setDestination(locCaches[par("loc").stringValue()].c_str());
     req->setBitLength(1); // request packet 1 bit long only
     send(req, "out");
 }

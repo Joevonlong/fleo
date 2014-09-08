@@ -33,7 +33,7 @@ void Global::loadCacheLocs() {
         cModule *subModule = i();
         if (subModule->hasPar("hasCache")) {
             if (subModule->par("hasCache").boolValue() == true) {
-                locCaches[subModule->par("loc").stringValue()] = subModule->getFullName();
+                //locCaches[subModule->par("loc").stringValue()] = subModule->getFullPath();
             }
         }
     }

@@ -4,9 +4,9 @@ cTopology topo;
 
 cGate* getNextGate(Logic* current, Request* request) {
   const char* dest = request->getDestination();
-//EV << "userindex " << userIndex << endl;
+  //EV << dest << endl;
 
-  //check if answer is not cached
+  // check if answer is not cached
   if (!current->nextGate[dest]) {
     EV << "next gate not cached\n";
 //    char userPath[20];
@@ -14,7 +14,7 @@ cGate* getNextGate(Logic* current, Request* request) {
     //EV << "userPath " << userPath << endl;
     cTopology::Node *destNode =
       topo.getNodeFor(simulation.getModuleByPath(dest));
-    //  EV << "usernode " << userNode << endl;
+    EV << "destnode " << destNode << endl;
     topo.calculateUnweightedSingleShortestPathsTo(destNode);
     cTopology::Node *currentNode = topo.getNodeFor(current);
     //  EV << "currentnode " << currentNode << endl;

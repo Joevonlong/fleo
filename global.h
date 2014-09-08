@@ -11,9 +11,8 @@ extern std::map<std::string, std::string> locCaches;
 
 class Global : public cSimpleModule
 {
-public:
-    int numInitStages () const;
 protected:
+    int numInitStages() const;
     virtual void initialize(int stage);
 private:
     void loadCacheLocs();
