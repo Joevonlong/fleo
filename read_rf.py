@@ -6,7 +6,7 @@ import collections
 # global vars
 fn = "rocketfuel_maps_cch.tar.gz"
 archive = tarfile.open(fn)
-asn = '1221.r0'
+asn = '4755'
 file0 = archive.extractfile(asn+'.cch')
 num_replica = 15
 
