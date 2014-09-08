@@ -1,3 +1,4 @@
+import argparse
 import fileinput
 import tarfile
 import re
@@ -6,8 +7,8 @@ import collections
 # global vars
 fn = "rocketfuel_maps_cch.tar.gz"
 archive = tarfile.open(fn)
-asn = '4755'
-file0 = archive.extractfile(asn+'.cch')
+#asn = '4755'
+#file0 = archive.extractfile(asn+'.cch')
 num_replica = 15
 
 class Node:
@@ -257,6 +258,15 @@ def write_to_ned():
     f.close()
 
 def main():
+    # read command line argument
+    parser = argparse.ArgumentParser(description='Convert rf topology to ned.')
+    parser.add_argument("asn")
+    args = parser.parse_args()
+    global asn
+    asn = args.asn
+    global file0
+    file0 = archive.extractfile(asn+'.cch')
+    # read rf file
     parse()
     manip_topo()
     write_to_ned()
