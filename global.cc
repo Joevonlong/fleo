@@ -29,14 +29,14 @@ void Global::initialize(int stage)
 }
 
 void Global::loadCacheLocs() {
-    for (cModule::SubmoduleIterator i(getParentModule()); !i.end(); i++) {
-        cModule *subModule = i();
-        if (subModule->hasPar("hasCache")) {
-            if (subModule->par("hasCache").boolValue() == true) {
-                //locCaches[subModule->par("loc").stringValue()] = subModule->getFullPath();
-            }
-        }
-    }
+//    for (cModule::SubmoduleIterator i(getParentModule()); !i.end(); i++) {
+//        cModule *subModule = i();
+//        if (subModule->hasPar("hasCache")) {
+//            if (subModule->par("hasCache").boolValue() == true) {
+//                locCaches[subModule->par("loc").stringValue()] = subModule->getFullPath();
+//            }
+//        }
+//    }
     EV << "locCaches.size() is " << locCaches.size() << endl;
     for (std::map<std::string, int>::iterator it=locCaches.begin(); it!=locCaches.end(); it++) {
         EV << it->first << " => " << it->second << endl;

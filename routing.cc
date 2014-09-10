@@ -69,7 +69,7 @@ void topoSetup()
   topo.clear();
   // 4 methods:
   //topo.extractByModulePath(cStringTokenizer("*").asVector());
-  topo.extractByNedTypeName(cStringTokenizer("Buffer PoPLogic CoreLogic BeyondLogic User").asVector());
+  topo.extractByNedTypeName(cStringTokenizer("Buffer PoPLogic CoreLogic BeyondLogic Logic User").asVector());
   //topo.extractByProperty("display");
   //topo.extractFromNetwork(selectFunction, NULL);
   EV << topo.getNumNodes() << " nodes in routing topology\n";
