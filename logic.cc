@@ -38,21 +38,21 @@ void Logic::handleMessage(cMessage *msg) {
             reply->setSourceID(getId());
             reply->setDestinationID(req->getSourceID());
             // send reply
-            cGate* outGate = getNextGate(this, reply);
+            cGate* outGate = getNextGate(this, (cMessage*)reply);
             send(reply, outGate);
             EV << "Sending reply out of " << outGate->getFullName() << endl;
             // cleanup
             delete msg;
         }
         else { // forward request
-            cGate* outGate = getNextGate(this, req);
+            cGate* outGate = getNextGate(this, msg);
             send(req, outGate);
             EV << "Forwarding request via " << outGate->getFullName() << endl;
         }
     }
     else if (msg->getKind() == replyKind) { // forward reply
         Reply *reply = check_and_cast<Reply*>(msg);
-        cGate* outGate = getNextGate(this, reply);
+        cGate* outGate = getNextGate(this, msg);
         send(reply, outGate);
         EV << "Forwarding reply via " << outGate->getFullName() << endl;
     }
