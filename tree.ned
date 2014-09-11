@@ -64,6 +64,7 @@ simple Logic
     parameters:
 //        @signal[request](type="double");
   //      @statistic[request-size](title="request size"; source="request"; record=vector,histogram; interpolationmode=none);
+    @class(Logic);
     gates:
         inout gate[];
 }
@@ -121,7 +122,7 @@ module PoP extends Router
     parameters:
         @display("i=block/switch,blue");
     submodules:
-        pop: PoPLogic;
+        pop: Logic;
     connections:
         for i=0..sizeof(in)-1 {
             pop.gate++ <--> buffer[i].logicIO;
@@ -133,7 +134,7 @@ module Core extends Router
     parameters:
         @display("i=block/routing,yellow");
     submodules:
-        core: CoreLogic;
+        core: Logic;
     connections:
         for i=0..sizeof(in)-1 {
             core.gate++ <--> buffer[i].logicIO;
@@ -145,7 +146,7 @@ module Beyond extends Router
     parameters:
         @display("i=block/server,red");
     submodules:
-        beyond: BeyondLogic;
+        beyond: Logic;
     connections:
         for i=0..sizeof(in)-1 {
             beyond.gate++ <--> buffer[i].logicIO;
