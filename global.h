@@ -15,6 +15,7 @@ protected:
     int numInitStages() const;
     virtual void initialize(int stage);
 private:
-    void loadCacheLocs();
+    void loadAllLocs();
+    void printCacheLocs();
 };
 

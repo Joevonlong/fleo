@@ -104,6 +104,7 @@ module Router
         string loc = default("");
         int rn = default(-1);
         bool hasCache = default(false);
+        int cacheRank = default(-1);
     gates:
         input in[];
         output out[];

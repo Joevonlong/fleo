@@ -187,12 +187,16 @@ def manip_topo():
         if n.assignment == 'user':
             loc_users[n.loc] += 1
     # - place cache in centres of locs with most users
+    rank = 1
     for (loc, users) in loc_users.most_common()[:num_replica]:
         if loc_centres[loc].assignment == 'user':
             continue # in case only 1 node in loc which is also user
         loc_centres[loc].has_cache = True
-        print('cache assigned to UID '+str(loc_centres[loc].uid)+
+        loc_centres[loc].cache_rank = rank
+        print('cache (rank #'+str(rank)+
+              ') assigned to UID '+str(loc_centres[loc].uid)+
               ' for '+loc+' ('+str(users)+' users)')
+        rank += 1
 
 def write_to_ned():
     f = open('AS'+asn+'.ned', 'w')
@@ -217,7 +221,8 @@ def write_to_ned():
         f.write(' loc="'+node.loc+'";')
         f.write(' rn='+str(node.rn)+';')
         if (getattr(node, 'has_cache', False) == True):
-            f.write(' hasCache=true; @display("i=block/routing,green");')
+            f.write(' hasCache=true; cacheRank='+str(node.cache_rank)+
+                    '; @display("i=block/routing,green");')
         f.write('};\n')
 
     # connection section
