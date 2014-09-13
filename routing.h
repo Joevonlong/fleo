@@ -3,7 +3,8 @@
 #include "logic.h"
 
 extern cTopology topo;
-cGate* getNextGate(Logic* current, cMessage* msg);
 extern std::string beyondPath;
-void topoSetup();
+extern void topoSetup();
+extern cGate* getNextGate(Logic* current, cMessage* msg);
+extern int getNearestCacheID(int userID);
 

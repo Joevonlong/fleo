@@ -30,7 +30,8 @@ void User::initialize(int stage) {
         idle();
     }
     else if (stage == 3) {
-        // find nearest cache
+        nearestCache = getNearestCacheID(getId());
+        EV << "Nearest cache for " << getFullPath() << "(" << par("loc").stringValue() << ") is " << simulation.getModule(nearestCache)->getFullPath() << "(" << simulation.getModule(nearestCache)->getParentModule()->par("loc").stringValue() << ")." << endl;
     }
 }
 
@@ -48,7 +49,8 @@ void User::sendRequest()
     req->setCustomID(getRandCustomVideoID());
     EV << "Sending request for Custom ID " << req->getCustomID() << endl;
     req->setSourceID(getId());
-    req->setDestinationID(locCaches[par("loc")]);
+    //req->setDestinationID(locCaches[par("loc")]);
+    req->setDestinationID(nearestCache);
     req->setBitLength(1); // request packet 1 bit long only
     send(req, "out");
 }

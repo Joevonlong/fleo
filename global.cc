@@ -10,7 +10,7 @@ simsignal_t idleSignal;
 simsignal_t requestSignal;
 int requestKind;
 int replyKind;
-std::vector<int> caches;
+std::vector<int> cacheIDs;
 std::map<std::string, int> locCaches;
 
 int Global::numInitStages () const {return 3;}
@@ -56,7 +56,7 @@ void Global::printCacheLocs() {
 void Global::buildCacheVector() {
     for (std::map<std::string, int>::iterator it=locCaches.begin(); it!=locCaches.end(); it++) {
         if (it->second != defaultLoc){
-            caches.push_back(it->second);
+            cacheIDs.push_back(it->second);
         }
     }
 }

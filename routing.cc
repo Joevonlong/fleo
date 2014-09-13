@@ -1,3 +1,4 @@
+#include "global.h"
 #include "routing.h"
 #include "request_m.h"
 #include "reply_m.h"
@@ -38,12 +39,30 @@ cGate* getNextGate(Logic* current, cMessage* msg) {
     return current->nextGate[destID];
 }
 
+int getNearestCacheID(int userID) {
+    double shortestDist = DBL_MAX;
+    int nearestCacheID = -1;
+    cTopology::Node *destNode =
+        topo.getNodeFor(simulation.getModule(userID));
+    topo.calculateUnweightedSingleShortestPathsTo(destNode);
+    for (std::vector<int>::iterator it = cacheIDs.begin();
+        it != cacheIDs.end(); ++it) {
+        cTopology::Node *cacheNode = topo.getNodeFor(simulation.getModule(*it));
+        if (cacheNode->getDistanceToTarget() < shortestDist) {
+            nearestCacheID = *it;
+            shortestDist = cacheNode->getDistanceToTarget();
+        }
+    }
+    return nearestCacheID;
+}
+
 bool selectFunction(cModule *mod, void *)
 {
   // EV << "selfunc debug:" <<  mod->getFullName() << mod->getParentModule() << simulation.getSystemModule() << endl;
   return mod->getParentModule() == simulation.getSystemModule();
 }
 
+// called from global during init
 void topoSetup()
 {
   topo.clear();

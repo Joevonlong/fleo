@@ -63,6 +63,7 @@ void Logic::handleMessage(cMessage *msg) {
     }
 }
 
+// inserts logic's ID as value with location as key
 void Logic::registerSelfIfCache() {
     if (getParentModule()->par("hasCache").boolValue() == true) {
         locCaches[getParentModule()->par("loc").stringValue()] = getId();
