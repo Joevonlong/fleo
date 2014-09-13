@@ -9,11 +9,13 @@
 Define_Module(Logic);
 
 int Logic::numInitStages() const {
-    return 1;
+    return 2;
 }
 
 void Logic::initialize(int stage) {
     if (stage == 0) {
+    }
+    else if (stage == 1) {
         registerSelfIfCache();
         // populate cache with all content
         Cache* cache = (Cache*)(getParentModule()->getSubmodule("cache"));

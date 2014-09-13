@@ -4,16 +4,18 @@
 class User : public cSimpleModule
 {
 public:
-  virtual ~User();
+    virtual ~User();
 private:
-  cMessage* idleTimer;
-  void idle();
-  void sendRequest();
-  uint64_t requestingBits;
+    cMessage* idleTimer;
+    void idle();
+    void sendRequest();
+    uint64_t requestingBits;
+    int nearestCache;
 protected:
-  cDoubleHistogram requestHistogram;
-  virtual void initialize();
-  virtual void handleMessage(cMessage *msg);
-  virtual void finish();
+    cDoubleHistogram requestHistogram;
+    virtual int numInitStages() const;
+    virtual void initialize(int stage);
+    virtual void handleMessage(cMessage *msg);
+    virtual void finish();
 };
 

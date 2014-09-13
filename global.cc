@@ -4,13 +4,16 @@
 
 Define_Module(Global);
 
+const int defaultLoc = -1;
+
 simsignal_t idleSignal;
 simsignal_t requestSignal;
 int requestKind;
 int replyKind;
+std::vector<int> caches;
 std::map<std::string, int> locCaches;
 
-int Global::numInitStages () const {return 2;}
+int Global::numInitStages () const {return 3;}
 
 void Global::initialize(int stage)
 {
@@ -22,10 +25,13 @@ void Global::initialize(int stage)
         topoSetup();
         loadVideoLengthFile();
         EV << static_cast<double>(UINT64_MAX) << endl;
-        loadAllLocs();
+        //loadAllLocs();
     }
     else if (stage == 1) {
+    }
+    else if (stage == 2) {
         printCacheLocs();
+        buildCacheVector();
     }
 }
 
@@ -34,15 +40,24 @@ void Global::loadAllLocs() {
     for (cModule::SubmoduleIterator i(getParentModule()); !i.end(); i++) {
         cModule *subModule = i();
         if (subModule->hasPar("loc")) {
-            locCaches[subModule->par("loc").stringValue()] = -1;
+            locCaches[subModule->par("loc").stringValue()] = defaultLoc;
         }
     }
 }
 
 void Global::printCacheLocs() {
     EV << "locCaches.size() is " << locCaches.size() << endl;
-    for (std::map<std::string, int>::iterator it=locCaches.begin(); it!=locCaches.end(); it++) {
+    for (std::map<std::string, int>::iterator it=locCaches.begin();
+        it!=locCaches.end(); it++) {
         EV << it->first << " => " << it->second << endl;
+    }
+}
+
+void Global::buildCacheVector() {
+    for (std::map<std::string, int>::iterator it=locCaches.begin(); it!=locCaches.end(); it++) {
+        if (it->second != defaultLoc){
+            caches.push_back(it->second);
+        }
     }
 }
 

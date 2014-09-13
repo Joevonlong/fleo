@@ -7,15 +7,17 @@ extern simsignal_t requestSignal;
 extern int requestKind;
 extern int replyKind;
 
+extern std::vector<int> caches;
 extern std::map<std::string, int> locCaches;
 
 class Global : public cSimpleModule
 {
 protected:
-    int numInitStages() const;
+    virtual int numInitStages() const;
     virtual void initialize(int stage);
 private:
     void loadAllLocs();
     void printCacheLocs();
+    void buildCacheVector();
 };
 

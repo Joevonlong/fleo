@@ -14,26 +14,32 @@ const uint64_t packetBitSize = 1000000; // 1Mb
 
 User::~User()
 {
-  cancelAndDelete(idleTimer);
+    cancelAndDelete(idleTimer);
 }
 
-void User::initialize()
-{
-    requestingBits = 0;
-    requestHistogram.setName("Request Size");
-    requestHistogram.setRangeAutoUpper(0);
-    requestHistogram.setNumCells(100);
-//  requestHistogram.setRange(0, UINT64_MAX);
-    idleTimer = new cMessage("idle timer");
-    idle();
+int User::numInitStages() const {return 4;}
+
+void User::initialize(int stage) {
+    if (stage == 0) {
+        requestingBits = 0;
+        requestHistogram.setName("Request Size");
+        requestHistogram.setRangeAutoUpper(0);
+        requestHistogram.setNumCells(100);
+    //  requestHistogram.setRange(0, UINT64_MAX);
+        idleTimer = new cMessage("idle timer");
+        idle();
+    }
+    else if (stage == 3) {
+        // find nearest cache
+    }
 }
 
 void User::idle()
 {
-  simtime_t idleTime = par("idleTime"); // changed via ini
-  emit(idleSignal, idleTime);
-  EV << getFullName() << " idling for " << idleTime << "s\n";
-  scheduleAt(simTime()+idleTime, idleTimer);
+    simtime_t idleTime = par("idleTime"); // changed via ini
+    emit(idleSignal, idleTime);
+    EV << getFullName() << " idling for " << idleTime << "s\n";
+    scheduleAt(simTime()+idleTime, idleTimer);
 }
 
 void User::sendRequest()
@@ -49,32 +55,32 @@ void User::sendRequest()
 
 void User::handleMessage(cMessage *msg)
 {
-  if (msg->isSelfMessage()) { // if idle timer is back
-    //uint64_t size = getVideoSize();
-    //emit(requestSignal, static_cast<double>(size));
-    //requestHistogram.collect(size);
-    //requestingBits = size;
-    sendRequest();
-  }
-  else { // else received reply
-    Reply* reply = check_and_cast<Reply*>(msg);
-    uint64_t size = reply->getBitLength();
-    delete reply;
-    EV << getFullName() << " received reply of size " << size;
-    requestingBits -= size;
-    if (requestingBits != 0) {
-      EV << ". Still waiting for " << requestingBits << endl;
-      sendRequest();
+    if (msg->isSelfMessage()) { // if idle timer is back
+        //uint64_t size = getVideoSize();
+        //emit(requestSignal, static_cast<double>(size));
+        //requestHistogram.collect(size);
+        //requestingBits = size;
+        sendRequest();
     }
-    else {
-      EV << ". Request fulfilled.\n";
-      idle();
+    else { // else received reply
+        Reply* reply = check_and_cast<Reply*>(msg);
+        uint64_t size = reply->getBitLength();
+        delete reply;
+        EV << getFullName() << " received reply of size " << size;
+        requestingBits -= size;
+        if (requestingBits != 0) {
+            EV << ". Still waiting for " << requestingBits << endl;
+            sendRequest();
+        }
+        else {
+            EV << ". Request fulfilled.\n";
+            idle();
+        }
     }
-  }
 }
 
 void User::finish()
 {
-  requestHistogram.record();
+    requestHistogram.record();
 }
 
