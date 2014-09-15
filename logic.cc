@@ -17,10 +17,12 @@ void Logic::initialize(int stage) {
     }
     else if (stage == 1) {
         registerSelfIfCache();
-        // populate cache with all content
-        Cache* cache = (Cache*)(getParentModule()->getSubmodule("cache"));
-        for (unsigned long maxID = getMaxCustomVideoID(); maxID != ULONG_MAX; maxID--) {
-            cache->setCached(maxID, true);
+        // if master cache, populate with all content
+        if (getParentModule()->par("cacheRank").longValue() == 1) {
+            Cache* cache = (Cache*)(getParentModule()->getSubmodule("cache"));
+            for (unsigned long maxID = getMaxCustomVideoID(); maxID != ULONG_MAX; maxID--) {
+                cache->setCached(maxID, true);
+            }
         }
     }
     else {
