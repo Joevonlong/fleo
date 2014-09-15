@@ -8,9 +8,7 @@
 
 Define_Module(Logic);
 
-int Logic::numInitStages() const {
-    return 2;
-}
+int Logic::numInitStages() const {return 4;}
 
 void Logic::initialize(int stage) {
     if (stage == 0) {
@@ -25,8 +23,11 @@ void Logic::initialize(int stage) {
             }
         }
     }
-    else {
-        EV << "Error in Logic::initialize\n";
+    else if (stage == 3) {
+        if (getParentModule()->par("hasCache").boolValue() == true) {
+            nearestCache = getNearestCacheID(getId());
+            EV << "Secondary cache for " << getFullPath() << "(" << getParentModule()->par("loc").stringValue() << ") is " << simulation.getModule(nearestCache)->getFullPath() << "(" << simulation.getModule(nearestCache)->getParentModule()->par("loc").stringValue() << ")." << endl;
+        }
     }
 }
 

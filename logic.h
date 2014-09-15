@@ -12,5 +12,7 @@ protected:
     virtual void handleMessage(cMessage *msg);
     int64_t checkCache(int customID);
     void registerSelfIfCache();
+private:
+    int nearestCache;
 };
 

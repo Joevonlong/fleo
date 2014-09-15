@@ -39,18 +39,21 @@ cGate* getNextGate(Logic* current, cMessage* msg) {
     return current->nextGate[destID];
 }
 
+// returns ID closest to ID given in arg1, excluding itself.
 int getNearestCacheID(int userID) {
     double shortestDist = DBL_MAX;
     int nearestCacheID = -1;
     cTopology::Node *destNode =
         topo.getNodeFor(simulation.getModule(userID));
     topo.calculateUnweightedSingleShortestPathsTo(destNode);
-    for (std::vector<int>::iterator it = cacheIDs.begin();
-        it != cacheIDs.end(); ++it) {
-        cTopology::Node *cacheNode = topo.getNodeFor(simulation.getModule(*it));
-        if (cacheNode->getDistanceToTarget() < shortestDist) {
-            nearestCacheID = *it;
-            shortestDist = cacheNode->getDistanceToTarget();
+    for (std::vector<int>::iterator id = cacheIDs.begin();
+        id != cacheIDs.end(); id++) {
+        if (*id != userID) {
+            cTopology::Node *cacheNode = topo.getNodeFor(simulation.getModule(*id));
+            if (cacheNode->getDistanceToTarget() < shortestDist) {
+                nearestCacheID = *id;
+                shortestDist = cacheNode->getDistanceToTarget();
+            }
         }
     }
     return nearestCacheID;
