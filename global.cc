@@ -11,6 +11,7 @@ simsignal_t requestSignal;
 int requestKind;
 int replyKind;
 std::vector<int> cacheIDs;
+std::vector<int> completeCacheIDs;
 std::map<std::string, int> locCaches;
 
 int Global::numInitStages () const {return 3;}

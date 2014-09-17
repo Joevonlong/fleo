@@ -16,7 +16,7 @@ void Logic::initialize(int stage) {
     else if (stage == 1) {
         registerSelfIfCache();
         // if master cache, populate with all content
-        if (getParentModule()->par("cacheRank").longValue() == 1) {
+        if (getParentModule()->par("completeCache").boolValue() == true) {
             Cache* cache = (Cache*)(getParentModule()->getSubmodule("cache"));
             for (unsigned long maxID = getMaxCustomVideoID(); maxID != ULONG_MAX; maxID--) {
                 cache->setCached(maxID, true);
@@ -27,6 +27,13 @@ void Logic::initialize(int stage) {
         if (getParentModule()->par("hasCache").boolValue() == true) {
             nearestCache = getNearestCacheID(getId());
             EV << "Secondary cache for " << getFullPath() << "(" << getParentModule()->par("loc").stringValue() << ") is " << simulation.getModule(nearestCache)->getFullPath() << "(" << simulation.getModule(nearestCache)->getParentModule()->par("loc").stringValue() << ")." << endl;
+            if (getParentModule()->par("completeCache").boolValue() == false) {
+                nearestCompleteCache = getNearestID(getId(), completeCacheIDs);
+                EV << "Master cache for " << getFullPath() << "(" << getParentModule()->par("loc").stringValue() << ") is " << simulation.getModule(nearestCompleteCache)->getFullPath() << "(" << simulation.getModule(nearestCompleteCache)->getParentModule()->par("loc").stringValue() << ")." << endl;
+            }
+            else {
+                nearestCompleteCache = getId();
+            }
         }
     }
 }
@@ -67,10 +74,14 @@ void Logic::handleMessage(cMessage *msg) {
     }
 }
 
-// inserts logic's ID as value with location as key
+// inserts logic's ID as value with location as key,
+// as well as if cache is a complete one.
 void Logic::registerSelfIfCache() {
     if (getParentModule()->par("hasCache").boolValue() == true) {
         locCaches[getParentModule()->par("loc").stringValue()] = getId();
+        if (getParentModule()->par("completeCache").boolValue() == true) {
+            completeCacheIDs.push_back(getId());
+        }
     }
 }
 

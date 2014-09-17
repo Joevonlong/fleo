@@ -14,5 +14,6 @@ protected:
     void registerSelfIfCache();
 private:
     int nearestCache;
+    int nearestCompleteCache;
 };
 

@@ -8,6 +8,7 @@ extern int requestKind;
 extern int replyKind;
 
 extern std::vector<int> cacheIDs;
+extern std::vector<int> completeCacheIDs;
 extern std::map<std::string, int> locCaches;
 
 class Global : public cSimpleModule
