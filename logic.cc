@@ -36,6 +36,7 @@ void Logic::handleMessage(cMessage *msg) {
         Request *req = check_and_cast<Request*>(msg);
         if (req->getDestinationID() == getId()) { // reached destination
             int64_t vidBitSize = checkCache(req->getCustomID());
+            EV << "received request sent at " << req->getCreationTime() << endl;
             // construct reply
             Reply *reply = new Reply("reply", replyKind);
             EV << "reply size: " << vidBitSize << endl;

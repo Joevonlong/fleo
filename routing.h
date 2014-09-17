@@ -7,4 +7,5 @@ extern std::string beyondPath;
 extern void topoSetup();
 extern cGate* getNextGate(Logic* current, cMessage* msg);
 extern int getNearestCacheID(int userID);
+extern int getNearestID(int originID, std::vector<int> candidateIDs);
 

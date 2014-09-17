@@ -105,6 +105,7 @@ module Router
         int rn = default(-1);
         bool hasCache = default(false);
         int cacheRank = default(-1);
+        bool completeCache = default(false);
     gates:
         input in[];
         output out[];
