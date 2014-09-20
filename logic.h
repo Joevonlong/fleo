@@ -10,10 +10,11 @@ protected:
     virtual int numInitStages() const;
     virtual void initialize(int stage);
     virtual void handleMessage(cMessage *msg);
-    int64_t checkCache(int customID);
-    void registerSelfIfCache();
-private:
     int nearestCache;
     int nearestCompleteCache;
+    void registerSelfIfCache();
+    int64_t checkCache(int customID);
+    void requestFromCache(int cacheID, int customID);
+private:
 };
 

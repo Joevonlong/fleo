@@ -22,7 +22,8 @@ void Buffer::handleMessage(cMessage* msg) {
     if (msg == transmitDone) {
         if (queue->front() != NULL) {
             send(queue->pop(), transmitID);
-            scheduleAt(gate(transmitID)->getTransmissionChannel()->getTransmissionFinishTime(), transmitDone);
+            scheduleAt(gate(transmitID)->getTransmissionChannel()
+                ->getTransmissionFinishTime(), transmitDone);
         }
     }
     else if (msg->getArrivalGateId() == receiveID) {
@@ -33,13 +34,13 @@ void Buffer::handleMessage(cMessage* msg) {
         cChannel* transmissionChannel =
             gate(transmitID)->
             getTransmissionChannel();
-        // EV << transmissionChannel->info() << endl;
         if (transmissionChannel->isBusy()) {
             queue->insert(pkt);
         }
         else {
             send(msg, transmitID);
-            scheduleAt(transmissionChannel->getTransmissionFinishTime(), transmitDone);
+            scheduleAt(transmissionChannel->getTransmissionFinishTime(),
+                transmitDone);
         }
     }
     else {

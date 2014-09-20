@@ -7,6 +7,12 @@ extern simsignal_t requestSignal;
 extern int requestKind;
 extern int replyKind;
 
+// MyPacket states
+extern short stateStart;
+extern short stateEnd;
+extern short stateTransfer;
+extern short stateAck;
+
 extern std::vector<int> cacheIDs;
 extern std::vector<int> completeCacheIDs;
 extern std::map<std::string, int> locCaches;

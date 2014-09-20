@@ -8,8 +8,16 @@ const int defaultLoc = -1;
 
 simsignal_t idleSignal;
 simsignal_t requestSignal;
-int requestKind;
-int replyKind;
+
+int requestKind = 123;
+int replyKind = 321;
+
+// MyPacket states
+short stateStart = 0;
+short stateEnd = 1;
+short stateTransfer = 2;
+short stateAck = 3;
+
 std::vector<int> cacheIDs;
 std::vector<int> completeCacheIDs;
 std::map<std::string, int> locCaches;
@@ -21,8 +29,6 @@ void Global::initialize(int stage)
     if (stage == 0) {
         idleSignal = registerSignal("idle"); // name assigned to signal ID
         requestSignal = registerSignal("request"); // name assigned to signal ID
-        requestKind = 123;
-        replyKind = 321;
         topoSetup();
         loadVideoLengthFile();
         EV << static_cast<double>(UINT64_MAX) << endl;

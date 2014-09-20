@@ -57,7 +57,10 @@ simple Buffer
         output transmit;
 }
 
-simple Cache {}
+simple Cache {
+    parameters:
+        int size @unit(GiB) = default(0);
+}
 
 simple Logic
 {

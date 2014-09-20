@@ -3,10 +3,15 @@
 #include "parse.h"
 #include "request_m.h"
 #include "reply_m.h"
+#include "mypacket_m.h"
 #include "routing.h"
 #include "cache.h"
 
 Define_Module(Logic);
+
+const int64_t noCache = -1;
+const int64_t notCached = 0;
+const uint64_t packetBitSize = UINT64_MAX;//1000000; // 1Mb
 
 int Logic::numInitStages() const {return 4;}
 
@@ -26,10 +31,18 @@ void Logic::initialize(int stage) {
     else if (stage == 3) {
         if (getParentModule()->par("hasCache").boolValue() == true) {
             nearestCache = getNearestCacheID(getId());
-            EV << "Secondary cache for " << getFullPath() << "(" << getParentModule()->par("loc").stringValue() << ") is " << simulation.getModule(nearestCache)->getFullPath() << "(" << simulation.getModule(nearestCache)->getParentModule()->par("loc").stringValue() << ")." << endl;
+            EV << "Secondary cache for " << getFullPath() << "("
+               << getParentModule()->par("loc").stringValue() << ") is "
+               << simulation.getModule(nearestCache)->getFullPath()
+               << "(" << simulation.getModule(nearestCache)
+                  ->getParentModule()->par("loc").stringValue() << ").\n";
             if (getParentModule()->par("completeCache").boolValue() == false) {
                 nearestCompleteCache = getNearestID(getId(), completeCacheIDs);
-                EV << "Master cache for " << getFullPath() << "(" << getParentModule()->par("loc").stringValue() << ") is " << simulation.getModule(nearestCompleteCache)->getFullPath() << "(" << simulation.getModule(nearestCompleteCache)->getParentModule()->par("loc").stringValue() << ")." << endl;
+                EV << "Master cache for " << getFullPath() << "("
+                   << getParentModule()->par("loc").stringValue() << ") is "
+                   << simulation.getModule(nearestCompleteCache)->getFullPath()
+                   << "(" << simulation.getModule(nearestCompleteCache)
+                      ->getParentModule()->par("loc").stringValue() << ").\n";
             }
             else {
                 nearestCompleteCache = getId();
@@ -39,38 +52,105 @@ void Logic::initialize(int stage) {
 }
 
 void Logic::handleMessage(cMessage *msg) {
-    if (msg->getKind() == requestKind) {
-        Request *req = check_and_cast<Request*>(msg);
-        if (req->getDestinationID() == getId()) { // reached destination
-            int64_t vidBitSize = checkCache(req->getCustomID());
-            EV << "received request sent at " << req->getCreationTime() << endl;
-            // construct reply
-            Reply *reply = new Reply("reply", replyKind);
-            EV << "reply size: " << vidBitSize << endl;
-            reply->setBitLength(vidBitSize);
-            reply->setSourceID(getId());
-            reply->setDestinationID(req->getSourceID());
-            // send reply
-            cGate* outGate = getNextGate(this, (cMessage*)reply);
-            send(reply, outGate);
-            EV << "Sending reply out of " << outGate->getFullName() << endl;
-            // cleanup
-            delete msg;
+    MyPacket *pkt = check_and_cast<MyPacket*>(msg);
+    if (pkt->getDestinationID() == getId()) { // destination reached
+        if (pkt->getState() == stateStart) {
+            // check cache
+            int64_t vidBitSize = checkCache(pkt->getCustomID());
+            pkt->setCacheTries(pkt->getCacheTries()-1); // decrement cacheTries
+            if (vidBitSize == noCache) {
+                throw std::runtime_error(
+                    "Content requested from node without a cache.");
+            }
+            else if (vidBitSize == notCached) {
+                MyPacket *outerPkt = new MyPacket("Request");
+                outerPkt->setBitLength(1); // assume no transmission delay
+                outerPkt->setSourceID(getId());
+                outerPkt->setState(stateStart);
+                outerPkt->setCacheTries(pkt->getCacheTries());
+                outerPkt->setCustomID(pkt->getCustomID());
+                if (pkt->getCacheTries() > 0) { // check secondary
+                    outerPkt->setDestinationID(nearestCache);
+                    EV << "Checking secondary cache: ";
+                }
+                else if (pkt->getCacheTries() == 0) { // get from master
+                    outerPkt->setDestinationID(nearestCompleteCache);
+                    EV << "Checking master cache: ";
+                }
+                else {
+                    EV << "cacheTries = " << pkt->getCacheTries() << endl;
+                    throw std::runtime_error("Invalid cacheTries value.");
+                }
+                EV << simulation.getModule(outerPkt->getDestinationID())
+                    ->getFullPath() << endl;
+                outerPkt->encapsulate(pkt);
+                cGate* outGate = getNextGate(this, outerPkt);
+                send(outerPkt, outGate);
+                return;
+            }
+            else if (vidBitSize > 0) { // cached
+                pkt->setDestinationID(pkt->getSourceID());
+                pkt->setSourceID(getId());
+                pkt->setState(stateTransfer);
+                pkt->setBitLength(std::min((uint64_t)vidBitSize,packetBitSize));
+                pkt->setBitsPending(vidBitSize-pkt->getBitLength());
+                EV << "Requested item is cached. Sending reply.\n";
+                cGate* outGate = getNextGate(this, pkt);
+                send(pkt, outGate);
+                return;
+            }
+            else {
+                throw std::runtime_error("Invalid return from checkCache.");
+            }
         }
-        else { // forward request
-            cGate* outGate = getNextGate(this, msg);
-            send(req, outGate);
-            EV << "Forwarding request via " << outGate->getFullName() << endl;
+        else if (pkt->getState() == stateTransfer) {
+            // acknowledge transfer
+            pkt->setDestinationID(pkt->getSourceID());
+            pkt->setSourceID(getId());
+            pkt->setState(stateAck);
+            pkt->setBitLength(1);
+            cGate* outGate = getNextGate(this, pkt);
+            send(pkt, outGate);
+            return;
+        }
+        else if (pkt->getState() == stateAck) { // continue transfer
+            pkt->setDestinationID(pkt->getSourceID());
+            pkt->setSourceID(getId());
+            pkt->setState(stateTransfer);
+            pkt->setBitLength(std::min(pkt->getBitsPending(),packetBitSize));
+            pkt->setBitsPending(pkt->getBitsPending()-pkt->getBitLength());
+            if (pkt->getBitsPending() == 0) {
+                pkt->setState(stateEnd);
+            }
+            cGate* outGate = getNextGate(this, pkt);
+            send(pkt, outGate);
+            return;
+        }
+        else if (pkt->getState() == stateEnd) {
+            EV << "Fetch from other cache completed.\n";
+            // assume all misses are cached (as in LRU?)
+            ((Cache*)getParentModule()->getSubmodule("cache"))->setCached(
+                pkt->getCustomID(), true);
+            if (pkt->hasEncapsulatedPacket() == true) {
+                MyPacket *innerPkt = (MyPacket*)pkt->decapsulate();
+                delete pkt;
+                scheduleAt(simTime(), innerPkt);
+                return;
+            }
+            else {
+                throw std::runtime_error(
+                    "Cache-to-cache transfer without user request");
+            }
+        }
+        else {
+            throw std::invalid_argument("invalid packet state");
         }
     }
-    else if (msg->getKind() == replyKind) { // forward reply
-        Reply *reply = check_and_cast<Reply*>(msg);
-        cGate* outGate = getNextGate(this, msg);
-        send(reply, outGate);
-        EV << "Forwarding reply via " << outGate->getFullName() << endl;
-    }
-    else {
-        EV << "Error in Logic::handleMessage : unknown message kind\n";
+    else { // destination not reached: forward
+        cGate* outGate = getNextGate(this, pkt);
+        send(pkt, outGate);
+        EV << "Forwarding request via " << outGate->getFullName() << endl;
+        return;
     }
 }
 
@@ -87,13 +167,25 @@ void Logic::registerSelfIfCache() {
 
 int64_t Logic::checkCache(int customID) {
     if (getParentModule()->par("hasCache").boolValue() == false) {
-        return -1; // module has no cache
+        return noCache; // module has no cache
     }
     else if (((Cache*)(getParentModule()->getSubmodule("cache")))->isCached(customID)) {
         return getVideoBitSize(customID); // should be video's bitsize
     }
     else {
-        return 0; // requested item is not cached
+        return notCached; // requested item is not cached
     }
+}
+
+void requestFromCache(int cacheID, int customID) {
+    EV << "Requesting "<< customID << " from secondary cache.\n";
+    Request *req = new Request("cache to cache", requestKind);
+    req->setBitLength(1);
+    //req->
+//                Reply *reply = new Reply("reply", replyKind);
+//                EV << "reply size: " << vidBitSize << endl;
+//                reply->setBitLength(vidBitSize);
+//                reply->setSourceID(getId());
+//                reply->setDestinationID(req->getSourceID());
 }
 

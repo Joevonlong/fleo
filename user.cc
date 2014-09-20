@@ -2,6 +2,7 @@
 #include <string.h>
 #include "request_m.h"
 #include "reply_m.h"
+#include "mypacket_m.h"
 #include "user.h"
 #include "parse.h"
 #include "routing.h"
@@ -45,13 +46,14 @@ void User::idle()
 
 void User::sendRequest()
 {
-    Request *req = new Request("request", requestKind); // use user[] index as message kind
+    MyPacket *req = new MyPacket("Request");
+    req->setBitLength(1); // assume no transmission delay
+    req->setSourceID(getId());
+    req->setDestinationID(nearestCache);
     req->setCustomID(getRandCustomVideoID());
     EV << "Sending request for Custom ID " << req->getCustomID() << endl;
-    req->setSourceID(getId());
-    //req->setDestinationID(locCaches[par("loc")]);
-    req->setDestinationID(nearestCache);
-    req->setBitLength(1); // request packet 1 bit long only
+    req->setCacheTries(2); // try 2 caches before master
+    req->setState(stateStart);
     send(req, "out");
 }
 
@@ -65,18 +67,24 @@ void User::handleMessage(cMessage *msg)
         sendRequest();
     }
     else { // else received reply
-        Reply* reply = check_and_cast<Reply*>(msg);
-        uint64_t size = reply->getBitLength();
-        delete reply;
-        EV << getFullName() << " received reply of size " << size;
-        requestingBits -= size;
-        if (requestingBits != 0) {
-            EV << ". Still waiting for " << requestingBits << endl;
-            sendRequest();
+        MyPacket *pkt = check_and_cast<MyPacket*>(msg);
+        EV << "Received " << pkt->getBitLength() << "b of data. "
+           << pkt->getBitsPending() << "b more to go.\n";
+        if (pkt->getState() == stateEnd) {
+            EV << "Transfer of item #" << pkt->getCustomID() << " complete.\n";
+            delete pkt;
+            idle();
+        }
+        else if (pkt->getState() == stateTransfer) {
+            pkt->setState(stateAck);
+            pkt->setDestinationID(pkt->getSourceID());
+            pkt->setSourceID(getId());
+            pkt->setBitLength(0);
+            send(pkt, "out");
+            // TODO teleport ack to cache to avoid false propagation delay?
         }
         else {
-            EV << ". Request fulfilled.\n";
-            idle();
+            throw std::invalid_argument("invalid packet state");
         }
     }
 }

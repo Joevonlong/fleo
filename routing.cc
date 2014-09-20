@@ -2,21 +2,13 @@
 #include "routing.h"
 #include "request_m.h"
 #include "reply_m.h"
+#include "mypacket_m.h"
 
 cTopology topo;
 
 cGate* getNextGate(Logic* current, cMessage* msg) {
     // get destination module ID
-    int destID;
-    if (msg->getKind() == requestKind) {
-        destID = (check_and_cast<Request*>(msg))->getDestinationID();
-    }
-    else if (msg->getKind() == replyKind) {
-        destID = (check_and_cast<Reply*>(msg))->getDestinationID();
-    }
-    else {
-        EV << "Error in getNextGate : unknown message kind\n";
-    }
+    int destID = (check_and_cast<MyPacket*>(msg))->getDestinationID();
 
     // check if answer is not cached
     if (!current->nextGate[destID]) {
