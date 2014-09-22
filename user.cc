@@ -47,7 +47,7 @@ void User::idle()
 void User::sendRequest()
 {
     MyPacket *req = new MyPacket("Request");
-    req->setBitLength(1); // assume no transmission delay
+    req->setBitLength(0); // assume no transmission delay
     req->setSourceID(getId());
     req->setDestinationID(nearestCache);
     req->setCustomID(getRandCustomVideoID());
@@ -59,7 +59,7 @@ void User::sendRequest()
 
 void User::handleMessage(cMessage *msg)
 {
-    if (msg->isSelfMessage()) { // if idle timer is back
+    if (msg == idleTimer) { // if idle timer is back
         //uint64_t size = getVideoSize();
         //emit(requestSignal, static_cast<double>(size));
         //requestHistogram.collect(size);

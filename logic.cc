@@ -9,8 +9,8 @@
 
 Define_Module(Logic);
 
-const int64_t noCache = -1;
-const int64_t notCached = 0;
+const int64_t noCache = -2;
+const int64_t notCached = -1;
 const uint64_t packetBitSize = UINT64_MAX;//1000000; // 1Mb
 
 int Logic::numInitStages() const {return 4;}
@@ -64,7 +64,7 @@ void Logic::handleMessage(cMessage *msg) {
             }
             else if (vidBitSize == notCached) {
                 MyPacket *outerPkt = new MyPacket("Request");
-                outerPkt->setBitLength(1); // assume no transmission delay
+                outerPkt->setBitLength(0); // assume no transmission delay
                 outerPkt->setSourceID(getId());
                 outerPkt->setState(stateStart);
                 outerPkt->setCacheTries(pkt->getCacheTries());
@@ -91,9 +91,14 @@ void Logic::handleMessage(cMessage *msg) {
             else if (vidBitSize > 0) { // cached
                 pkt->setDestinationID(pkt->getSourceID());
                 pkt->setSourceID(getId());
-                pkt->setState(stateTransfer);
                 pkt->setBitLength(std::min((uint64_t)vidBitSize,packetBitSize));
                 pkt->setBitsPending(vidBitSize-pkt->getBitLength());
+                if (pkt->getBitsPending() == 0) {
+                    pkt->setState(stateEnd);
+                }
+                else {
+                    pkt->setState(stateTransfer);
+                }
                 EV << "Requested item is cached. Sending reply.\n";
                 cGate* outGate = getNextGate(this, pkt);
                 send(pkt, outGate);
@@ -103,34 +108,12 @@ void Logic::handleMessage(cMessage *msg) {
                 throw std::runtime_error("Invalid return from checkCache.");
             }
         }
-        else if (pkt->getState() == stateTransfer) {
-            // acknowledge transfer
-            pkt->setDestinationID(pkt->getSourceID());
-            pkt->setSourceID(getId());
-            pkt->setState(stateAck);
-            pkt->setBitLength(1);
-            cGate* outGate = getNextGate(this, pkt);
-            send(pkt, outGate);
-            return;
-        }
-        else if (pkt->getState() == stateAck) { // continue transfer
-            pkt->setDestinationID(pkt->getSourceID());
-            pkt->setSourceID(getId());
-            pkt->setState(stateTransfer);
-            pkt->setBitLength(std::min(pkt->getBitsPending(),packetBitSize));
-            pkt->setBitsPending(pkt->getBitsPending()-pkt->getBitLength());
-            if (pkt->getBitsPending() == 0) {
-                pkt->setState(stateEnd);
-            }
-            cGate* outGate = getNextGate(this, pkt);
-            send(pkt, outGate);
-            return;
-        }
         else if (pkt->getState() == stateEnd) {
             EV << "Fetch from other cache completed.\n";
             // assume all misses are cached (as in LRU?)
             ((Cache*)getParentModule()->getSubmodule("cache"))->setCached(
                 pkt->getCustomID(), true);
+            EV << checkCache(pkt->getCustomID()) << endl;
             if (pkt->hasEncapsulatedPacket() == true) {
                 MyPacket *innerPkt = (MyPacket*)pkt->decapsulate();
                 delete pkt;
@@ -142,8 +125,33 @@ void Logic::handleMessage(cMessage *msg) {
                     "Cache-to-cache transfer without user request");
             }
         }
+        else if (pkt->getState() == stateTransfer) {
+            // acknowledge transfer
+            pkt->setDestinationID(pkt->getSourceID());
+            pkt->setSourceID(getId());
+            pkt->setState(stateAck);
+            pkt->setBitLength(0);
+            cGate* outGate = getNextGate(this, pkt);
+            send(pkt, outGate);
+            return;
+        }
+        else if (pkt->getState() == stateAck) { // continue transfer
+            pkt->setDestinationID(pkt->getSourceID());
+            pkt->setSourceID(getId());
+            pkt->setBitLength(std::min(pkt->getBitsPending(),packetBitSize));
+            pkt->setBitsPending(pkt->getBitsPending()-pkt->getBitLength());
+            if (pkt->getBitsPending() == 0) {
+                pkt->setState(stateEnd);
+            }
+            else {
+                pkt->setState(stateTransfer);
+            }
+            cGate* outGate = getNextGate(this, pkt);
+            send(pkt, outGate);
+            return;
+        }
         else {
-            throw std::invalid_argument("invalid packet state");
+            error("Invalid packet state");
         }
     }
     else { // destination not reached: forward
