@@ -13,6 +13,7 @@ private:
     int nearestCache;
 protected:
     cDoubleHistogram requestHistogram;
+    cDoubleHistogram completionHistogram;
     virtual int numInitStages() const;
     virtual void initialize(int stage);
     virtual void handleMessage(cMessage *msg);

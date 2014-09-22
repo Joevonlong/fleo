@@ -10,8 +10,8 @@
 
 Define_Module(User);
 
-const bool message_switching = true;
-const uint64_t packetBitSize = 1000000; // 1Mb
+//const bool message_switching = true;
+//const uint64_t packetBitSize = 1000000; // 1Mb
 const short cacheTries = 2; // try 2 caches before master
 
 User::~User()
@@ -28,6 +28,9 @@ void User::initialize(int stage) {
         requestHistogram.setRangeAutoUpper(0);
         requestHistogram.setNumCells(100);
     //  requestHistogram.setRange(0, UINT64_MAX);
+        completionHistogram.setName("Completion Time");
+        completionHistogram.setRangeAutoUpper(0);
+        completionHistogram.setNumCells(100);
         idleTimer = new cMessage("idle timer");
         idle();
     }
@@ -48,7 +51,7 @@ void User::idle()
 void User::sendRequest()
 {
     MyPacket *req = new MyPacket("Request");
-    req->setBitLength(1000); // assume no transmission delay
+    req->setBitLength(headerBitLength); // assume no transmission delay
     req->setSourceID(getId());
     req->setDestinationID(nearestCache);
     req->setCustomID(getRandCustomVideoID());
@@ -72,7 +75,10 @@ void User::handleMessage(cMessage *msg)
         EV << "Received " << pkt->getBitLength() << "b of data. "
            << pkt->getBitsPending() << "b more to go.\n";
         if (pkt->getState() == stateEnd) {
-            EV << "Transfer of item #" << pkt->getCustomID() << " complete.\n";
+            EV << "Transfer of item #" << pkt->getCustomID() << " complete. "
+               << "Total time to serve request was "
+               << simTime() - pkt->getCreationTime() << endl;
+            completionHistogram.collect(simTime()-pkt->getCreationTime());
             delete pkt;
             idle();
         }
@@ -80,7 +86,7 @@ void User::handleMessage(cMessage *msg)
             pkt->setState(stateAck);
             pkt->setDestinationID(pkt->getSourceID());
             pkt->setSourceID(getId());
-            pkt->setBitLength(1000);
+            pkt->setBitLength(headerBitLength);
             send(pkt, "out");
             // TODO teleport ack to cache to avoid false propagation delay?
         }
@@ -93,5 +99,6 @@ void User::handleMessage(cMessage *msg)
 void User::finish()
 {
     requestHistogram.record();
+    completionHistogram.record();
 }
 

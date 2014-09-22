@@ -11,6 +11,7 @@ simsignal_t requestSignal;
 
 int requestKind = 123;
 int replyKind = 321;
+int64_t headerBitLength = 100;
 
 // MyPacket states
 short stateStart = 0;

@@ -6,6 +6,7 @@ extern simsignal_t requestSignal;
 
 extern int requestKind;
 extern int replyKind;
+extern int64_t headerBitLength;
 
 // MyPacket states
 extern short stateStart;

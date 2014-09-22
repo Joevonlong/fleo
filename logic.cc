@@ -11,7 +11,7 @@ Define_Module(Logic);
 
 const int64_t noCache = -2;
 const int64_t notCached = -1;
-const uint64_t packetBitSize = UINT64_MAX;//1000000; // 1Mb
+const uint64_t packetBitSize = 1000000; // 1Mb
 
 int Logic::numInitStages() const {return 4;}
 
@@ -63,7 +63,7 @@ void Logic::handleMessage(cMessage *msg) {
             }
             else if (vidBitSize == notCached) {
                 MyPacket *outerPkt = new MyPacket("Request");
-                outerPkt->setBitLength(1000); // assume no transmission delay
+                outerPkt->setBitLength(headerBitLength); // assume no transmission delay
                 outerPkt->setSourceID(getId());
                 outerPkt->setState(stateStart);
                 outerPkt->setCacheTries(pkt->getCacheTries()-1);
@@ -82,10 +82,7 @@ void Logic::handleMessage(cMessage *msg) {
                 }
                 EV << simulation.getModule(outerPkt->getDestinationID())
                     ->getFullPath() << endl;
-                EV << pkt->getBitLength() << endl;
-                EV << outerPkt->getBitLength() << endl;
                 outerPkt->encapsulate(pkt);
-                EV << "encapsulated, bitlength is now " << outerPkt->getBitLength() << endl;
                 cGate* outGate = getNextGate(this, outerPkt);
                 send(outerPkt, outGate);
                 return;
@@ -135,8 +132,7 @@ void Logic::handleMessage(cMessage *msg) {
             pkt->setDestinationID(pkt->getSourceID());
             pkt->setSourceID(getId());
             pkt->setState(stateAck);
-            error("should not reach this with message switching");
-            pkt->setBitLength(1000);
+            pkt->setBitLength(headerBitLength);
             cGate* outGate = getNextGate(this, pkt);
             send(pkt, outGate);
             return;
