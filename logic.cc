@@ -57,17 +57,16 @@ void Logic::handleMessage(cMessage *msg) {
         if (pkt->getState() == stateStart) {
             // check cache
             int64_t vidBitSize = checkCache(pkt->getCustomID());
-            pkt->setCacheTries(pkt->getCacheTries()-1); // decrement cacheTries
             if (vidBitSize == noCache) {
                 throw std::runtime_error(
                     "Content requested from node without a cache.");
             }
             else if (vidBitSize == notCached) {
                 MyPacket *outerPkt = new MyPacket("Request");
-                outerPkt->setBitLength(0); // assume no transmission delay
+                outerPkt->setBitLength(1000); // assume no transmission delay
                 outerPkt->setSourceID(getId());
                 outerPkt->setState(stateStart);
-                outerPkt->setCacheTries(pkt->getCacheTries());
+                outerPkt->setCacheTries(pkt->getCacheTries()-1);
                 outerPkt->setCustomID(pkt->getCustomID());
                 if (pkt->getCacheTries() > 0) { // check secondary
                     outerPkt->setDestinationID(nearestCache);
@@ -83,7 +82,10 @@ void Logic::handleMessage(cMessage *msg) {
                 }
                 EV << simulation.getModule(outerPkt->getDestinationID())
                     ->getFullPath() << endl;
+                EV << pkt->getBitLength() << endl;
+                EV << outerPkt->getBitLength() << endl;
                 outerPkt->encapsulate(pkt);
+                EV << "encapsulated, bitlength is now " << outerPkt->getBitLength() << endl;
                 cGate* outGate = getNextGate(this, outerPkt);
                 send(outerPkt, outGate);
                 return;
@@ -92,6 +94,7 @@ void Logic::handleMessage(cMessage *msg) {
                 pkt->setDestinationID(pkt->getSourceID());
                 pkt->setSourceID(getId());
                 pkt->setBitLength(std::min((uint64_t)vidBitSize,packetBitSize));
+                EV << pkt->getBitLength() << endl;
                 pkt->setBitsPending(vidBitSize-pkt->getBitLength());
                 if (pkt->getBitsPending() == 0) {
                     pkt->setState(stateEnd);
@@ -105,6 +108,9 @@ void Logic::handleMessage(cMessage *msg) {
                 return;
             }
             else {
+                EV << "checkCache -> " << vidBitSize << endl;
+                EV << "custom id: " << pkt->getCustomID() << endl;
+                EV << getVideoBitSize(pkt->getCustomID()) << endl;
                 throw std::runtime_error("Invalid return from checkCache.");
             }
         }
@@ -113,7 +119,6 @@ void Logic::handleMessage(cMessage *msg) {
             // assume all misses are cached (as in LRU?)
             ((Cache*)getParentModule()->getSubmodule("cache"))->setCached(
                 pkt->getCustomID(), true);
-            EV << checkCache(pkt->getCustomID()) << endl;
             if (pkt->hasEncapsulatedPacket() == true) {
                 MyPacket *innerPkt = (MyPacket*)pkt->decapsulate();
                 delete pkt;
@@ -130,7 +135,8 @@ void Logic::handleMessage(cMessage *msg) {
             pkt->setDestinationID(pkt->getSourceID());
             pkt->setSourceID(getId());
             pkt->setState(stateAck);
-            pkt->setBitLength(0);
+            error("should not reach this with message switching");
+            pkt->setBitLength(1000);
             cGate* outGate = getNextGate(this, pkt);
             send(pkt, outGate);
             return;

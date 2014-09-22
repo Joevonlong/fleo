@@ -7,9 +7,11 @@ MAXLENGTH = 36000
 # 3. lookup table?
 
 def parse(videoID_index, length_index, views_index):
+    print('parsing '+ifn)
     infile = open(ifn)
     outfile = open(ofn, 'w')
     vids = []
+    ignore_count = 0
 
     for l in infile:
         l = l.rstrip()
@@ -28,9 +30,14 @@ def parse(videoID_index, length_index, views_index):
         if length > MAXLENGTH:
             print('length cut from ' + str(length) + ' to ' + str(MAXLENGTH))
             length = MAXLENGTH
+        elif length == 0:
+            #print('ignoring video of zero length')
+            ignore_count += 1
+            continue
         # video view count
         views = int(l.split('|')[views_index])
         vids.append((videoID, length, views))
+    print(str(ignore_count)+' videos of zero length ignored')
     # sort by descending viewcount to speed up lookups
     vids.sort(key=lambda x:x[2], reverse=True)
     # write metadata

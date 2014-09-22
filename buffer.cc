@@ -20,7 +20,10 @@ void Buffer::initialize() {
 
 void Buffer::handleMessage(cMessage* msg) {
     if (msg == transmitDone) {
+        EV << "Transmit done.\n";
         if (queue->front() != NULL) {
+            EV << "\tQueue not empty, sending next.\n";
+            EV << ((cPacket*)queue->front())->getBitLength() << endl;//
             send(queue->pop(), transmitID);
             scheduleAt(gate(transmitID)->getTransmissionChannel()
                 ->getTransmissionFinishTime(), transmitDone);
@@ -30,14 +33,18 @@ void Buffer::handleMessage(cMessage* msg) {
         send(msg, toLogicID);
     }
     else if (msg->getArrivalGateId() == fromLogicID) {
+        EV << "Outgoing message from logic.\n";
         cPacket* pkt = check_and_cast<cPacket*>(msg);
         cChannel* transmissionChannel =
             gate(transmitID)->
             getTransmissionChannel();
         if (transmissionChannel->isBusy()) {
+            EV << "\tChannel is busy, placing into queue.\n";
             queue->insert(pkt);
         }
         else {
+            EV << "\tChannel is free, transmitting now.\n";
+            EV << ((cPacket*)msg)->getBitLength() << endl;//
             send(msg, transmitID);
             scheduleAt(transmissionChannel->getTransmissionFinishTime(),
                 transmitDone);

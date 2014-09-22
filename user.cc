@@ -12,6 +12,7 @@ Define_Module(User);
 
 const bool message_switching = true;
 const uint64_t packetBitSize = 1000000; // 1Mb
+const short cacheTries = 2; // try 2 caches before master
 
 User::~User()
 {
@@ -47,12 +48,12 @@ void User::idle()
 void User::sendRequest()
 {
     MyPacket *req = new MyPacket("Request");
-    req->setBitLength(0); // assume no transmission delay
+    req->setBitLength(1000); // assume no transmission delay
     req->setSourceID(getId());
     req->setDestinationID(nearestCache);
     req->setCustomID(getRandCustomVideoID());
     EV << "Sending request for Custom ID " << req->getCustomID() << endl;
-    req->setCacheTries(2); // try 2 caches before master
+    req->setCacheTries(cacheTries);
     req->setState(stateStart);
     send(req, "out");
 }
@@ -79,7 +80,7 @@ void User::handleMessage(cMessage *msg)
             pkt->setState(stateAck);
             pkt->setDestinationID(pkt->getSourceID());
             pkt->setSourceID(getId());
-            pkt->setBitLength(0);
+            pkt->setBitLength(1000);
             send(pkt, "out");
             // TODO teleport ack to cache to avoid false propagation delay?
         }
