@@ -121,7 +121,7 @@ euid_re = re.compile(r'-(?P<euid>\d+)\s+'
 asys = AS()
 exts = []
 def parse():
-    for line in file0:
+    for line in file_in:
         m = uid_re.match(line.decode('UTF-8'))
         if m != None:
             if m.group('nuid'):
@@ -155,6 +155,34 @@ def parse():
         print(line)
     print('parsed '+str(len(asys.nodes))+' internal nodes')
     print('parsed '+str(len(exts))+' external nodes')
+
+link_lags = {}
+link_lag_avg = {}
+def read_lags():
+    fn = "weights-dist.tar.gz"
+    arc = tarfile.open(fn)
+    lag_re = re.compile(r'(?P<loc1>\D+)\d+\s+'
+                        r'(?P<loc2>\D+)\d+\s+'
+                        r'(?P<lag>\d+)'
+                        )
+    lag_file = arc.extractfile(asn+'/latencies.intra')
+    for line in lag_file:
+        m = lag_re.match(line.decode('UTF-8'))
+        if m == None:
+            print('unrecognised line:')
+            print(line)
+        else:
+            l1 = m.group('loc1')
+            l2 = m.group('loc2')
+            lag = float(m.group('lag'))
+            if (l1,l2) in link_lags:
+                link_lags[l1,l2].append(lag)
+            elif (l2,l1) in link_lags:
+                link_lags[l2,l1].append(lag)
+            else:
+                link_lags[l1,l2] = [lag]
+    for link in link_lags.keys():
+        link_lag_avg[link] = sum(link_lags[link]) / float(len(link_lags[link]))
 
 def manip_topo():
     # take most connected node to be server
@@ -199,7 +227,7 @@ def manip_topo():
         rank += 1
 
 def write_to_ned():
-    f = open('AS'+asn+'.ned', 'w')
+    f = open(file_out, 'w')
     f.write('network AS'+asn.replace('.','')+'\n{\n')
 
     # submodule section
@@ -263,16 +291,25 @@ def write_to_ned():
     f.close()
 
 def main():
-    # read command line argument
+    # read command line arguments
     parser = argparse.ArgumentParser(description='Convert rf topology to ned.')
-    parser.add_argument("asn")
+    parser.add_argument('asn')
+    parser.add_argument('--r', default=None)
     args = parser.parse_args()
+
     global asn
     asn = args.asn
-    global file0
-    file0 = archive.extractfile(asn+'.cch')
+    if args.r == None:
+        rad = ''
+    else:
+        rad = '.r'+args.r
+    global file_in
+    file_in = archive.extractfile(asn+rad+'.cch')
+    global file_out
+    file_out = 'AS'+asn+rad+'.ned'
     # read rf file
     parse()
+    read_lags()
     manip_topo()
     write_to_ned()
 
