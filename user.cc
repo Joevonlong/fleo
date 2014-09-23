@@ -28,9 +28,14 @@ void User::initialize(int stage) {
         requestHistogram.setRangeAutoUpper(0);
         requestHistogram.setNumCells(100);
     //  requestHistogram.setRange(0, UINT64_MAX);
+//        completionVector.setName("Time to complete request")
+//        completionVector.
+        //
         completionHistogram.setName("Completion Time");
         completionHistogram.setRangeAutoUpper(0);
         completionHistogram.setNumCells(100);
+        //
+        lagVector.setName("Total time minus ");
         idleTimer = new cMessage("idle timer");
         idle();
     }
@@ -75,10 +80,13 @@ void User::handleMessage(cMessage *msg)
         EV << "Received " << pkt->getBitLength() << "b of data. "
            << pkt->getBitsPending() << "b more to go.\n";
         if (pkt->getState() == stateEnd) {
+            simtime_t completionTime = simTime() - pkt->getCreationTime();
             EV << "Transfer of item #" << pkt->getCustomID() << " complete. "
-               << "Total time to serve request was "
-               << simTime() - pkt->getCreationTime() << endl;
-            completionHistogram.collect(simTime()-pkt->getCreationTime());
+               << "Total time to serve request was " << completionTime << endl;
+            completionHistogram.collect(completionTime);
+            emit(videoLengthSignal, pkt->getVideoLength());
+            emit(completionTimeSignal, completionTime);
+            emit(effBitRateSignal, (double)pkt->getVideoLength()*800000/completionTime);
             delete pkt;
             idle();
         }

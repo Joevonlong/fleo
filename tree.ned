@@ -168,8 +168,14 @@ simple User
         volatile double requestSize;
         @signal[idle](type="simtime");
         @statistic[idle](title="idle time"; source="idle"; record=vector,min,max,mean,count; interpolationmode=none);
-//        @signal[request](type="double");
-  //      @statistic[request-size](title="request size"; source="request"; record=vector,histogram; interpolationmode=none);
+        @signal[videoLength](type="long");
+        @statistic[video-length](title="requested video length"; source="videoLength"; record=vector,mean,count,histogram; interpolationmode=none);
+        @signal[request](type="double");
+        @statistic[request-size](title="request size"; source="request"; record=vector; interpolationmode=none);
+        @signal[completionTime](type="simtime");
+        @statistic[completion-time](title="completion time"; source="completionTime"; record=vector,mean,count; interpolationmode=none);
+        @signal[effectiveBitRate](type="double");
+        @statistic[effective-bitrate](title="Effective Bit Rate"; source=effectiveBitRate; record=vector,mean,count,histogram; interpolationmode=none);
         @display("i=block/user");
     gates:
         input in;

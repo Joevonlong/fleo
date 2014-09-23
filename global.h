@@ -3,6 +3,9 @@
 
 extern simsignal_t idleSignal;
 extern simsignal_t requestSignal;
+extern simsignal_t videoLengthSignal;
+extern simsignal_t completionTimeSignal;
+extern simsignal_t effBitRateSignal;
 
 extern int requestKind;
 extern int replyKind;

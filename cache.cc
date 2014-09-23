@@ -1,11 +1,14 @@
 #include "request_m.h"
 #include "global.h"
 #include "cache.h"
+#include "parse.h"
 
 Define_Module(Cache);
 // record request statistics
 void Cache::initialize() {
-    //cached = std
+    cacheSize = pow(10, 2+3*4) * 8; // 100TB
+    diskUsed = 0;
+    cacheOrder = new cQueue("cache insert order"); // for LRU replacement
 }
 
 void Cache::handleMessage(cMessage* msg) {
@@ -32,8 +35,18 @@ bool Cache::isCached(int customID) {
 
 void Cache::setCached(int customID, bool b) {
     cached[customID] = b;
+    if (b == true) {
+        diskUsed += getVideoBitSize(customID);
+        cacheOrder->insert((cObject*)customID);
+    }
+    else {
+        diskUsed -= getVideoBitSize(customID);
+        cacheOrder->remove((cObject*)customID);
+    }
+    // check if full
+    if (diskUsed > cacheSize) {
+        // assume LRU replacement
+        
+    }
 }
-
-//virtual cModule * 	getParentModule () const
-//cModule * 	getSubmodule (const char *submodname, int idx=-1)
 

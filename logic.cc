@@ -11,7 +11,7 @@ Define_Module(Logic);
 
 const int64_t noCache = -2;
 const int64_t notCached = -1;
-const uint64_t packetBitSize = 1000000; // 1Mb
+const uint64_t packetBitSize = 100000000; // 100Mb, takes 0.16s for OC12
 
 int Logic::numInitStages() const {return 4;}
 
@@ -90,6 +90,7 @@ void Logic::handleMessage(cMessage *msg) {
             else if (vidBitSize > 0) { // cached
                 pkt->setDestinationID(pkt->getSourceID());
                 pkt->setSourceID(getId());
+                pkt->setVideoLength(vidBitSize/800000);
                 pkt->setBitLength(std::min((uint64_t)vidBitSize,packetBitSize));
                 EV << pkt->getBitLength() << endl;
                 pkt->setBitsPending(vidBitSize-pkt->getBitLength());
@@ -118,6 +119,7 @@ void Logic::handleMessage(cMessage *msg) {
                 pkt->getCustomID(), true);
             if (pkt->hasEncapsulatedPacket() == true) {
                 MyPacket *innerPkt = (MyPacket*)pkt->decapsulate();
+                innerPkt->setVideoLength(pkt->getVideoLength());
                 delete pkt;
                 scheduleAt(simTime(), innerPkt);
                 return;

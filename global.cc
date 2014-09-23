@@ -7,7 +7,10 @@ Define_Module(Global);
 const int defaultLoc = -1;
 
 simsignal_t idleSignal;
+simsignal_t videoLengthSignal;
 simsignal_t requestSignal;
+simsignal_t completionTimeSignal;
+simsignal_t effBitRateSignal;
 
 int requestKind = 123;
 int replyKind = 321;
@@ -30,6 +33,9 @@ void Global::initialize(int stage)
     if (stage == 0) {
         idleSignal = registerSignal("idle"); // name assigned to signal ID
         requestSignal = registerSignal("request"); // name assigned to signal ID
+        videoLengthSignal = registerSignal("videoLength");
+        completionTimeSignal = registerSignal("completionTime");
+        effBitRateSignal = registerSignal("effectiveBitRate");
         topoSetup();
         loadVideoLengthFile();
         EV << static_cast<double>(UINT64_MAX) << endl;

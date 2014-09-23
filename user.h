@@ -13,7 +13,9 @@ private:
     int nearestCache;
 protected:
     cDoubleHistogram requestHistogram;
+//    cOutVector completionVector;
     cDoubleHistogram completionHistogram;
+    cOutVector lagVector;
     virtual int numInitStages() const;
     virtual void initialize(int stage);
     virtual void handleMessage(cMessage *msg);

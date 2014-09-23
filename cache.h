@@ -9,5 +9,8 @@ protected:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
     std::map<int, bool> cached; // maps custom video ID to cache status
+    uint64_t cacheSize;
+    uint64_t diskUsed;
+    cQueue *cacheOrder;
 };
 
