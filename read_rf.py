@@ -309,7 +309,7 @@ def main():
     file_out = 'AS'+asn+rad+'.ned'
     # read rf file
     parse()
-    read_lags()
+    #read_lags()
     manip_topo()
     write_to_ned()
 

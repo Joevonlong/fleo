@@ -1,16 +1,18 @@
 #include <omnetpp.h>
+#include <queue>
 
 class Cache : public cSimpleModule
 {
 public:
     bool isCached(int customID);
     void setCached(int customID, bool b);
+    void setCached(int customID, bool b, bool force);
+    uint64_t diskUsed;
 protected:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
     std::map<int, bool> cached; // maps custom video ID to cache status
     uint64_t cacheSize;
-    uint64_t diskUsed;
-    cQueue *cacheOrder;
+    std::queue<uint64_t> cacheOrder;
 };
 

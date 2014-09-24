@@ -38,6 +38,9 @@ def parse(videoID_index, length_index, views_index):
         views = int(l.split('|')[views_index])
         vids.append((videoID, length, views))
     print(str(ignore_count)+' videos of zero length ignored')
+    print('average video length is '+str(
+        float(sum([l*v for (vid,l,v) in vids]))/sum([v for (vid,l,v) in vids]))
+        +'s.')
     # sort by descending viewcount to speed up lookups
     vids.sort(key=lambda x:x[2], reverse=True)
     # write metadata

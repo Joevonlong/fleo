@@ -11,7 +11,7 @@ Define_Module(Logic);
 
 const int64_t noCache = -2;
 const int64_t notCached = -1;
-const uint64_t packetBitSize = 100000000; // 100Mb, takes 0.16s for OC12
+const uint64_t packetBitSize = pow(10, Z1+3*2) * 8; // 10MB: takes 0.13s for OC12
 
 int Logic::numInitStages() const {return 4;}
 
@@ -24,8 +24,9 @@ void Logic::initialize(int stage) {
         if (getParentModule()->par("completeCache").boolValue() == true) {
             Cache* cache = (Cache*)(getParentModule()->getSubmodule("cache"));
             for (unsigned long maxID = getMaxCustomVideoID(); maxID != ULONG_MAX; maxID--) {
-                cache->setCached(maxID, true);
+                cache->setCached(maxID, true, true);
             }
+            EV << "asdf"<<((Cache*)getParentModule()->getSubmodule("cache"))->diskUsed << endl;
         }
     }
     else if (stage == 3) {
