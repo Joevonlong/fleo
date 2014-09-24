@@ -1,5 +1,5 @@
 #include <omnetpp.h>
-#include <queue>
+#include <deque>
 
 class Cache : public cSimpleModule
 {
@@ -13,6 +13,6 @@ protected:
     virtual void handleMessage(cMessage *msg);
     std::map<int, bool> cached; // maps custom video ID to cache status
     uint64_t cacheSize;
-    std::queue<uint64_t> cacheOrder;
+    std::deque<uint64_t> cacheOrder;
 };
 

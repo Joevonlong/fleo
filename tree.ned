@@ -1,4 +1,8 @@
-simple Global {}
+simple Global {
+    parameters:
+        @signal[completionTimeGlobal](type="simtime");
+        @statistic[completion-time-global](title="global completion time"; source="completionTimeGlobal"; record=vector,mean,count; interpolationmode=none);
+}
 
 channel MyDatarateChannel extends ned.DatarateChannel
 {
@@ -170,10 +174,10 @@ simple User
         @statistic[idle](title="idle time"; source="idle"; record=vector,min,max,mean,count; interpolationmode=none);
         @signal[videoLength](type="long");
         @statistic[video-length](title="requested video length"; source="videoLength"; record=vector,mean,count,histogram; interpolationmode=none);
-        @signal[request](type="double");
-        @statistic[request-size](title="request size"; source="request"; record=vector; interpolationmode=none);
+        @signal[request](type="long");
+        @statistic[request-size](title="request size"; source="request"; record=vector,count; interpolationmode=none);
         @signal[completionTime](type="simtime");
-        @statistic[completion-time](title="completion time"; source="completionTime"; record=vector,mean,count; interpolationmode=none);
+        @statistic[completion-time](title="completion time"; source="completionTime"; record=vector,mean,max,count; interpolationmode=none);
         @signal[effectiveBitRate](type="double");
         @statistic[effective-bitrate](title="Effective Bit Rate"; source=effectiveBitRate; record=vector,mean,count,histogram; interpolationmode=none);
         @display("i=block/user");

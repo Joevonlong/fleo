@@ -5,23 +5,14 @@
 
 Define_Module(Cache);
 // record request statistics
+
 void Cache::initialize() {
     cacheSize = pow(10, 3*4) * 8; // 1TB
     diskUsed = 0;
-    std::queue<uint64_t> cacheOrder; // = new cQueue("cache insert order"); // for LRU replacement
+    std::deque<uint64_t> cacheOrder; // = new cQueue("cache insert order"); // for LRU replacement
 }
 
 void Cache::handleMessage(cMessage* msg) {
-    if (msg->getKind() == requestKind) {
-        Request *req = check_and_cast<Request*>(msg);
-        if (cached[req->getCustomID()]) {
-            // servefrom cache
-        }
-        else {
-            // not in cache:
-            // fetch from upstream, or redirect.
-        }
-    }
 }
 
 bool Cache::isCached(int customID) {
@@ -45,7 +36,7 @@ void Cache::setCached(int customID, bool b, bool force) {
     cached[customID] = b;
     if (b == true) {
         diskUsed += getVideoBitSize(customID);
-        cacheOrder.push(customID);
+        cacheOrder.push_back(customID);
         //EV << "Cached item #" << customID
         //   << " of size " << getVideoBitSize(customID) << endl;
     }
@@ -63,7 +54,7 @@ void Cache::setCached(int customID, bool b, bool force) {
             EV << "Cache full. ";
             // assume LRU replacement
             uint64_t evicted = cacheOrder.front();
-            cacheOrder.pop();
+            cacheOrder.pop_front();
             diskUsed -=getVideoBitSize(evicted);
             EV << "Evicted item #" << evicted
                << " of size " << getVideoBitSize(evicted) << endl;

@@ -35,6 +35,7 @@ void Global::initialize(int stage)
         requestSignal = registerSignal("request"); // name assigned to signal ID
         videoLengthSignal = registerSignal("videoLength");
         completionTimeSignal = registerSignal("completionTime");
+        completionTimeGlobalSignal = registerSignal("completionTimeGlobal");;
         effBitRateSignal = registerSignal("effectiveBitRate");
         topoSetup();
         loadVideoLengthFile();
@@ -73,5 +74,9 @@ void Global::buildCacheVector() {
             cacheIDs.push_back(it->second);
         }
     }
+}
+
+void Global::recordCompletionTimeGlobal(simtime_t time) {
+    emit(completionTimeGlobalSignal, time);
 }
 

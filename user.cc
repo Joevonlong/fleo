@@ -12,7 +12,7 @@ Define_Module(User);
 
 //const bool message_switching = true;
 //const uint64_t packetBitSize = 1000000; // 1Mb
-const short cacheTries = 2; // try 2 caches before master
+const short cacheTries = 1; // try 2 caches before master
 
 User::~User()
 {
@@ -61,6 +61,7 @@ void User::sendRequest()
     req->setDestinationID(nearestCache);
     req->setCustomID(getRandCustomVideoID());
     EV << "Sending request for Custom ID " << req->getCustomID() << endl;
+    emit(requestSignal, req->getCustomID());
     req->setCacheTries(cacheTries);
     req->setState(stateStart);
     send(req, "out");
@@ -70,7 +71,6 @@ void User::handleMessage(cMessage *msg)
 {
     if (msg == idleTimer) { // if idle timer is back
         //uint64_t size = getVideoSize();
-        //emit(requestSignal, static_cast<double>(size));
         //requestHistogram.collect(size);
         //requestingBits = size;
         sendRequest();
@@ -86,6 +86,8 @@ void User::handleMessage(cMessage *msg)
             completionHistogram.collect(completionTime);
             emit(videoLengthSignal, pkt->getVideoLength());
             emit(completionTimeSignal, completionTime);
+            ((Global*)getParentModule()->getSubmodule("global"))
+                ->recordCompletionTimeGlobal(completionTime);
             emit(effBitRateSignal, (double)pkt->getVideoLength()*800000/completionTime);
             delete pkt;
             idle();

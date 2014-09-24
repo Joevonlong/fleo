@@ -11,7 +11,7 @@ Define_Module(Logic);
 
 const int64_t noCache = -2;
 const int64_t notCached = -1;
-const uint64_t packetBitSize = pow(10, Z1+3*2) * 8; // 10MB: takes 0.13s for OC12
+const uint64_t packetBitSize = pow(10, 3*2) * 8; // 1MB: takes 0.13s for OC12
 
 int Logic::numInitStages() const {return 4;}
 
@@ -59,8 +59,7 @@ void Logic::handleMessage(cMessage *msg) {
             // check cache
             int64_t vidBitSize = checkCache(pkt->getCustomID());
             if (vidBitSize == noCache) {
-                throw std::runtime_error(
-                    "Content requested from node without a cache.");
+                error("Content requested from node without a cache.");
             }
             else if (vidBitSize == notCached) {
                 MyPacket *outerPkt = new MyPacket("Request");
@@ -69,17 +68,17 @@ void Logic::handleMessage(cMessage *msg) {
                 outerPkt->setState(stateStart);
                 outerPkt->setCacheTries(pkt->getCacheTries()-1);
                 outerPkt->setCustomID(pkt->getCustomID());
-                if (pkt->getCacheTries() > 0) { // check secondary
+                if (outerPkt->getCacheTries() > 0) { // check secondary
                     outerPkt->setDestinationID(nearestCache);
                     EV << "Checking secondary cache: ";
                 }
-                else if (pkt->getCacheTries() == 0) { // get from master
+                else if (outerPkt->getCacheTries() == 0) { // get from master
                     outerPkt->setDestinationID(nearestCompleteCache);
                     EV << "Checking master cache: ";
                 }
                 else {
-                    EV << "cacheTries = " << pkt->getCacheTries() << endl;
-                    throw std::runtime_error("Invalid cacheTries value.");
+                    EV << "cacheTries = " << outerPkt->getCacheTries() << endl;
+                    error("Invalid cacheTries value.");
                 }
                 EV << simulation.getModule(outerPkt->getDestinationID())
                     ->getFullPath() << endl;

@@ -23,9 +23,12 @@ extern std::map<std::string, int> locCaches;
 
 class Global : public cSimpleModule
 {
+public:
+    void recordCompletionTimeGlobal(simtime_t time);
 protected:
     virtual int numInitStages() const;
     virtual void initialize(int stage);
+    simsignal_t completionTimeGlobalSignal;
 private:
     void loadAllLocs();
     void printCacheLocs();
