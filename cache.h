@@ -13,6 +13,7 @@ protected:
     virtual void handleMessage(cMessage *msg);
     std::map<int, bool> cached; // maps custom video ID to cache status
     uint64_t cacheSize;
-    std::deque<uint64_t> cacheOrder;
+    std::map<int, std::deque<int>::iterator> lruMap;
+    std::deque<int> cacheOrder;
 };
 

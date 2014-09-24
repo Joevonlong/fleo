@@ -11,7 +11,7 @@ Define_Module(Logic);
 
 const int64_t noCache = -2;
 const int64_t notCached = -1;
-const uint64_t packetBitSize = pow(10, 3*2) * 8; // 1MB: takes 0.13s for OC12
+const uint64_t packetBitSize = UINT64_MAX; //pow(10, 1+3*2) * 8; // 10MB: takes 0.13s for OC12
 
 int Logic::numInitStages() const {return 4;}
 
@@ -100,7 +100,8 @@ void Logic::handleMessage(cMessage *msg) {
                 else {
                     pkt->setState(stateTransfer);
                 }
-                EV << "Requested item is cached. Sending reply.\n";
+                EV << "Requested item #" << pkt->getCustomID()
+                   << " is cached. Sending reply.\n";
                 cGate* outGate = getNextGate(this, pkt);
                 send(pkt, outGate);
                 return;
