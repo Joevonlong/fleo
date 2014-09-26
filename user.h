@@ -5,13 +5,26 @@ class User : public cSimpleModule
 {
 public:
     virtual ~User();
-private:
+protected:
     cMessage* idleTimer;
     void idle();
+    void idle(simtime_t t);
+    short cacheTries;
+    simtime_t playbackStart;
+    simtime_t playbackTimeDownloaded;
+    void startPlayback(simtime_t remaining);
+    // also record request start - playback start time
+    cMessage* underflowTimer;
+    cOutVector underflowVector;
+    
     void sendRequest();
+    void endRequest(MyPacket *pkt);
+    simtime_t requestStartTime;
+    bool playingBack;
+    simtime_t playBackStart;
     uint64_t requestingBits;
     int nearestCache;
-protected:
+    Global *global;
     cDoubleHistogram requestHistogram;
 //    cOutVector completionVector;
     cDoubleHistogram completionHistogram;

@@ -1,7 +1,11 @@
 simple Global {
     parameters:
+        int bufferBlock = default(30);
+        int bufferMin = default(15);
         @signal[completionTimeGlobal](type="simtime");
-        @statistic[completion-time-global](title="global completion time"; source="completionTimeGlobal"; record=vector,mean,count; interpolationmode=none);
+        @statistic[completion-time-global](title="global completion time"; source="completionTimeGlobal"; record=histogram,vector,mean,count; interpolationmode=none);
+        @signal[effectiveBitRateGlobal](type="double");
+        @statistic[effective-bitrate-global](title="global effective bit rate"; source="effectiveBitRateGlobal"; record=vector,mean,count; interpolationmode=none);
 }
 
 channel MyDatarateChannel extends ned.DatarateChannel
@@ -34,7 +38,7 @@ channel OC48 extends MyDatarateChannel {
 }
 channel OC12 extends MyDatarateChannel {
     datarate = 622.08Mbps;
-    delay = 10ms;
+    delay = 5ms;
 }
 channel OC3 extends MyDatarateChannel {
     datarate = 155.52Mbps;
@@ -170,6 +174,7 @@ simple User
         int rn = default(-1);
         volatile double idleTime @unit(s);   // delay before next request
         volatile double requestSize;
+        int cacheTries = default(2); // try 2 caches before master
         @signal[idle](type="simtime");
         @statistic[idle](title="idle time"; source="idle"; record=vector,min,max,mean,count; interpolationmode=none);
         @signal[videoLength](type="long");
@@ -177,9 +182,9 @@ simple User
         @signal[request](type="long");
         @statistic[request-size](title="request size"; source="request"; record=vector,count; interpolationmode=none);
         @signal[completionTime](type="simtime");
-        @statistic[completion-time](title="completion time"; source="completionTime"; record=vector,mean,max,count; interpolationmode=none);
+        @statistic[completion-time](title="completion time"; source="completionTime"; record=vector?,mean,max,count; interpolationmode=none);
         @signal[effectiveBitRate](type="double");
-        @statistic[effective-bitrate](title="Effective Bit Rate"; source=effectiveBitRate; record=vector,mean,count,histogram; interpolationmode=none);
+        @statistic[effective-bitrate](title="Effective Bit Rate"; source=effectiveBitRate; record=vector?,mean,count,histogram; interpolationmode=none);
         @display("i=block/user");
     gates:
         input in;

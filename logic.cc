@@ -11,12 +11,13 @@ Define_Module(Logic);
 
 const int64_t noCache = -2;
 const int64_t notCached = -1;
-const uint64_t packetBitSize = UINT64_MAX; //pow(10, 1+3*2) * 8; // 10MB: takes 0.13s for OC12
+const uint64_t packetBitSize = pow(10, 3*2) * 8; // 10MB: takes 0.13s for OC12
 
 int Logic::numInitStages() const {return 4;}
 
 void Logic::initialize(int stage) {
     if (stage == 0) {
+        global = (Global*)getParentModule()->getSubmodule("global");
     }
     else if (stage == 1) {
         registerSelfIfCache();
@@ -90,16 +91,33 @@ void Logic::handleMessage(cMessage *msg) {
             else if (vidBitSize > 0) { // cached
                 pkt->setDestinationID(pkt->getSourceID());
                 pkt->setSourceID(getId());
-                pkt->setVideoLength(vidBitSize/800000);
-                pkt->setBitLength(std::min((uint64_t)vidBitSize,packetBitSize));
-                EV << pkt->getBitLength() << endl;
-                pkt->setBitsPending(vidBitSize-pkt->getBitLength());
-                if (pkt->getBitsPending() == 0) {
-                    pkt->setState(stateEnd);
+                long vidlen = vidBitSize/bitRate;
+                pkt->setVideoLength(vidlen);
+                pkt->setVideoSegmentsPending(
+                    vidlen / global->getBufferBlock()
+                    + (vidlen % global->getBufferBlock() != 0)
+                    -1);
+                if (pkt->getVideoSegmentsPending() > 0) {
+                    pkt->setVideoSegmentLength(global->getBufferBlock());
+                    pkt->setBitLength(global->getBufferBlock()*bitRate);
                 }
-                else {
-                    pkt->setState(stateTransfer);
+                else if (pkt->getVideoSegmentsPending() == 0){
+                    pkt->setVideoSegmentLength(vidlen);
+                    pkt->setBitLength(vidlen*bitRate);
                 }
+                else {error("Initial videoSegmentsPending < 0");}
+                EV << "Initial bitLength: " << pkt->getBitLength() << endl;
+                pkt->setVideoLengthPending(vidlen-pkt->getVideoSegmentLength());
+
+//                pkt->setBitsPending(vidBitSize-pkt->getBitLength());
+//                if (pkt->getBitsPending() == 0) {
+//                    pkt->setState(stateEnd);
+//                }
+//                else {
+//                    pkt->setState(stateTransfer);
+//                }
+
+                pkt->setState(stateTransfer);
                 EV << "Requested item #" << pkt->getCustomID()
                    << " is cached. Sending reply.\n";
                 cGate* outGate = getNextGate(this, pkt);
@@ -114,6 +132,7 @@ void Logic::handleMessage(cMessage *msg) {
             }
         }
         else if (pkt->getState() == stateEnd) {
+            error("not currently used");
             EV << "Fetch from other cache completed.\n";
             // assume all misses are cached (as in LRU?)
             ((Cache*)getParentModule()->getSubmodule("cache"))->setCached(
@@ -131,16 +150,35 @@ void Logic::handleMessage(cMessage *msg) {
             }
         }
         else if (pkt->getState() == stateTransfer) {
-            // acknowledge transfer
-            pkt->setDestinationID(pkt->getSourceID());
-            pkt->setSourceID(getId());
-            pkt->setState(stateAck);
-            pkt->setBitLength(headerBitLength);
-            cGate* outGate = getNextGate(this, pkt);
-            send(pkt, outGate);
-            return;
+            if (pkt->getVideoSegmentsPending() == 0) {
+                EV << "Fetch from other cache completed.\n";
+                // assume all misses are cached (as in LRU?)
+                ((Cache*)getParentModule()->getSubmodule("cache"))->setCached(
+                    pkt->getCustomID(), true);
+            }
+            else {
+                
+            }
+            // decapsulate
+            if (pkt->hasEncapsulatedPacket() == true) {
+                MyPacket *innerPkt = (MyPacket*)pkt->decapsulate();
+                innerPkt->setDestinationID(innerPkt->getSourceID());
+                innerPkt->setSourceID(getId());
+                innerPkt->setVideoLength(pkt->getVideoLength());
+                innerPkt->setVideoSegmentLength(pkt->getVideoSegmentLength());
+                innerPkt->setVideoSegmentsPending(pkt->getVideoSegmentsPending());
+                innerPkt->setVideoLengthPending(pkt->getVideoLengthPending());
+                innerPkt->setState(stateTransfer);
+                // not using bitsPending
+                cGate* outGate = getNextGate(this, innerPkt);
+                send(innerPkt, outGate);
+                delete pkt;
+                return;
+            }
+            else {error("Cache-to-cache transfer without user request");}
         }
         else if (pkt->getState() == stateAck) { // continue transfer
+            error("not currently used");
             pkt->setDestinationID(pkt->getSourceID());
             pkt->setSourceID(getId());
             pkt->setBitLength(std::min(pkt->getBitsPending(),packetBitSize));

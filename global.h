@@ -16,6 +16,7 @@ extern short stateStart;
 extern short stateEnd;
 extern short stateTransfer;
 extern short stateAck;
+extern short stateStream;
 
 extern std::vector<int> cacheIDs;
 extern std::vector<int> completeCacheIDs;
@@ -25,13 +26,21 @@ class Global : public cSimpleModule
 {
 public:
     void recordCompletionTimeGlobal(simtime_t time);
+    void recordEffBitRateGlobal(double d);
+    int getBufferBlock();
+    int getBufferMin();
 protected:
     virtual int numInitStages() const;
     virtual void initialize(int stage);
     simsignal_t completionTimeGlobalSignal;
+    simsignal_t effBitRateGlobalSignal;
+    cDoubleHistogram effBitRateGlobalHist;
+    virtual void finish();
 private:
     void loadAllLocs();
     void printCacheLocs();
     void buildCacheVector();
+    int bufferBlock;
+    int bufferMin;
 };
 

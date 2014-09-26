@@ -1,3 +1,4 @@
+extern const uint64_t bitRate;
 void loadVideoLengthFile();
 //uint64_t getVideoSize();
 unsigned long getMaxCustomVideoID();

@@ -7,6 +7,7 @@ class Logic : public cSimpleModule
 public:
     std::map<int, cGate*> nextGate; // maps user index to next cGate*
 protected:
+    Global *global;
     virtual int numInitStages() const;
     virtual void initialize(int stage);
     virtual void handleMessage(cMessage *msg);

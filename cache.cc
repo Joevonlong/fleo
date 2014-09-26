@@ -45,7 +45,7 @@ void Cache::setCached(int customID, bool b, bool force) {
     cached[customID] = b;
     if (b == true) {
         diskUsed += getVideoBitSize(customID);
-//        cacheOrder.push_back(customID);
+        cacheOrder.push_back(customID);
 //        lruMap[customID] = cacheOrder.end()-1; // -1 for last element
         //EV << "Cached item #" << customID
         //   << " of size " << getVideoBitSize(customID) << endl;
@@ -60,10 +60,9 @@ void Cache::setCached(int customID, bool b, bool force) {
     // check if full
     if (force == false) {
         while (diskUsed > cacheSize) {
-            error("cache full.");
             EV << "Cache full. ";
             // assume LRU replacement
-            int evicted = cacheOrder.front();
+            int evicted = cacheOrder.front(); // currently first to be cached.
             cacheOrder.pop_front();
             diskUsed -=getVideoBitSize(evicted);
             EV << "Evicted item #" << evicted

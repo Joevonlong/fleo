@@ -21,6 +21,7 @@ short stateStart = 0;
 short stateEnd = 1;
 short stateTransfer = 2;
 short stateAck = 3;
+short stateStream = 4;
 
 std::vector<int> cacheIDs;
 std::vector<int> completeCacheIDs;
@@ -35,8 +36,17 @@ void Global::initialize(int stage)
         requestSignal = registerSignal("request"); // name assigned to signal ID
         videoLengthSignal = registerSignal("videoLength");
         completionTimeSignal = registerSignal("completionTime");
-        completionTimeGlobalSignal = registerSignal("completionTimeGlobal");;
+        completionTimeGlobalSignal = registerSignal("completionTimeGlobal");
         effBitRateSignal = registerSignal("effectiveBitRate");
+        effBitRateGlobalSignal = registerSignal("effectiveBitRateGlobal");
+
+        effBitRateGlobalHist.setName("Global EBR histogram");
+        effBitRateGlobalHist.setRangeAutoUpper(0);
+        effBitRateGlobalHist.setNumCells(1000);
+
+        bufferBlock = par("bufferBlock");
+        bufferMin = par("bufferMin");
+
         topoSetup();
         loadVideoLengthFile();
         EV << static_cast<double>(UINT64_MAX) << endl;
@@ -76,7 +86,23 @@ void Global::buildCacheVector() {
     }
 }
 
+int Global::getBufferBlock() {
+    return bufferBlock;
+}
+int Global::getBufferMin() {
+    return bufferMin;
+}
+
 void Global::recordCompletionTimeGlobal(simtime_t time) {
     emit(completionTimeGlobalSignal, time);
+}
+
+void Global::recordEffBitRateGlobal(double d) {
+    emit(effBitRateGlobalSignal, d);
+    effBitRateGlobalHist.collect(d);
+}
+
+void Global::finish() {
+    effBitRateGlobalHist.record();
 }
 
