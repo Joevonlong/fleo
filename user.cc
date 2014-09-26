@@ -16,6 +16,7 @@ Define_Module(User);
 User::~User()
 {
     cancelAndDelete(idleTimer);
+    cancelAndDelete(underflowTimer);
 }
 
 int User::numInitStages() const {return 4;}
@@ -112,6 +113,7 @@ void User::handleMessage(cMessage *msg)
     }
     else if (msg == underflowTimer) {
         // record underflow statistics
+        error("underflow");
     }
     else { // else received reply
         MyPacket *pkt = check_and_cast<MyPacket*>(msg);

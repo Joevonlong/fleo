@@ -44,8 +44,8 @@ void Global::initialize(int stage)
         effBitRateGlobalHist.setRangeAutoUpper(0);
         effBitRateGlobalHist.setNumCells(1000);
 
-        bufferBlock = par("bufferBlock");
-        bufferMin = par("bufferMin");
+        bufferBlock = par("bufferBlock").longValue();
+        bufferMin = par("bufferMin").longValue();
 
         topoSetup();
         loadVideoLengthFile();
@@ -86,10 +86,10 @@ void Global::buildCacheVector() {
     }
 }
 
-int Global::getBufferBlock() {
+long Global::getBufferBlock() {
     return bufferBlock;
 }
-int Global::getBufferMin() {
+long Global::getBufferMin() {
     return bufferMin;
 }
 

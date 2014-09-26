@@ -1,7 +1,7 @@
 simple Global {
     parameters:
-        int bufferBlock = default(30);
-        int bufferMin = default(15);
+        int bufferBlock = default(30s) @unit(s);
+        int bufferMin = default(15s) @unit(s);
         @signal[completionTimeGlobal](type="simtime");
         @statistic[completion-time-global](title="global completion time"; source="completionTimeGlobal"; record=histogram,vector,mean,count; interpolationmode=none);
         @signal[effectiveBitRateGlobal](type="double");

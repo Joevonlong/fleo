@@ -17,7 +17,8 @@ int Logic::numInitStages() const {return 4;}
 
 void Logic::initialize(int stage) {
     if (stage == 0) {
-        global = (Global*)getParentModule()->getSubmodule("global");
+        global = (Global*)getParentModule()->getParentModule()
+            ->getSubmodule("global");
     }
     else if (stage == 1) {
         registerSelfIfCache();
@@ -91,7 +92,7 @@ void Logic::handleMessage(cMessage *msg) {
             else if (vidBitSize > 0) { // cached
                 pkt->setDestinationID(pkt->getSourceID());
                 pkt->setSourceID(getId());
-                long vidlen = vidBitSize/bitRate;
+                uint64_t vidlen = vidBitSize/bitRate;
                 pkt->setVideoLength(vidlen);
                 pkt->setVideoSegmentsPending(
                     vidlen / global->getBufferBlock()
@@ -108,15 +109,6 @@ void Logic::handleMessage(cMessage *msg) {
                 else {error("Initial videoSegmentsPending < 0");}
                 EV << "Initial bitLength: " << pkt->getBitLength() << endl;
                 pkt->setVideoLengthPending(vidlen-pkt->getVideoSegmentLength());
-
-//                pkt->setBitsPending(vidBitSize-pkt->getBitLength());
-//                if (pkt->getBitsPending() == 0) {
-//                    pkt->setState(stateEnd);
-//                }
-//                else {
-//                    pkt->setState(stateTransfer);
-//                }
-
                 pkt->setState(stateTransfer);
                 EV << "Requested item #" << pkt->getCustomID()
                    << " is cached. Sending reply.\n";
@@ -128,8 +120,11 @@ void Logic::handleMessage(cMessage *msg) {
                 EV << "checkCache -> " << vidBitSize << endl;
                 EV << "custom id: " << pkt->getCustomID() << endl;
                 EV << getVideoBitSize(pkt->getCustomID()) << endl;
-                throw std::runtime_error("Invalid return from checkCache.");
+                error("Invalid return from checkCache.");
             }
+        } // end if stateStart
+        else if (pkt->getState() == stateStream) {
+            error("here we are");
         }
         else if (pkt->getState() == stateEnd) {
             error("not currently used");
@@ -145,8 +140,7 @@ void Logic::handleMessage(cMessage *msg) {
                 return;
             }
             else {
-                throw std::runtime_error(
-                    "Cache-to-cache transfer without user request");
+                error("Cache-to-cache transfer without user request");
             }
         }
         else if (pkt->getState() == stateTransfer) {
@@ -157,7 +151,7 @@ void Logic::handleMessage(cMessage *msg) {
                     pkt->getCustomID(), true);
             }
             else {
-                
+                // do nothing
             }
             // decapsulate
             if (pkt->hasEncapsulatedPacket() == true) {

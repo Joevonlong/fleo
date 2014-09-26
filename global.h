@@ -27,8 +27,8 @@ class Global : public cSimpleModule
 public:
     void recordCompletionTimeGlobal(simtime_t time);
     void recordEffBitRateGlobal(double d);
-    int getBufferBlock();
-    int getBufferMin();
+    long getBufferBlock();
+    long getBufferMin();
 protected:
     virtual int numInitStages() const;
     virtual void initialize(int stage);
@@ -40,7 +40,7 @@ private:
     void loadAllLocs();
     void printCacheLocs();
     void buildCacheVector();
-    int bufferBlock;
-    int bufferMin;
+    long bufferBlock;
+    long bufferMin;
 };
 
