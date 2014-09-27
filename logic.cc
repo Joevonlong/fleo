@@ -116,15 +116,65 @@ void Logic::handleMessage(cMessage *msg) {
                 send(pkt, outGate);
                 return;
             }
-            else {
-                EV << "checkCache -> " << vidBitSize << endl;
-                EV << "custom id: " << pkt->getCustomID() << endl;
-                EV << getVideoBitSize(pkt->getCustomID()) << endl;
-                error("Invalid return from checkCache.");
-            }
+            else {error("Invalid return from checkCache.");}
         } // end if stateStart
         else if (pkt->getState() == stateStream) {
-            error("here we are");
+            int64_t vidBitSize = checkCache(pkt->getCustomID());
+            if (vidBitSize == noCache) {
+                error("Content streamed from node without a cache.");
+            }
+            else if (vidBitSize == notCached) {
+                MyPacket *outerPkt = new MyPacket("Request");
+                outerPkt->setBitLength(headerBitLength);
+                outerPkt->setSourceID(getId());
+                outerPkt->setState(stateStream);
+                outerPkt->setCacheTries(pkt->getCacheTries()-1);
+                outerPkt->setCustomID(pkt->getCustomID());
+                outerPkt->setVideoLength(pkt->getVideoLength());
+                outerPkt->setVideoSegmentLength(pkt->getVideoSegmentLength());
+                outerPkt->setVideoSegmentsPending(pkt->getVideoSegmentsPending());
+                outerPkt->setVideoLengthPending(pkt->getVideoLengthPending());
+                if (outerPkt->getCacheTries() > 0) { // check secondary
+                    outerPkt->setDestinationID(nearestCache);
+                    EV << "Checking secondary cache: ";
+                }
+                else if (outerPkt->getCacheTries() == 0) { // get from master
+                    outerPkt->setDestinationID(nearestCompleteCache);
+                    EV << "Checking master cache: ";
+                }
+                else {
+                    EV << "cacheTries = " << outerPkt->getCacheTries() << endl;
+                    error("Invalid cacheTries value.");
+                }
+                EV << simulation.getModule(outerPkt->getDestinationID())
+                    ->getFullPath() << endl;
+                outerPkt->encapsulate(pkt);
+                cGate* outGate = getNextGate(this, outerPkt);
+                send(outerPkt, outGate);
+                return;
+            }
+            else if (vidBitSize > 0) { // cached
+                pkt->setDestinationID(pkt->getSourceID());
+                pkt->setSourceID(getId());
+                pkt->setState(stateTransfer);
+                pkt->setVideoSegmentsPending(
+                    pkt->getVideoSegmentsPending()-1);
+                if (pkt->getVideoSegmentsPending() > 0) {
+                    pkt->setVideoSegmentLength(global->getBufferBlock());
+                }
+                else if (pkt->getVideoSegmentsPending() == 0){
+                    pkt->setVideoSegmentLength(
+                        pkt->getVideoLength() % global->getBufferBlock());
+                }
+                else {error("videoSegmentsPending < 0 while streaming");}
+                pkt->setBitLength(pkt->getVideoSegmentLength()*bitRate);
+                pkt->setVideoLengthPending(
+                    pkt->getVideoSegmentLength() - pkt->getVideoSegmentLength());
+                cGate* outGate = getNextGate(this, pkt);
+                send(pkt, outGate);
+                return;
+            }
+            else {error("Invalid return from checkCache.");}
         }
         else if (pkt->getState() == stateEnd) {
             error("not currently used");
@@ -187,9 +237,7 @@ void Logic::handleMessage(cMessage *msg) {
             send(pkt, outGate);
             return;
         }
-        else {
-            error("Invalid packet state");
-        }
+        else {error("Invalid packet state");}
     }
     else { // destination not reached: forward
         cGate* outGate = getNextGate(this, pkt);

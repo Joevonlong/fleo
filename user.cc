@@ -159,6 +159,7 @@ void User::handleMessage(cMessage *msg)
                 // record playback completed
                 delete pkt;
                 idle();
+                return;
             }
             else if (pkt->getVideoSegmentsPending() > 0) {
                 pkt->setDestinationID(pkt->getSourceID());
@@ -166,6 +167,7 @@ void User::handleMessage(cMessage *msg)
                 pkt->setBitLength(headerBitLength);
                 send(pkt, "out");
                 // TODO teleport ack to cache to avoid false propagation delay?
+                return;
             }
             else {error("getVideoSegmentsPending < 0");}
         }
