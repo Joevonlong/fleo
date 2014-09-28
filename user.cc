@@ -82,16 +82,8 @@ void User::endRequest(MyPacket *pkt) {
     simtime_t completionTime = simTime() - pkt->getCreationTime();
     EV << "Transfer of item #" << pkt->getCustomID() << " complete. "
        << "Total time to serve request was " << completionTime << endl;
-    // completion time
-    completionHistogram.collect(completionTime);
-    emit(completionTimeSignal, completionTime);
-    global->recordCompletionTimeGlobal(completionTime);
     // video length
     emit(videoLengthSignal, pkt->getVideoLength());
-    // effective bit rate
-    emit(effBitRateSignal, (double)pkt->getVideoLength()*bitRate/completionTime);
-    global->recordEffBitRateGlobal(
-            (double)pkt->getVideoLength()*bitRate/completionTime);
     delete pkt;
 }
 
@@ -129,8 +121,8 @@ void User::handleMessage(cMessage *msg)
                 playbackTimeDownloaded += pkt->getVideoSegmentLength();
                 pkt->setState(stateStream);
                 if (pkt->getVideoSegmentsPending() > 0) {
-                    scheduleAt(simTime()+15, pkt); // request next block in 15s
-                    scheduleAt(simTime()+30, underflowTimer); // underflow in 30s
+                    scheduleAt(simTime()+global->getBufferMin(), pkt); // request next block in 15s
+                    scheduleAt(simTime()+global->getBufferBlock(), underflowTimer); // underflow in 30s
                     return;
                 }
                 else if (pkt->getVideoSegmentsPending() == 0) {
@@ -146,7 +138,7 @@ void User::handleMessage(cMessage *msg)
                 pkt->setState(stateStream);
                 cancelEvent(underflowTimer);
                 if (pkt->getVideoSegmentsPending() > 0) {
-                    scheduleAt(playBackStart+playbackTimeDownloaded-15, pkt);
+                    scheduleAt(playBackStart+playbackTimeDownloaded-global->getBufferMin(), pkt);
                     scheduleAt(playBackStart+playbackTimeDownloaded, underflowTimer);
                 }
                 else if (pkt->getVideoSegmentsPending() == 0) {

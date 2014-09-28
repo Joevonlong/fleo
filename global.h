@@ -4,9 +4,6 @@
 extern simsignal_t idleSignal;
 extern simsignal_t requestSignal;
 extern simsignal_t videoLengthSignal;
-//extern simsignal_t startupDelaySignal;
-extern simsignal_t completionTimeSignal;
-extern simsignal_t effBitRateSignal;
 
 extern int requestKind;
 extern int replyKind;
@@ -28,8 +25,6 @@ class Global : public cSimpleModule
 public:
     void recordRequestedLength(double len);
     void recordStartupDelay(simtime_t delay);
-    void recordCompletionTimeGlobal(simtime_t time);
-    void recordEffBitRateGlobal(double d);
     long getBufferBlock();
     long getBufferMin();
 protected:
@@ -39,9 +34,6 @@ protected:
     cDoubleHistogram requestedLengthHist;
     cOutVector startupDelayVec;
     cDoubleHistogram startupDelayHist;
-    simsignal_t completionTimeGlobalSignal;
-    simsignal_t effBitRateGlobalSignal;
-    cDoubleHistogram effBitRateGlobalHist;
     virtual void finish();
 private:
     void loadAllLocs();
@@ -50,4 +42,3 @@ private:
     long bufferBlock;
     long bufferMin;
 };
-

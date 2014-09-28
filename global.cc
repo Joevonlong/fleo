@@ -41,24 +41,14 @@ void Global::initialize(int stage)
         requestedLengthVec.setName("video length vector");
         requestedLengthHist.setName("video length histogram");
         requestedLengthHist.setRangeAutoUpper(0, 1000);
-        requestedLengthHist.setNumCells(100);
+        requestedLengthHist.setNumCells(1000);
 
         // startup delays
         //startupDelaySignal = registerSignal("startup delay");
         startupDelayVec.setName("startup delay vector");
         startupDelayHist.setName("startup delay histogram");
         startupDelayHist.setRangeAutoUpper(0);
-        startupDelayHist.setNumCells(100);
-
-        completionTimeSignal = registerSignal("completionTime");
-        completionTimeGlobalSignal = registerSignal("completionTimeGlobal");
-
-        effBitRateSignal = registerSignal("effectiveBitRate");
-
-        effBitRateGlobalSignal = registerSignal("effectiveBitRateGlobal");
-        effBitRateGlobalHist.setName("Global EBR histogram");
-        effBitRateGlobalHist.setRangeAutoUpper(0);
-        effBitRateGlobalHist.setNumCells(1000);
+        startupDelayHist.setNumCells(200);
 
         bufferBlock = par("bufferBlock").longValue();
         bufferMin = par("bufferMin").longValue();
@@ -119,18 +109,8 @@ void Global::recordStartupDelay(simtime_t delay) {
     startupDelayHist.collect(delay);
 }
 
-void Global::recordCompletionTimeGlobal(simtime_t time) {
-    emit(completionTimeGlobalSignal, time);
-}
-
-void Global::recordEffBitRateGlobal(double d) {
-    emit(effBitRateGlobalSignal, d);
-    effBitRateGlobalHist.collect(d);
-}
-
 void Global::finish() {
     requestedLengthHist.record();
     startupDelayHist.record();
-    effBitRateGlobalHist.record();
 }
 
