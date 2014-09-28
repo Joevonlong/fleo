@@ -10,6 +10,7 @@ archive = tarfile.open(fn)
 #asn = '4755'
 #file0 = archive.extractfile(asn+'.cch')
 num_replica = 15
+default_lag = 3
 
 class Node:
     """Properties follow those detailed in README.cch"""
@@ -81,7 +82,7 @@ class AS:
         print('Pruning unreachable nodes...')
         while prev_num_reachable != len(reachable_uids):
             prev_num_reachable = len(reachable_uids)
-            print(str(prev_num_reachable)+' nodes reachable')
+            print(str(prev_num_reachable)+' nodes reachable...')
             for n1,n2 in self.links:
                 if n1 in reachable_uids:
                     reachable_uids.add(n2)
@@ -165,7 +166,11 @@ def read_lags():
                         r'(?P<loc2>\D+)\d+\s+'
                         r'(?P<lag>\d+)'
                         )
-    lag_file = arc.extractfile(asn+'/latencies.intra')
+    try:
+        lag_file = arc.extractfile(asn+'/latencies.intra')
+    except:
+        print ('latencies file not available.')
+        return
     for line in lag_file:
         m = lag_re.match(line.decode('UTF-8'))
         if m == None:
@@ -183,6 +188,7 @@ def read_lags():
                 link_lags[l1,l2] = [lag]
     for link in link_lags.keys():
         link_lag_avg[link] = sum(link_lags[link]) / float(len(link_lags[link]))
+        #print(link, link_lag_avg[link])
 
 def manip_topo():
     # take most connected node to be server
@@ -256,6 +262,25 @@ def write_to_ned():
     # connection section
     f.write(' '*4+'connections:\n')
     for (n1,n2) in asys.links:
+        # look up latency
+        loc1 = asys.uids[n1].loc
+        loc2 = asys.uids[n2].loc
+        lag = -1
+        if (loc1,loc2) in link_lag_avg.keys():
+            lag = link_lag_avg[(loc1,loc2)]
+        elif (loc2,loc1) in link_lag_avg.keys():
+            lag = link_lag_avg[(loc2,loc1)]
+        elif (loc1 == loc2) and (loc1 != u'T'):
+            lag = 1
+        else:
+            #raise Exception('error while looking up latency for', loc1, loc2)
+            pass
+        if lag == -1:
+            lag_str = ''
+        else:
+            lag_str = '{delay='+str(lag)+'ms;}'
+        #print(loc1, loc2, lag)
+        # assign node type
         if asys.uids[n1].bb:
             left = 'core'
         else: # 'access'
@@ -271,20 +296,20 @@ def write_to_ned():
             right = 'beyond'
         # override if user
         if asys.uids[n1].assignment == 'user':
-            f.write(' '*8+'user'+str(n1)+'.out --> OC12 --> '
+            f.write(' '*8+'user'+str(n1)+'.out --> OC12'+lag_str+' --> '
                     +right+str(n2)+'.in++;\n')
-            f.write(' '*8+'user'+str(n1)+'.in <-- OC12 <-- '
+            f.write(' '*8+'user'+str(n1)+'.in <-- OC12'+lag_str+' <-- '
                     +right+str(n2)+'.out++;\n')
             continue
         if asys.uids[n2].assignment == 'user':
-            f.write(' '*8+left+str(n1)+'.out++ --> OC12 --> '
+            f.write(' '*8+left+str(n1)+'.out++ --> OC12'+lag_str+' --> '
                     +'user'+str(n2)+'.in;\n')
-            f.write(' '*8+left+str(n1)+'.in++ <-- OC12 <-- '
+            f.write(' '*8+left+str(n1)+'.in++ <-- OC12'+lag_str+' <-- '
                     +'user'+str(n2)+'.out;\n')
             continue
-        f.write(' '*8+left+str(n1)+'.out++ --> OC12 --> '
+        f.write(' '*8+left+str(n1)+'.out++ --> OC12'+lag_str+' --> '
                 +right+str(n2)+'.in++;\n')
-        f.write(' '*8+left+str(n1)+'.in++ <-- OC12 <-- '
+        f.write(' '*8+left+str(n1)+'.in++ <-- OC12'+lag_str+' <-- '
                 +right+str(n2)+'.out++;\n')
 
     f.write('}\n\n')

@@ -37,6 +37,13 @@ void Global::initialize(int stage)
         requestSignal = registerSignal("request"); // name assigned to signal ID
         videoLengthSignal = registerSignal("videoLength");
 
+        // video lengths
+        requestedLengthVec.setName("video length vector");
+        requestedLengthHist.setName("video length histogram");
+        requestedLengthHist.setRangeAutoUpper(0, 1000);
+        requestedLengthHist.setNumCells(100);
+
+        // startup delays
         //startupDelaySignal = registerSignal("startup delay");
         startupDelayVec.setName("startup delay vector");
         startupDelayHist.setName("startup delay histogram");
@@ -102,6 +109,11 @@ long Global::getBufferMin() {
     return bufferMin;
 }
 
+void Global::recordRequestedLength(double len) {
+    requestedLengthVec.record(len);
+    requestedLengthHist.collect(len);
+}
+
 void Global::recordStartupDelay(simtime_t delay) {
     startupDelayVec.record(delay);
     startupDelayHist.collect(delay);
@@ -117,6 +129,7 @@ void Global::recordEffBitRateGlobal(double d) {
 }
 
 void Global::finish() {
+    requestedLengthHist.record();
     startupDelayHist.record();
     effBitRateGlobalHist.record();
 }

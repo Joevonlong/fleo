@@ -26,6 +26,7 @@ extern std::map<std::string, int> locCaches;
 class Global : public cSimpleModule
 {
 public:
+    void recordRequestedLength(double len);
     void recordStartupDelay(simtime_t delay);
     void recordCompletionTimeGlobal(simtime_t time);
     void recordEffBitRateGlobal(double d);
@@ -34,6 +35,8 @@ public:
 protected:
     virtual int numInitStages() const;
     virtual void initialize(int stage);
+    cOutVector requestedLengthVec;
+    cDoubleHistogram requestedLengthHist;
     cOutVector startupDelayVec;
     cDoubleHistogram startupDelayHist;
     simsignal_t completionTimeGlobalSignal;

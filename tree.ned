@@ -38,7 +38,7 @@ channel OC48 extends MyDatarateChannel {
 }
 channel OC12 extends MyDatarateChannel {
     datarate = 622.08Mbps;
-    delay = 5ms;
+    delay = default(5ms) @unit(s);
 }
 channel OC3 extends MyDatarateChannel {
     datarate = 155.52Mbps;

@@ -112,6 +112,7 @@ void Logic::handleMessage(cMessage *msg) {
                 pkt->setState(stateTransfer);
                 EV << "Requested item #" << pkt->getCustomID()
                    << " is cached. Sending reply.\n";
+                global->recordRequestedLength(pkt->getVideoLength());
                 cGate* outGate = getNextGate(this, pkt);
                 send(pkt, outGate);
                 return;
@@ -175,24 +176,7 @@ void Logic::handleMessage(cMessage *msg) {
                 return;
             }
             else {error("Invalid return from checkCache.");}
-        }
-        else if (pkt->getState() == stateEnd) {
-            error("not currently used");
-            EV << "Fetch from other cache completed.\n";
-            // assume all misses are cached (as in LRU?)
-            ((Cache*)getParentModule()->getSubmodule("cache"))->setCached(
-                pkt->getCustomID(), true);
-            if (pkt->hasEncapsulatedPacket() == true) {
-                MyPacket *innerPkt = (MyPacket*)pkt->decapsulate();
-                innerPkt->setVideoLength(pkt->getVideoLength());
-                delete pkt;
-                scheduleAt(simTime(), innerPkt);
-                return;
-            }
-            else {
-                error("Cache-to-cache transfer without user request");
-            }
-        }
+        } // end if stateStream
         else if (pkt->getState() == stateTransfer) {
             if (pkt->getVideoSegmentsPending() == 0) {
                 EV << "Fetch from other cache completed.\n";
@@ -221,22 +205,6 @@ void Logic::handleMessage(cMessage *msg) {
                 return;
             }
             else {error("Cache-to-cache transfer without user request");}
-        }
-        else if (pkt->getState() == stateAck) { // continue transfer
-            error("not currently used");
-            pkt->setDestinationID(pkt->getSourceID());
-            pkt->setSourceID(getId());
-            pkt->setBitLength(std::min(pkt->getBitsPending(),packetBitSize));
-            pkt->setBitsPending(pkt->getBitsPending()-pkt->getBitLength());
-            if (pkt->getBitsPending() == 0) {
-                pkt->setState(stateEnd);
-            }
-            else {
-                pkt->setState(stateTransfer);
-            }
-            cGate* outGate = getNextGate(this, pkt);
-            send(pkt, outGate);
-            return;
         }
         else {error("Invalid packet state");}
     }

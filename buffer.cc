@@ -25,6 +25,7 @@ void Buffer::handleMessage(cMessage* msg) {
             EV << "\tQueue not empty, sending next.\n";
             EV << ((cPacket*)queue->front())->getBitLength() << endl;//
             send(queue->pop(), transmitID);
+            if (transmitDone->isScheduled()) error("Buffer::handleMessage A");
             scheduleAt(gate(transmitID)->getTransmissionChannel()
                 ->getTransmissionFinishTime(), transmitDone);
         }
@@ -46,6 +47,9 @@ void Buffer::handleMessage(cMessage* msg) {
             EV << "\tChannel is free, transmitting now.\n";
             EV << ((cPacket*)msg)->getBitLength() << endl;//
             send(msg, transmitID);
+            if (transmitDone->isScheduled()) {
+                cancelEvent(transmitDone);
+            }
             scheduleAt(transmissionChannel->getTransmissionFinishTime(),
                 transmitDone);
         }
