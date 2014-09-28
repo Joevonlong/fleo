@@ -124,7 +124,8 @@ void User::handleMessage(cMessage *msg)
                 playingBack = true;
                 playBackStart = simTime();
                 // record playback delay
-                // ... = simTime() - requestStartTime;
+                global->recordStartupDelay(playBackStart - requestStartTime);
+
                 playbackTimeDownloaded += pkt->getVideoSegmentLength();
                 pkt->setState(stateStream);
                 if (pkt->getVideoSegmentsPending() > 0) {
@@ -150,6 +151,7 @@ void User::handleMessage(cMessage *msg)
                 }
                 else if (pkt->getVideoSegmentsPending() == 0) {
                     scheduleAt(playBackStart+playbackTimeDownloaded, pkt);
+                    cancelEvent(underflowTimer);
                 }
                 else {error("getVideoSegmentsPending < 0");}
             }

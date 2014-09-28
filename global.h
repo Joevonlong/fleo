@@ -4,6 +4,7 @@
 extern simsignal_t idleSignal;
 extern simsignal_t requestSignal;
 extern simsignal_t videoLengthSignal;
+//extern simsignal_t startupDelaySignal;
 extern simsignal_t completionTimeSignal;
 extern simsignal_t effBitRateSignal;
 
@@ -25,6 +26,7 @@ extern std::map<std::string, int> locCaches;
 class Global : public cSimpleModule
 {
 public:
+    void recordStartupDelay(simtime_t delay);
     void recordCompletionTimeGlobal(simtime_t time);
     void recordEffBitRateGlobal(double d);
     long getBufferBlock();
@@ -32,6 +34,8 @@ public:
 protected:
     virtual int numInitStages() const;
     virtual void initialize(int stage);
+    cOutVector startupDelayVec;
+    cDoubleHistogram startupDelayHist;
     simsignal_t completionTimeGlobalSignal;
     simsignal_t effBitRateGlobalSignal;
     cDoubleHistogram effBitRateGlobalHist;

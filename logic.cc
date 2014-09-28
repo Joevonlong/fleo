@@ -208,11 +208,12 @@ void Logic::handleMessage(cMessage *msg) {
                 MyPacket *innerPkt = (MyPacket*)pkt->decapsulate();
                 innerPkt->setDestinationID(innerPkt->getSourceID());
                 innerPkt->setSourceID(getId());
+                innerPkt->setState(stateTransfer);
                 innerPkt->setVideoLength(pkt->getVideoLength());
                 innerPkt->setVideoSegmentLength(pkt->getVideoSegmentLength());
                 innerPkt->setVideoSegmentsPending(pkt->getVideoSegmentsPending());
                 innerPkt->setVideoLengthPending(pkt->getVideoLengthPending());
-                innerPkt->setState(stateTransfer);
+                innerPkt->setBitLength(pkt->getBitLength());
                 // not using bitsPending
                 cGate* outGate = getNextGate(this, innerPkt);
                 send(innerPkt, outGate);

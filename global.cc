@@ -7,8 +7,9 @@ Define_Module(Global);
 const int defaultLoc = -1;
 
 simsignal_t idleSignal;
-simsignal_t videoLengthSignal;
 simsignal_t requestSignal;
+simsignal_t videoLengthSignal;
+simsignal_t startupDelaySignal;
 simsignal_t completionTimeSignal;
 simsignal_t effBitRateSignal;
 
@@ -35,11 +36,19 @@ void Global::initialize(int stage)
         idleSignal = registerSignal("idle"); // name assigned to signal ID
         requestSignal = registerSignal("request"); // name assigned to signal ID
         videoLengthSignal = registerSignal("videoLength");
+
+        //startupDelaySignal = registerSignal("startup delay");
+        startupDelayVec.setName("startup delay vector");
+        startupDelayHist.setName("startup delay histogram");
+        startupDelayHist.setRangeAutoUpper(0);
+        startupDelayHist.setNumCells(100);
+
         completionTimeSignal = registerSignal("completionTime");
         completionTimeGlobalSignal = registerSignal("completionTimeGlobal");
-        effBitRateSignal = registerSignal("effectiveBitRate");
-        effBitRateGlobalSignal = registerSignal("effectiveBitRateGlobal");
 
+        effBitRateSignal = registerSignal("effectiveBitRate");
+
+        effBitRateGlobalSignal = registerSignal("effectiveBitRateGlobal");
         effBitRateGlobalHist.setName("Global EBR histogram");
         effBitRateGlobalHist.setRangeAutoUpper(0);
         effBitRateGlobalHist.setNumCells(1000);
@@ -93,6 +102,11 @@ long Global::getBufferMin() {
     return bufferMin;
 }
 
+void Global::recordStartupDelay(simtime_t delay) {
+    startupDelayVec.record(delay);
+    startupDelayHist.collect(delay);
+}
+
 void Global::recordCompletionTimeGlobal(simtime_t time) {
     emit(completionTimeGlobalSignal, time);
 }
@@ -103,6 +117,7 @@ void Global::recordEffBitRateGlobal(double d) {
 }
 
 void Global::finish() {
+    startupDelayHist.record();
     effBitRateGlobalHist.record();
 }
 
