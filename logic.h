@@ -13,6 +13,7 @@ protected:
     virtual void handleMessage(cMessage *msg);
     int nearestCache;
     int nearestCompleteCache;
+    double distToCompleteCache;
     void registerSelfIfCache();
     int64_t checkCache(int customID);
     void requestFromCache(int cacheID, int customID);

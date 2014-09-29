@@ -13,7 +13,7 @@ const int64_t noCache = -2;
 const int64_t notCached = -1;
 const uint64_t packetBitSize = pow(10, 3*2) * 8; // 10MB: takes 0.13s for OC12
 
-int Logic::numInitStages() const {return 4;}
+int Logic::numInitStages() const {return 5;}
 
 void Logic::initialize(int stage) {
     if (stage == 0) {
@@ -22,25 +22,20 @@ void Logic::initialize(int stage) {
     }
     else if (stage == 1) {
         registerSelfIfCache();
-        // if master cache, populate with all content
+        // if origin server, populate with all content
         if (getParentModule()->par("completeCache").boolValue() == true) {
             Cache* cache = (Cache*)(getParentModule()->getSubmodule("cache"));
             for (unsigned long maxID = getMaxCustomVideoID(); maxID != ULONG_MAX; maxID--) {
                 cache->setCached(maxID, true, true);
             }
-            EV << "asdf"<<((Cache*)getParentModule()->getSubmodule("cache"))->diskUsed << endl;
         }
     }
     else if (stage == 3) {
         if (getParentModule()->par("hasCache").boolValue() == true) {
-            nearestCache = getNearestCacheID(getId());
-            EV << "Secondary cache for " << getFullPath() << "("
-               << getParentModule()->par("loc").stringValue() << ") is "
-               << simulation.getModule(nearestCache)->getFullPath()
-               << "(" << simulation.getModule(nearestCache)
-                  ->getParentModule()->par("loc").stringValue() << ").\n";
+            // find nearest origin server
             if (getParentModule()->par("completeCache").boolValue() == false) {
                 nearestCompleteCache = getNearestID(getId(), completeCacheIDs);
+                distToCompleteCache = getDistanceBetween(getId(), nearestCompleteCache);
                 EV << "Master cache for " << getFullPath() << "("
                    << getParentModule()->par("loc").stringValue() << ") is "
                    << simulation.getModule(nearestCompleteCache)->getFullPath()
@@ -49,7 +44,34 @@ void Logic::initialize(int stage) {
             }
             else {
                 nearestCompleteCache = getId();
+                distToCompleteCache = 0;
             }
+        }
+    }
+    else if (stage == 4) {
+        if (getParentModule()->par("hasCache").boolValue() == true) {
+            // find replica with smallest detour from origin
+            double pathLength;
+            double shortestPathLength = DBL_MAX;
+            nearestCache = -1;
+            for (std::vector<int>::iterator id = cacheIDs.begin();
+                id != cacheIDs.end(); id++) {
+                if (*id == getId()) {continue;}
+                else if (simulation.getModule(*id)->getParentModule()
+                    ->par("completeCache").boolValue() == false) {
+                    pathLength = getDistanceBetween(getId(), *id)
+                        + ((Logic*)simulation.getModule(*id))->distToCompleteCache;
+                    if (pathLength < shortestPathLength) {
+                        shortestPathLength = pathLength;
+                        nearestCache = *id;
+                    }
+                }
+            }
+            EV << "Secondary cache for " << getFullPath() << "("
+               << getParentModule()->par("loc").stringValue() << ") is "
+               << simulation.getModule(nearestCache)->getFullPath()
+               << "(" << simulation.getModule(nearestCache)
+                  ->getParentModule()->par("loc").stringValue() << ").\n";
         }
     }
 }

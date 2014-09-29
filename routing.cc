@@ -31,6 +31,16 @@ cGate* getNextGate(Logic* current, cMessage* msg) {
     return current->nextGate[destID];
 }
 
+// returns number of hops between the two module IDs
+double getDistanceBetween(int originID, int destID) {
+    cTopology::Node *originNode =
+        topo.getNodeFor(simulation.getModule(originID));
+    cTopology::Node *destNode =
+        topo.getNodeFor(simulation.getModule(destID));
+    topo.calculateUnweightedSingleShortestPathsTo(destNode);
+    return originNode->getDistanceToTarget();
+}
+
 // returns cacheID closest to ID given in arg1, excluding itself.
 int getNearestCacheID(int userID) {
     return getNearestID(userID, cacheIDs);
@@ -46,7 +56,8 @@ int getNearestID(int originID, std::vector<int> candidateIDs) {
     for (std::vector<int>::iterator id = candidateIDs.begin();
         id != candidateIDs.end(); id++) {
         if (*id != originID) {
-            cTopology::Node *candidateNode = topo.getNodeFor(simulation.getModule(*id));
+            cTopology::Node *candidateNode =
+                topo.getNodeFor(simulation.getModule(*id));
             if (candidateNode->getDistanceToTarget() < shortestDist) {
                 nearestID = *id;
                 shortestDist = candidateNode->getDistanceToTarget();
