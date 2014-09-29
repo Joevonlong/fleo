@@ -37,6 +37,12 @@ void Global::initialize(int stage)
         requestSignal = registerSignal("request"); // name assigned to signal ID
         videoLengthSignal = registerSignal("videoLength");
 
+        // user idle time between videos
+        idleTimeVec.setName("idle time vector");
+        idleTimeHist.setName("idle time histogram");
+        idleTimeHist.setRangeAutoUpper(0, 10000);
+        idleTimeHist.setNumCells(1000);
+
         // video lengths
         requestedLengthVec.setName("video length vector");
         requestedLengthHist.setName("video length histogram");
@@ -49,6 +55,9 @@ void Global::initialize(int stage)
         startupDelayHist.setName("startup delay histogram");
         startupDelayHist.setRangeAutoUpper(0);
         startupDelayHist.setNumCells(200);
+
+        // underflows (buffer runs out)
+        underflowVec.setName("underflow vector");
 
         bufferBlock = par("bufferBlock").longValue();
         bufferMin = par("bufferMin").longValue();
@@ -99,6 +108,11 @@ long Global::getBufferMin() {
     return bufferMin;
 }
 
+void Global::recordIdleTime(simtime_t t) {
+    idleTimeVec.record(t);
+    idleTimeHist.collect(t);
+}
+
 void Global::recordRequestedLength(double len) {
     requestedLengthVec.record(len);
     requestedLengthHist.collect(len);
@@ -109,7 +123,12 @@ void Global::recordStartupDelay(simtime_t delay) {
     startupDelayHist.collect(delay);
 }
 
+void Global:: recordUnderflow() {
+    underflowVec.record();
+}
+
 void Global::finish() {
+    idleTimeHist.record();
     requestedLengthHist.record();
     startupDelayHist.record();
 }

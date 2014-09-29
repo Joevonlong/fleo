@@ -23,17 +23,22 @@ extern std::map<std::string, int> locCaches;
 class Global : public cSimpleModule
 {
 public:
+    void recordIdleTime(simtime_t t);
     void recordRequestedLength(double len);
     void recordStartupDelay(simtime_t delay);
+    void recordUnderflow();
     long getBufferBlock();
     long getBufferMin();
 protected:
     virtual int numInitStages() const;
     virtual void initialize(int stage);
+    cOutVector idleTimeVec;
+    cDoubleHistogram idleTimeHist;
     cOutVector requestedLengthVec;
     cDoubleHistogram requestedLengthHist;
     cOutVector startupDelayVec;
     cDoubleHistogram startupDelayHist;
+    cOutVector underflowVec;
     virtual void finish();
 private:
     void loadAllLocs();

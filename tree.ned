@@ -1,11 +1,7 @@
 simple Global {
     parameters:
-        int bufferBlock = default(30s) @unit(s);
-        int bufferMin = default(15s) @unit(s);
-        @signal[completionTimeGlobal](type="simtime");
-        @statistic[completion-time-global](title="global completion time"; source="completionTimeGlobal"; record=histogram,vector,mean,count; interpolationmode=none);
-        @signal[effectiveBitRateGlobal](type="double");
-        @statistic[effective-bitrate-global](title="global effective bit rate"; source="effectiveBitRateGlobal"; record=vector,mean,count; interpolationmode=none);
+        int bufferBlock = default(14s) @unit(s);
+        int bufferMin = default(7s) @unit(s);
 }
 
 channel MyDatarateChannel extends ned.DatarateChannel
@@ -38,7 +34,7 @@ channel OC48 extends MyDatarateChannel {
 }
 channel OC12 extends MyDatarateChannel {
     datarate = 622.08Mbps;
-    delay = default(5ms) @unit(s);
+    delay = default(3.8ms) @unit(s);
 }
 channel OC3 extends MyDatarateChannel {
     datarate = 155.52Mbps;
@@ -172,19 +168,13 @@ simple User
         string name = default("");
         string loc = default("");
         int rn = default(-1);
-        volatile double idleTime @unit(s);   // delay before next request
-        volatile double requestSize;
-        int cacheTries = default(2); // try 2 caches before master
+        volatile double initIdleTime @unit(s);   // delay before first request
+        volatile double idleTime @unit(s);   // delay before subsequent requests
+        int cacheTries = default(2); // replicas to try before origin
         @signal[idle](type="simtime");
         @statistic[idle](title="idle time"; source="idle"; record=vector,min,max,mean,count; interpolationmode=none);
         @signal[videoLength](type="long");
         @statistic[video-length](title="requested video length"; source="videoLength"; record=vector,mean,count,histogram; interpolationmode=none);
-        @signal[request](type="long");
-        @statistic[request-size](title="request size"; source="request"; record=vector,count; interpolationmode=none);
-        @signal[completionTime](type="simtime");
-        @statistic[completion-time](title="completion time"; source="completionTime"; record=vector?,mean,max,count; interpolationmode=none);
-        @signal[effectiveBitRate](type="double");
-        @statistic[effective-bitrate](title="Effective Bit Rate"; source=effectiveBitRate; record=vector?,mean,count,histogram; interpolationmode=none);
         @display("i=block/user");
     gates:
         input in;

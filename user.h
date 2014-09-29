@@ -7,6 +7,7 @@ public:
     virtual ~User();
 protected:
     cMessage* idleTimer;
+    simtime_t idleTime;
     void idle();
     void idle(simtime_t t);
     short cacheTries;

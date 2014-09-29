@@ -38,13 +38,19 @@ void User::initialize(int stage) {
         //
         lagVector.setName("Total time minus ");
         idleTimer = new cMessage("idle timer");
+        idleTime = par("initIdleTime");
         underflowTimer = new cMessage("underflow timer");
         idle();
         cacheTries = par("cacheTries");
     }
     else if (stage == 3) {
-        nearestCache = getNearestCacheID(getId());
-        //nearestCache = getNearestID(getId(), completeCacheIDs); // temp
+        if (cacheTries > 0){
+            nearestCache = getNearestCacheID(getId());
+        }
+        else if (cacheTries == 0) {
+            nearestCache = getNearestID(getId(), completeCacheIDs);
+        }
+        else {error("negative cacheTries value");}
         EV << "Nearest cache for " << getFullPath() << "(" << par("loc").stringValue() << ") is " << simulation.getModule(nearestCache)->getFullPath() << "(" << simulation.getModule(nearestCache)->getParentModule()->par("loc").stringValue() << ")." << endl;
     }
 }
@@ -53,10 +59,12 @@ void User::idle() {
     idle(0);
 }
 void User::idle(simtime_t t) {
-    simtime_t idleTime = par("idleTime"); // changed via ini
     emit(idleSignal, idleTime);
     EV << getFullName() << " idling for " << idleTime << "s\n";
     scheduleAt(simTime()+idleTime+t, idleTimer);
+    global->recordIdleTime(idleTime); // record at global module
+    // use initial idle time (avg 180s) before generating new one (avg 5s)
+    idleTime = par("idleTime"); // changed via ini
     // clean up previous stream
     cancelEvent(underflowTimer);
 }
@@ -105,6 +113,7 @@ void User::handleMessage(cMessage *msg)
     }
     else if (msg == underflowTimer) {
         // record underflow statistics
+        global->recordUnderflow();
         error("underflow");
     }
     else { // else received reply

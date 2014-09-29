@@ -96,11 +96,11 @@ class AS:
         self.links = reachable_links
 
 # lines to consider:
-# 1 @Adelaide,+Australia  	(1) -> <1787> 	=firstc1-new.link.telstra.net.136.130.139.in-addr.! r1
-# 15 @Melbourne,+Australia  	(1) &6 -> <3471> {-1184} {-952} {-949} {-931} {-859} {-64} 	=203.24.109.1 r2
-# 99 @T  bb	(4) &1 -> <1036> <1500> <2483> <4298> {-219} 	=203.35.151.1 r1
-# 131 @Port+Pirie,+Australia  	(1) -> <2832> 	=203.58.167.1 r2
-# 398 @Perth,+Australia + 	(2) -> <3856> <3888> 	=139.130.73.113 r0
+# 1 @Adelaide,+Australia    (1) -> <1787>   =firstc1-new.link.telstra.net.136.130.139.in-addr.! r1
+# 15 @Melbourne,+Australia      (1) &6 -> <3471> {-1184} {-952} {-949} {-931} {-859} {-64}  =203.24.109.1 r2
+# 99 @T  bb (4) &1 -> <1036> <1500> <2483> <4298> {-219}    =203.35.151.1 r1
+# 131 @Port+Pirie,+Australia    (1) -> <2832>   =203.58.167.1 r2
+# 398 @Perth,+Australia +   (2) -> <3856> <3888>    =139.130.73.113 r0
 
 uid_re = re.compile(r'(?P<uid>\d+) '
                     r'@(?P<loc>\S+) '
@@ -188,7 +188,13 @@ def read_lags():
                 link_lags[l1,l2] = [lag]
     for link in link_lags.keys():
         link_lag_avg[link] = sum(link_lags[link]) / float(len(link_lags[link]))
-        #print(link, link_lag_avg[link])
+    def mean(ls):
+        return sum(ls)/float(len(ls))
+    print("mean lag in file is:",
+        mean(
+            [mean(lags) for lags in link_lags.values()]
+        )
+    )
 
 def manip_topo():
     # take most connected node to be server
@@ -334,7 +340,7 @@ def main():
     file_out = 'AS'+asn+rad+'.ned'
     # read rf file
     parse()
-    #read_lags()
+    read_lags()
     manip_topo()
     write_to_ned()
 
