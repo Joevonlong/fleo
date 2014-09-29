@@ -59,12 +59,13 @@ void User::idle() {
     idle(0);
 }
 void User::idle(simtime_t t) {
+    // use initial idle time (avg 180s) before generating new one (avg 5s)
+    idleTime = par("idleTime"); // changed via ini
+
     emit(idleSignal, idleTime);
     EV << getFullName() << " idling for " << idleTime << "s\n";
     scheduleAt(simTime()+idleTime+t, idleTimer);
     global->recordIdleTime(idleTime); // record at global module
-    // use initial idle time (avg 180s) before generating new one (avg 5s)
-    idleTime = par("idleTime"); // changed via ini
     // clean up previous stream
     cancelEvent(underflowTimer);
 }

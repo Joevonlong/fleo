@@ -123,8 +123,8 @@ void Global::recordStartupDelay(simtime_t delay) {
     startupDelayHist.collect(delay);
 }
 
-void Global:: recordUnderflow() {
-    underflowVec.record();
+void Global::recordUnderflow() {
+    underflowVec.record(1); // only want to record timestamp
 }
 
 void Global::finish() {
