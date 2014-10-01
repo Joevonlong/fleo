@@ -253,6 +253,9 @@ int64_t Logic::checkCache(int customID) {
     if (getParentModule()->par("hasCache").boolValue() == false) {
         return noCache; // module has no cache
     }
+    else if (getParentModule()->par("completeCache").boolValue() == true) {
+        return getVideoBitSize(customID);
+    }
     else if (((Cache*)(getParentModule()->getSubmodule("cache")))->isCached(customID)) {
         return getVideoBitSize(customID); // should be video's bitsize
     }

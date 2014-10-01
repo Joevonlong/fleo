@@ -9,8 +9,8 @@ Define_Module(Cache);
 void Cache::initialize() {
     cacheSize = pow(10, 3*4) * 8; // 1TB
     diskUsed = 0;
-    std::map<int, std::deque<int>::iterator> lruMap;
-    std::deque<int> cacheOrder; // = new cQueue("cache insert order"); // for LRU replacement
+    std::map<int, std::list<int>::iterator> idToIndex;
+    std::list<int> leastRecent; // = new cQueue("cache insert order"); // for LRU replacement
 }
 
 void Cache::handleMessage(cMessage* msg) {
@@ -22,9 +22,10 @@ bool Cache::isCached(int customID) {
     }
     if (cached[customID]) { // key added if it doesn't exist, and maps to false.
         // refresh item access to front of cacheOrder
-//        cacheOrder.erase(lruMap[customID]); // bug line
-//        cacheOrder.push_back(customID);
-//        lruMap[customID] = cacheOrder.end()-1; // -1 for last element
+        leastRecent.erase(idToIndex[customID]); // bug line
+        leastRecent.push_back(customID);
+        idToIndex[customID] = leastRecent.end();
+        --idToIndex[customID]; // -- for last element
         return true;
     }
     else {
@@ -45,13 +46,14 @@ void Cache::setCached(int customID, bool b, bool force) {
     cached[customID] = b;
     if (b == true) {
         diskUsed += getVideoBitSize(customID);
-        cacheOrder.push_back(customID);
-//        lruMap[customID] = cacheOrder.end()-1; // -1 for last element
-        //EV << "Cached item #" << customID
-        //   << " of size " << getVideoBitSize(customID) << endl;
+        leastRecent.push_back(customID);
+        idToIndex[customID] = leastRecent.end();
+        --idToIndex[customID]; // -- for last element
+        EV << "Cached item #" << customID
+           << " of size " << getVideoBitSize(customID) << endl;
     }
     else {
-        error("not yet implemented.");
+        error("setCached(false) not yet implemented.");
 //        diskUsed -= getVideoBitSize(customID);
 //        cacheOrder->remove((cObject*)customID);
 //        EV << "Evicted item #" << customID
@@ -62,13 +64,14 @@ void Cache::setCached(int customID, bool b, bool force) {
         while (diskUsed > cacheSize) {
             EV << "Cache full. ";
             // assume LRU replacement
-            int evicted = cacheOrder.front(); // currently first to be cached.
-            cacheOrder.pop_front();
+            int evicted = leastRecent.front();
+            leastRecent.pop_front();
             diskUsed -=getVideoBitSize(evicted);
+            cached[evicted] = false;
             EV << "Evicted item #" << evicted
                << " of size " << getVideoBitSize(evicted) << endl;
             // add eviction statistics?
         }
-    }
+    } // else force insert ignoring space limit
 }
 
