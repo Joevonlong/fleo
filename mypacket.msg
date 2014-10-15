@@ -2,6 +2,7 @@ packet MyPacket extends cPacket
 {
     int sourceID;
     int destinationID;
+    short hops;
     int customID; // internal video ID, not yt/daum's
     long videoLength; // total
     long videoSegmentLength; // 30s or less

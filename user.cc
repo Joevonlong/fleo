@@ -75,6 +75,7 @@ void User::sendRequest()
     MyPacket *req = new MyPacket("Request");
     req->setBitLength(headerBitLength); // assume no transmission delay
     req->setSourceID(getId());
+    req->setHops(0);
     req->setDestinationID(nearestCache);
     req->setCustomID(getRandCustomVideoID());
     EV << "Sending request for Custom ID " << req->getCustomID() << endl;

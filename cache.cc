@@ -49,8 +49,10 @@ void Cache::setCached(int customID, bool b, bool force) {
         leastRecent.push_back(customID);
         idToIndex[customID] = leastRecent.end();
         --idToIndex[customID]; // -- for last element
-        EV << "Cached item #" << customID
-           << " of size " << getVideoBitSize(customID) << endl;
+        if (!force) {
+            EV << "Cached item #" << customID
+               << " of size " << getVideoBitSize(customID) << endl;
+       }
     }
     else {
         error("setCached(false) not yet implemented.");

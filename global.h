@@ -11,9 +11,9 @@ extern int64_t headerBitLength;
 
 // MyPacket states
 extern short stateStart;
-extern short stateEnd;
+//extern short stateEnd;
 extern short stateTransfer;
-extern short stateAck;
+//extern short stateAck;
 extern short stateStream;
 
 extern std::vector<int> cacheIDs;

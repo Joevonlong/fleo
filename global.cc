@@ -19,9 +19,9 @@ int64_t headerBitLength = 100;
 
 // MyPacket states
 short stateStart = 0;
-short stateEnd = 1;
+//short stateEnd = 1;
 short stateTransfer = 2;
-short stateAck = 3;
+//short stateAck = 3;
 short stateStream = 4;
 
 std::vector<int> cacheIDs;

@@ -80,6 +80,8 @@ void Logic::handleMessage(cMessage *msg) {
     MyPacket *pkt = check_and_cast<MyPacket*>(msg);
     if (pkt->getDestinationID() == getId()) { // destination reached
         if (pkt->getState() == stateStart) {
+            // increment hops
+            pkt->setHops(pkt->getHops()+1);
             // check cache
             int64_t vidBitSize = checkCache(pkt->getCustomID());
             if (vidBitSize == noCache) {
@@ -90,6 +92,7 @@ void Logic::handleMessage(cMessage *msg) {
                 outerPkt->setBitLength(headerBitLength); // assume no transmission delay
                 outerPkt->setSourceID(getId());
                 outerPkt->setState(stateStart);
+                outerPkt->setHops(pkt->getHops());
                 outerPkt->setCacheTries(pkt->getCacheTries()-1);
                 outerPkt->setCustomID(pkt->getCustomID());
                 if (outerPkt->getCacheTries() > 0) { // check secondary
@@ -206,14 +209,13 @@ void Logic::handleMessage(cMessage *msg) {
                 ((Cache*)getParentModule()->getSubmodule("cache"))->setCached(
                     pkt->getCustomID(), true);
             }
-            else {
-                // do nothing
-            }
+            else {/*do nothing*/}
             // decapsulate
             if (pkt->hasEncapsulatedPacket() == true) {
                 MyPacket *innerPkt = (MyPacket*)pkt->decapsulate();
                 innerPkt->setDestinationID(innerPkt->getSourceID());
                 innerPkt->setSourceID(getId());
+                innerPkt->setHops(pkt->getHops());
                 innerPkt->setState(stateTransfer);
                 innerPkt->setVideoLength(pkt->getVideoLength());
                 innerPkt->setVideoSegmentLength(pkt->getVideoSegmentLength());
@@ -231,6 +233,11 @@ void Logic::handleMessage(cMessage *msg) {
         else {error("Invalid packet state");}
     }
     else { // destination not reached: forward
+        // increment hops first
+        if (pkt->getState() == stateStart) {
+            pkt->setHops(pkt->getHops()+1);
+        }
+        // ---
         cGate* outGate = getNextGate(this, pkt);
         send(pkt, outGate);
         EV << "Forwarding request via " << outGate->getFullName() << endl;
