@@ -128,6 +128,7 @@ void User::handleMessage(cMessage *msg)
                 playBackStart = simTime();
                 // record playback delay
                 global->recordStartupDelay(playBackStart - requestStartTime);
+                global->recordHops(pkt->getHops());
 
                 playbackTimeDownloaded += pkt->getVideoSegmentLength();
                 pkt->setState(stateStream);

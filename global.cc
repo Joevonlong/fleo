@@ -56,6 +56,12 @@ void Global::initialize(int stage)
         startupDelayHist.setRangeAutoUpper(0);
         startupDelayHist.setNumCells(200);
 
+        // hops to cache hit
+        hopsVec.setName("hops vector");
+        hopsHist.setName("hops histogram");
+        hopsHist.setRange(0, 50);
+        hopsHist.setNumCells(50);
+
         // underflows (buffer runs out)
         underflowVec.setName("underflow vector");
 
@@ -123,6 +129,11 @@ void Global::recordStartupDelay(simtime_t delay) {
     startupDelayHist.collect(delay);
 }
 
+void Global::recordHops(short hops) {
+    hopsVec.record(hops);
+    hopsHist.collect(hops);
+}
+
 void Global::recordUnderflow() {
     underflowVec.record(1); // only want to record timestamp
 }
@@ -131,5 +142,6 @@ void Global::finish() {
     idleTimeHist.record();
     requestedLengthHist.record();
     startupDelayHist.record();
+    hopsHist.record();
 }
 

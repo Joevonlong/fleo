@@ -26,6 +26,7 @@ public:
     void recordIdleTime(simtime_t t);
     void recordRequestedLength(double len);
     void recordStartupDelay(simtime_t delay);
+    void recordHops(short hops);
     void recordUnderflow();
     long getBufferBlock();
     long getBufferMin();
@@ -38,6 +39,8 @@ protected:
     cDoubleHistogram requestedLengthHist;
     cOutVector startupDelayVec;
     cDoubleHistogram startupDelayHist;
+    cOutVector hopsVec;
+    cDoubleHistogram hopsHist;
     cOutVector underflowVec;
     virtual void finish();
 private:
