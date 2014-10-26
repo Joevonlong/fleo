@@ -1,4 +1,3 @@
 #!/bin/bash
 
-./tree -u Cmdenv -c Tree
-
+./tree -u Cmdenv -c AS1221

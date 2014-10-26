@@ -37,6 +37,12 @@ void Global::initialize(int stage)
         requestSignal = registerSignal("request"); // name assigned to signal ID
         videoLengthSignal = registerSignal("videoLength");
 
+        // distance from each user to its nearest cache
+        userD2CVec.setName("distance to cache vector");
+        userD2CHist.setName("distance to cache histogram");
+        userD2CHist.setRangeAutoUpper(0, 10000, 1);
+        userD2CHist.setNumCells(100);
+
         // user idle time between videos
         idleTimeVec.setName("idle time vector");
         idleTimeHist.setName("idle time histogram");
@@ -56,11 +62,18 @@ void Global::initialize(int stage)
         startupDelayHist.setRangeAutoUpper(0);
         startupDelayHist.setNumCells(200);
 
+        // startup delays for vids shorter than 20s
+        //startupDelaySignal = registerSignal("startup delay");
+        startupDelayL20Vec.setName("startup delay for short videos vector");
+        startupDelayL20Hist.setName("startup delay for short videos histogram");
+        startupDelayL20Hist.setRangeAutoUpper(0);
+        startupDelayL20Hist.setNumCells(200);
+
         // hops to cache hit
         hopsVec.setName("hops vector");
         hopsHist.setName("hops histogram");
-        hopsHist.setRange(0, 50);
-        hopsHist.setNumCells(50);
+        hopsHist.setRangeAutoUpper(0);
+        hopsHist.setNumCells(20);
 
         // underflows (buffer runs out)
         underflowVec.setName("underflow vector");
@@ -114,6 +127,11 @@ long Global::getBufferMin() {
     return bufferMin;
 }
 
+void Global::recordUserD2C(double d) {
+    userD2CVec.record(d);
+    userD2CHist.collect(d);
+}
+
 void Global::recordIdleTime(simtime_t t) {
     idleTimeVec.record(t);
     idleTimeHist.collect(t);
@@ -129,6 +147,11 @@ void Global::recordStartupDelay(simtime_t delay) {
     startupDelayHist.collect(delay);
 }
 
+void Global::recordStartupDelayL20(simtime_t delay) {
+    startupDelayL20Vec.record(delay);
+    startupDelayL20Hist.collect(delay);
+}
+
 void Global::recordHops(short hops) {
     hopsVec.record(hops);
     hopsHist.collect(hops);
@@ -139,9 +162,10 @@ void Global::recordUnderflow() {
 }
 
 void Global::finish() {
+    userD2CHist.record();
     idleTimeHist.record();
     requestedLengthHist.record();
     startupDelayHist.record();
+    startupDelayL20Hist.record();
     hopsHist.record();
 }
-
