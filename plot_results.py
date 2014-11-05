@@ -36,7 +36,8 @@ def plot_hopcount():
                                 range=(min(hop_counts), max(hop_counts)+1),
                                 align='left',
                                 rwidth=1,
-                                facecolor='green', alpha=0.5)
+                                #facecolor='green', alpha=0.5
+                                )
     plt.xlabel('Hop count')
     plt.ylabel('Number of requests')
     plt.title(r'Number of hops for request to find cached content')
@@ -83,7 +84,8 @@ def plot_dist_to_cache():
                                 weights=freqs,
                                 align='left',
                                 rwidth=1,
-                                facecolor='green', alpha=0.5)
+                                #facecolor='green', alpha=0.5
+                                )
     plt.xlabel('Hops to nearest cache')
     plt.ylabel('Number of users')
     plt.title(r'Histogram of user hops to nearest cache')
@@ -91,7 +93,7 @@ def plot_dist_to_cache():
     plt.show()
     scaf.close()
 
-# plot startup delays
+# plot histogram of startup delays
 def plot_startup_delay():
     vecf = open(vecfn)
     # find vector identifiers
@@ -130,6 +132,39 @@ def plot_startup_delay():
     plt.show()
     vecf.close()
 
+# plot moving average of startup delays
+def plot_delayavg():
+    vecf = open(vecfn)
+    # find vector identifiers
+    long_ID = short_ID = None
+    while (short_ID == None) or (long_ID == None):
+        l = vecf.readline()
+        if 'startup delay vector' in l:
+            long_ID = l.split()[1]
+        elif 'startup delay for short videos vector' in l:
+            short_ID = l.split()[1]
+    # look for identifiers at start of subsequent lines
+    delays = []
+    delay_avgs = []
+    counter = 0
+    for l in vecf:
+        if l.startswith(long_ID) or l.startswith(short_ID):
+            delays.append(float(l.split()[3]))
+            counter += 1
+            if counter == 1000:
+                delay_avgs.append(sum(delays)/1000.0)
+                delays = []
+                counter = 0
+    # plot moving average
+    plt.plot(delay_avgs)
+    plt.xlabel('Request index / 1000')
+    plt.ylabel('Average Startup delay / s')
+    plt.title(r'Window averages of startup delays')
+    plt.grid()
+    plt.ylim(ymin=0.0)
+    plt.show()
+    vecf.close()
+
 # plot histogram of video lengths
 def plot_vidlen():
     ffn = 'freqs_yt_sci.txt'
@@ -148,16 +183,20 @@ def plot_vidlen():
             len_views[length] = views
         lv += length*views
     n, bins, patches = plt.hist(len_views.keys(),
-                                bins=3600,
+                                bins=np.logspace(0, 5, 200),
                                 normed=True,
                                 weights=len_views.values(),
                                 cumulative=True,
                                 #log=True,
-                                facecolor='green', alpha=0.5)
+                                #facecolor='green', alpha=0.5
+                                )
+    plt.gca().set_xscale("log")
     plt.xlabel('Video length')
     plt.ylabel('Cumulative fraction of views')
     plt.title(r'Distribution of video lengths by number of views')
     plt.grid()
+    plt.xlim(0,36000)
+    plt.ylim(0,1)
     plt.show()
     ff.close()
 
@@ -175,3 +214,5 @@ if __name__ == '__main__':
         plot_dist_to_cache()
     elif choice == 4:
         plot_startup_delay()
+    elif choice == 5:
+        plot_delayavg()

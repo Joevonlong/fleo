@@ -48,7 +48,7 @@ class AS:
         self.nodes = []
         self.exts = []
         self.uids = {}
-        self.links = set()
+        self.links = set() # internal links only
         self.link_count = 0
 
     def add_node(self, node):
@@ -155,6 +155,7 @@ def parse():
         print('unrecognised line:')
         print(line)
     print('parsed '+str(len(asys.nodes))+' internal nodes')
+    print('parsed '+str(len(asys.links))+' internal links')
     print('parsed '+str(len(exts))+' external nodes')
 
 link_lags = {}
@@ -203,6 +204,7 @@ def manip_topo():
     # prune nodes and links unable to reach server
     asys.prune_unreachable_from(asys.most_connected)
     print(str(len(asys.nodes))+' internal nodes after pruning unreachables')
+    print(str(len(asys.links))+' internal links after pruning unreachables')
 
     # singly connected nodes will be users
     user_count = 0
@@ -221,6 +223,8 @@ def manip_topo():
                 loc_centres[n.loc] = n
         else:
             loc_centres[n.loc] = n
+    print(str(len(loc_centres))+' locations found:')
+    print(loc_centres.keys())
     # - order cities/locs by number of users
     loc_users = collections.Counter()
     for n in asys.nodes:
