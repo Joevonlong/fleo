@@ -15,7 +15,7 @@ int* cumulativeViews;
 void loadVideoLengthFile() {
     unsigned long tmp;
     std::ifstream freqFile; // default: input from file
-    freqFile.open("freqs_yt_sci.txt");
+    freqFile.open("datasets/freqs_yt_sci.txt");
 
     // parse first line (metadata)
     freqFile >> arraySize >> tmp >> viewsTotal;
