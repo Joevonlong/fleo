@@ -14,8 +14,8 @@ import numpy as np
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 
-scafn = 'results/AS1221-0.sca'
-vecfn = 'results/AS1221-0.vec'
+scafn = '../results/AS1221-0.sca'
+vecfn = '../results/AS1221-0.vec'
 
 # plot hops to reach content
 def plot_hopcount():

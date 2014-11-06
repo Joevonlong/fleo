@@ -5,8 +5,8 @@ import re
 import collections
 
 # global vars
-fn = "rocketfuel_maps_cch.tar.gz"
-archive = tarfile.open(fn)
+topo_file = "../datasets/rocketfuel/rocketfuel_maps_cch.tar.gz"
+archive = tarfile.open(topo_file)
 #asn = '4755'
 #file0 = archive.extractfile(asn+'.cch')
 num_replica = 15
@@ -161,8 +161,8 @@ def parse():
 link_lags = {}
 link_lag_avg = {}
 def read_lags():
-    fn = "weights-dist.tar.gz"
-    arc = tarfile.open(fn)
+    lag_file = "../datasets/rocketfuel/weights-dist.tar.gz"
+    arc = tarfile.open(lag_file)
     lag_re = re.compile(r'(?P<loc1>\D+)\d+\s+'
                         r'(?P<loc2>\D+)\d+\s+'
                         r'(?P<lag>\d+)'
@@ -341,7 +341,7 @@ def main():
     global file_in
     file_in = archive.extractfile(asn+rad+'.cch')
     global file_out
-    file_out = 'AS'+asn+rad+'.ned'
+    file_out = '../ned/'+'AS'+asn+rad+'.ned'
     # read rf file
     parse()
     read_lags()
