@@ -1,5 +1,7 @@
+#pragma once
 #include <omnetpp.h>
 #include "global.h"
+//#include "logic.h"
 
 class User : public cSimpleModule
 {
@@ -19,7 +21,7 @@ protected:
     cOutVector underflowVector;
     
     void sendRequest();
-    void endRequest(MyPacket *pkt);
+    //void endRequest(MyPacket *pkt);
     simtime_t requestStartTime;
     bool playingBack;
     simtime_t playBackStart;
@@ -33,6 +35,7 @@ protected:
     virtual int numInitStages() const;
     virtual void initialize(int stage);
     virtual void handleMessage(cMessage *msg);
+    //void setupFlowTo(int destID);
     virtual void finish();
 };
 

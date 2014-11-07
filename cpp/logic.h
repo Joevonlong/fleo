@@ -1,11 +1,14 @@
 #pragma once
 #include <omnetpp.h>
 #include "global.h"
+#include "user.h"
 
 class Logic : public cSimpleModule
 {
 public:
+    cTopology topo;
     std::map<int, cGate*> nextGate; // maps user index to next cGate*
+    void setupFlowFrom(User *user);
 protected:
     Global *global;
     virtual int numInitStages() const;
@@ -19,4 +22,3 @@ protected:
     void requestFromCache(int cacheID, int customID);
 private:
 };
-

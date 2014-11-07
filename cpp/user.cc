@@ -38,7 +38,7 @@ void User::initialize(int stage) {
         //
         lagVector.setName("Total time minus ");
         idleTimer = new cMessage("idle timer");
-        idleTime = par("initIdleTime");
+        //idleTime = par("initIdleTime");
         underflowTimer = new cMessage("underflow timer");
         idle();
         cacheTries = par("cacheTries");
@@ -87,8 +87,10 @@ void User::sendRequest()
     requestStartTime = simTime();
     playingBack = false;
     playbackTimeDownloaded = 0;
+    ((Logic*)(simulation.getModule(nearestCache)))->setupFlowFrom(this);
 }
 
+/*
 void User::endRequest(MyPacket *pkt) {
     simtime_t completionTime = simTime() - pkt->getCreationTime();
     EV << "Transfer of item #" << pkt->getCustomID() << " complete. "
@@ -97,14 +99,7 @@ void User::endRequest(MyPacket *pkt) {
     emit(videoLengthSignal, pkt->getVideoLength());
     delete pkt;
 }
-
-//void User::startPlayback(simtime_t remaining) {
-//    playingBack = true;
-//    playBackStart = simTime();
-//    // record playback delay
-//    // ... = simTime() - requestStartTime;
-//    scheduleAt(simTime()+remaining, underflowTimer);
-//}
+*/
 
 void User::handleMessage(cMessage *msg)
 {
@@ -190,6 +185,48 @@ void User::handleMessage(cMessage *msg)
         }
     }
 }
+
+/*
+void User::setupFlowTo(int destID) {
+    double minDatarate = DBL_MAX; // bit/ss
+    Logic *dest = check_and_cast<Logic*>(simulation.getModule(destID));
+    // walk from this to dest, finding smallest available BW
+    cTopology::Node *node = dest->topo.getNodeFor(this);
+    if (node == NULL) {
+        ev << "We (" << getFullPath() << ") are not included in the topology.\n";
+    }
+    else if (node->getNumPaths()==0) {
+        ev << "No path to destination.\n";
+    }
+    else {
+        while (node != dest->topo.getTargetNode()) {
+            // BUG in this loop but not first iteration
+            ev << "We are in " << node->getModule()->getFullPath() << endl;
+            ev << node->getDistanceToTarget() << " hops to go\n";
+            ev << "There are " << node->getNumPaths()
+               << " equally good directions, taking the first one\n";
+            cTopology::LinkOut *path = node->getPath(0);
+            ev << "Taking gate " << path->getLocalGate()->getFullName()
+               << " we arrive in " << path->getRemoteNode()->getModule()->getFullPath()
+               << " on its gate " << path->getRemoteGate()->getFullName() << endl;
+
+            
+            if (path->getLocalGate()->getChannel()->isTransmissionChannel()) {
+                EV << "rerqrewq\n";
+                //double nextDatarate = ((cDatarateChannel*)path->getLocalGate()->getTransmissionChannel())->getDatarate();
+                //minDatarate = std::min(minDatarate, nextDatarate);
+            }
+            else {
+                EV << "sdasd\n";
+            }
+            node = path->getRemoteNode();
+            
+        }
+        error("sdasd");
+    }
+    EV << "min rate is " << minDatarate << endl;
+}
+*/
 
 void User::finish()
 {

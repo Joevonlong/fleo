@@ -23,6 +23,7 @@ short stateStart = 0;
 short stateTransfer = 2;
 //short stateAck = 3;
 short stateStream = 4;
+short flowStart = 5;
 
 std::vector<int> cacheIDs;
 std::vector<int> completeCacheIDs;

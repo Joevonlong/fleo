@@ -19,6 +19,12 @@ void Logic::initialize(int stage) {
     if (stage == 0) {
         global = (Global*)getParentModule()->getParentModule()
             ->getSubmodule("global");
+        // build paths to this node
+        topo.clear();
+        topo.extractByNedTypeName(cStringTokenizer("Buffer PoPLogic CoreLogic BeyondLogic Logic User").asVector());
+        cTopology::Node *thisNode =
+            topo.getNodeFor(simulation.getModule(getId()));
+        topo.calculateUnweightedSingleShortestPathsTo(thisNode);
     }
     else if (stage == 1) {
         registerSelfIfCache();
@@ -49,6 +55,7 @@ void Logic::initialize(int stage) {
         }
     }
     else if (stage == 4) {
+        return;
         if (getParentModule()->par("hasCache").boolValue() == true) {
             // find replica with smallest detour from origin
             double pathLength;
@@ -283,3 +290,39 @@ void requestFromCache(int cacheID, int customID) {
 //                reply->setDestinationID(req->getSourceID());
 }
 
+void Logic::setupFlowFrom(User *user) {
+    double minDatarate = DBL_MAX; // bit/ss
+    // walk from user to this, finding smallest available BW
+    cTopology::Node *node = topo.getNodeFor(user);
+    if (node == NULL) {
+        ev << "We (" << getFullPath() << ") are not included in the topology.\n";
+    }
+    else if (node->getNumPaths()==0) {
+        ev << "No path to destination.\n";
+    }
+    else {
+        while (node != topo.getTargetNode()) {
+        //EV << node->getModuleId() << endl;
+        //EV << node->getModule()->getFullName() << endl;
+            ev << "We are in " << node->getModule()->getFullPath() << endl;
+            ev << node->getDistanceToTarget() << " hops to go\n";
+            ev << "There are " << node->getNumPaths()
+               << " equally good directions, taking the first one\n";
+            cTopology::LinkOut *path = node->getPath(0);
+            ev << "Taking gate " << path->getLocalGate()->getFullName()
+               << " we arrive in " << path->getRemoteNode()->getModule()->getFullPath()
+               << " on its gate " << path->getRemoteGate()->getFullName() << endl;
+
+            //EV << path->getLocalGate()->findTransmissionChannel()->info() << endl;//isTransmissionChannel() << endl;
+            if (path->getLocalGate()->findTransmissionChannel()) {
+                double nextDatarate = path->getLocalGate()->getTransmissionChannel()->getNominalDatarate();
+                minDatarate = std::min(minDatarate, nextDatarate);
+            }
+            else {
+                EV << "Not a datarate channel\n";
+            }
+            node = path->getRemoteNode();
+        }
+    }
+    EV << "min rate is " << minDatarate << endl;
+}

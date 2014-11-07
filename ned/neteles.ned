@@ -168,7 +168,7 @@ simple User
         string name = default("");
         string loc = default("");
         int rn = default(-1);
-        volatile double initIdleTime @unit(s);   // delay before first request
+        //volatile double initIdleTime @unit(s);   // delay before first request
         volatile double idleTime @unit(s);   // delay before subsequent requests
         int cacheTries = default(2); // replicas to try before origin
         @signal[idle](type="simtime");

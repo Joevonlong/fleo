@@ -15,6 +15,7 @@ extern short stateStart;
 extern short stateTransfer;
 //extern short stateAck;
 extern short stateStream;
+extern short flowStart;
 
 extern std::vector<int> cacheIDs;
 extern std::vector<int> completeCacheIDs;
