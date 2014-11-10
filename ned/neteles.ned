@@ -74,6 +74,7 @@ simple Logic
     @class(Logic);
     gates:
         inout gate[];
+        inout testlink[];
 }
 
 simple BeyondLogic extends Logic
@@ -177,6 +178,7 @@ simple User
         //@statistic[video-length](title="requested video length"; source="videoLength"; record=vector,mean,count,histogram; interpolationmode=none);
         @display("i=block/user");
     gates:
+        inout testlink[];
         input in;
         output out;
 }

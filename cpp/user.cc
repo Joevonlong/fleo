@@ -73,6 +73,18 @@ void User::idle(simtime_t t) {
 
 void User::sendRequest()
 {
+    // add gates
+    int userlinks = gateSize("testlink");
+    setGateSize("testlink", userlinks+1);
+    cModule *pop = getParentModule()->getSubmodule("pop")->getSubmodule("pop");
+    int poplinks = pop->gateSize("testlink");
+    pop->setGateSize("testlink", poplinks+1);
+    // connect them
+    gate("testlink$o", userlinks)->connectTo(pop->gate("testlink$i", poplinks));
+    pop->gate("testlink$o", poplinks)->connectTo(gate("testlink$i", userlinks));
+    idle();
+    return;
+
     MyPacket *req = new MyPacket("Request");
     req->setBitLength(headerBitLength); // assume no transmission delay
     req->setSourceID(getId());
