@@ -4,8 +4,10 @@ simple Global {
         int bufferMin = default(7s) @unit(s);
 }
 
-channel MyDatarateChannel extends ned.DatarateChannel
+channel FlowChannel extends ned.DatarateChannel
 {
+    @class(FlowChannel);
+    double used = default(0bps) @unit(bps); // used datarate
 //    inherited:
 //    @class(cDatarateChannel);
 //    @signal[channelBusy](type=long);
@@ -24,31 +26,31 @@ channel MyDatarateChannel extends ned.DatarateChannel
 //    double per = default(0); // packet error rate (PER)
 }
 
-channel OC192 extends MyDatarateChannel {
+channel OC192 extends FlowChannel {
     datarate = 9.953Gbps;
     delay = 20ms;
 }
-channel OC48 extends MyDatarateChannel {
+channel OC48 extends FlowChannel {
     datarate = 2.488Gbps;
     delay = 15ms;
 }
-channel OC12 extends MyDatarateChannel {
+channel OC12 extends FlowChannel {
     datarate = 622.08Mbps;
     delay = default(3.8ms) @unit(s);
 }
-channel OC3 extends MyDatarateChannel {
+channel OC3 extends FlowChannel {
     datarate = 155.52Mbps;
     delay = 5ms;
 }
-channel Cat5 extends MyDatarateChannel {
+channel Cat5 extends FlowChannel {
     datarate = 100Mbps;
     delay = 5ms;
 }
-channel T3 extends MyDatarateChannel {
+channel T3 extends FlowChannel {
     datarate = 45Mbps;
     delay = 5ms;
 }
-channel Cat3 extends MyDatarateChannel {
+channel Cat3 extends FlowChannel {
     datarate = 10Mbps;
     delay = 5ms;
 }
