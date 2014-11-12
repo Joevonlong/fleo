@@ -10,7 +10,7 @@ simtime_t FlowChannel::getTransmissionFinishTime() const {
     return 0;
 }
 
-void FlowChannel::processMessage(cMessage *msg, simtime_t t, result_t& result) {
+void FlowChannel::processMessage(cMessage *msg, simtime_t t, result_t &result) {
     // if channel is disabled, signal that message should be deleted
     if (isDisabled) {
         result.discard = true;
@@ -40,5 +40,5 @@ void FlowChannel::processMessage(cMessage *msg, simtime_t t, result_t& result) {
     }
 }
 
-void FlowChannel::handleParameterChange (const char *parname) {
-}
+//~ void FlowChannel::handleParameterChange (const char *parname) {
+//~ }

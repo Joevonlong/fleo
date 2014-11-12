@@ -71,8 +71,6 @@ simple Cache {
 simple Logic
 {
     parameters:
-//        @signal[request](type="double");
-  //      @statistic[request-size](title="request size"; source="request"; record=vector,histogram; interpolationmode=none);
     @class(Logic);
     gates:
         inout gate[];
@@ -82,8 +80,6 @@ simple Logic
 simple BeyondLogic extends Logic
 {
     parameters:
-//        @signal[request](type="double");
-  //      @statistic[request-size](title="request size"; source="request"; record=vector,histogram; interpolationmode=none);
         @display("i=block/server");
     @class(BeyondLogic);
 }
@@ -175,9 +171,7 @@ simple User
         volatile double idleTime @unit(s);   // delay before subsequent requests
         int cacheTries = default(2); // replicas to try before origin
         @signal[idle](type="simtime");
-        //@statistic[idle](title="idle time"; source="idle"; record=vector,min,max,mean,count; interpolationmode=none);
         @signal[videoLength](type="long");
-        //@statistic[video-length](title="requested video length"; source="videoLength"; record=vector,mean,count,histogram; interpolationmode=none);
         @display("i=block/user");
     gates:
         inout testlink[];
