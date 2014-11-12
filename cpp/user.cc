@@ -71,22 +71,30 @@ void User::idle(simtime_t t) {
     cancelEvent(underflowTimer);
 }
 
+//~ std::vector<int> User::findAvailablePathTo(int destID, double bpsWanted) { // returns moduleIDs
+    //~ 
+//~ }
+
 void User::sendRequest()
 {
-    // add gates
-    int userlinks = gateSize("testlink");
-    setGateSize("testlink", userlinks+1);
-    cModule *pop = getParentModule()->getSubmodule("pop")->getSubmodule("pop");
-    int poplinks = pop->gateSize("testlink");
-    pop->setGateSize("testlink", poplinks+1);
-    // connect them
-    gate("testlink$o", userlinks)->connectTo(pop->gate("testlink$i", poplinks));
-    pop->gate("testlink$o", poplinks)->connectTo(gate("testlink$i", userlinks));
-    idle();
-    return;
+    //~ // add gates
+    //~ int userlinks = gateSize("testlink");
+    //~ setGateSize("testlink", userlinks+1);
+    //~ cModule *pop = getParentModule()->getSubmodule("pop")->getSubmodule("pop");
+    //~ int poplinks = pop->gateSize("testlink");
+    //~ pop->setGateSize("testlink", poplinks+1);
+    //~ // connect them
+    //~ cDelayChannel *temp = (cDelayChannel*)cChannelType::getDelayChannelType()->create("test");
+    //~ temp->setDelay(0.01);
+    //~ temp = (cDelayChannel*)gate("testlink$o", userlinks)->connectTo(pop->gate("testlink$i", poplinks), temp);
+    //~ EV << temp->info() << endl;
+    //~ temp = (cDelayChannel*)pop->gate("testlink$o", poplinks)->connectTo(gate("testlink$i", userlinks));
+    //~ //EV << temp->info() << endl;
+    //~ idle();
+    //~ return;
 
     MyPacket *req = new MyPacket("Request");
-    req->setBitLength(headerBitLength); // assume no transmission delay
+    req->setBitLength(headerBitLength);
     req->setSourceID(getId());
     req->setHops(0);
     req->setDestinationID(nearestCache);
@@ -99,7 +107,7 @@ void User::sendRequest()
     requestStartTime = simTime();
     playingBack = false;
     playbackTimeDownloaded = 0;
-    ((Logic*)(simulation.getModule(nearestCache)))->setupFlowFrom(this);
+    //~ ((Logic*)(simulation.getModule(nearestCache)))->setupFlowFrom(this);
 }
 
 /*

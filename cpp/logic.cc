@@ -22,8 +22,7 @@ void Logic::initialize(int stage) {
         // build paths to this node
         topo.clear();
         topo.extractByNedTypeName(cStringTokenizer("Buffer PoPLogic CoreLogic BeyondLogic Logic User").asVector());
-        cTopology::Node *thisNode =
-            topo.getNodeFor(simulation.getModule(getId()));
+        cTopology::Node *thisNode = topo.getNodeFor(this);
         topo.calculateUnweightedSingleShortestPathsTo(thisNode);
     }
     else if (stage == 1) {
@@ -290,39 +289,48 @@ void requestFromCache(int cacheID, int customID) {
 //                reply->setDestinationID(req->getSourceID());
 }
 
-void Logic::setupFlowFrom(User *user) {
-    double minDatarate = DBL_MAX; // bit/ss
+std::vector<int> Logic::findAvailablePathFrom(User *user, double bpsWanted) {
+    std::vector<int> path;
     // walk from user to this, finding smallest available BW
-    cTopology::Node *node = topo.getNodeFor(user);
-    if (node == NULL) {
-        ev << "We (" << getFullPath() << ") are not included in the topology.\n";
+    cTopology::Node *userNode = topo.getNodeFor(user);
+    if (userNode == NULL) {
+        error("User (%s) is not included in the topology.", getFullPath().c_str());
     }
-    else if (node->getNumPaths()==0) {
-        ev << "No path to destination.\n";
+    else if (userNode->getNumPaths()==0) {
+        error("No path to destination.");
     }
     else {
-        while (node != topo.getTargetNode()) {
-        //EV << node->getModuleId() << endl;
-        //EV << node->getModule()->getFullName() << endl;
-            ev << "We are in " << node->getModule()->getFullPath() << endl;
-            ev << node->getDistanceToTarget() << " hops to go\n";
-            ev << "There are " << node->getNumPaths()
-               << " equally good directions, taking the first one\n";
-            cTopology::LinkOut *path = node->getPath(0);
-            ev << "Taking gate " << path->getLocalGate()->getFullName()
-               << " we arrive in " << path->getRemoteNode()->getModule()->getFullPath()
-               << " on its gate " << path->getRemoteGate()->getFullName() << endl;
-
-            //EV << path->getLocalGate()->findTransmissionChannel()->info() << endl;//isTransmissionChannel() << endl;
-            if (path->getLocalGate()->findTransmissionChannel()) {
-                double nextDatarate = path->getLocalGate()->getTransmissionChannel()->getNominalDatarate();
-                minDatarate = std::min(minDatarate, nextDatarate);
+        int usablePathIndex = -1;
+        ev << "There are " << userNode->getNumPaths()
+           << " equally good directions. Starting with the first one...\n";
+        // TODO if no shortest path available, try longer ones
+        for (int pathIndex = 0; pathIndex < userNode->getNumPaths(); pathIndex++) {
+            cTopology::Node *walker = userNode;
+            cTopology::LinkOut *path = walker->getPath(pathIndex);
+            bool usablePath = true;
+            while (walker != topo.getTargetNode()) {
+                if (path->getLocalGate()->findTransmissionChannel()) {
+                    double nextDatarate = path->getLocalGate()->getTransmissionChannel()->getNominalDatarate();
+                    if (nextDatarate < bpsWanted) {
+                        usablePath = false;
+                        break; // not enough bandwidth available: try next path
+                    }
+                }
+                else {EV << "Not a datarate channel\n";}
+                walker = path->getRemoteNode();
             }
-            else {
-                EV << "Not a datarate channel\n";
+            if (usablePath) {
+                usablePathIndex = pathIndex;
+                EV << "Found usable path: #" << pathIndex <<").\n";
+                break;
             }
-            node = path->getRemoteNode();
+        }
+        if (usablePathIndex == -1) {
+            // no paths have sufficient bandwidth...
+        }
+        else {
+            // return usable path...
         }
     }
-    EV << "min rate is " << minDatarate << endl;
+    return path;
 }

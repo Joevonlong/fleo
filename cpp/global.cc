@@ -15,7 +15,7 @@ simsignal_t effBitRateSignal;
 
 int requestKind = 123;
 int replyKind = 321;
-int64_t headerBitLength = 100;
+int64_t headerBitLength = 0;
 
 // MyPacket states
 short stateStart = 0;
