@@ -249,6 +249,7 @@ def write_to_ned():
     # submodule section
     f.write(' '*4+'submodules:\n')
     f.write(' '*8+'global: Global;\n')
+    f.write(' '*8+'controller: Controller;\n')
     for node in asys.nodes:
         if node.assignment == 'beyond':
             f.write(' '*8+'beyond'+str(node.uid)+': Beyond{name="'

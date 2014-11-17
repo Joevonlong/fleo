@@ -1,6 +1,6 @@
 #include <omnetpp.h>
 
-class Global : public cSimpleModule {
+class Controller : public cSimpleModule {
     protected:
         virtual int numInitStages() const;
         virtual void initialize(int stage);
