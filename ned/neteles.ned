@@ -4,6 +4,9 @@ simple Global {
         int bufferMin = default(7s) @unit(s);
 }
 
+simple Controller {
+}
+
 channel FlowChannel extends ned.DatarateChannel
 {
     @class(FlowChannel);
