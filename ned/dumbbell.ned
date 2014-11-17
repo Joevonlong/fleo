@@ -5,6 +5,7 @@ network Dumbbell
     types:
     submodules:
         global: Global;
+        controller: Controller;
         beyond: Beyond{name="beyond"; loc="here"; rn=0; hasCache=true; cacheRank=1; @display("i=block/routing,green");};
         core: Core{name="core"; loc="here"; rn=1;};
         pop: PoP{name="pop"; loc="here"; rn=2;};

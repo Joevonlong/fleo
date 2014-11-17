@@ -14,7 +14,9 @@ class FlowChannel : public cDatarateChannel {
     private:
         bool isDisabled;
         double delay;
-        double datarate, used; // only "used" is new
-        double ber, per;
+        double datarate;
+        double used; // only new member compared to cDatarateChannel
+        double ber;
+        double per;
         simtime_t txfinishtime;
 };
