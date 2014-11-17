@@ -3,6 +3,9 @@
 class FlowChannel : public cDatarateChannel {
     public:
         bool assignDatarate(double bps);
+        double getUsedBW();
+        void setUsedBW(double bps);
+        void addUsedBW(double bps);
     protected:
         bool isTransmissionChannel() const;
         simtime_t getTransmissionFinishTime() const;
@@ -11,7 +14,7 @@ class FlowChannel : public cDatarateChannel {
     private:
         bool isDisabled;
         double delay;
-        double datarate, used;
+        double datarate, used; // only "used" is new
         double ber, per;
         simtime_t txfinishtime;
 };

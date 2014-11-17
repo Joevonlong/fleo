@@ -7,7 +7,7 @@ bool FlowChannel::isTransmissionChannel() const {
 }
 
 simtime_t FlowChannel::getTransmissionFinishTime() const {
-    return 0;
+    return txfinishtime;
 }
 
 void FlowChannel::processMessage(cMessage *msg, simtime_t t, result_t &result) {
@@ -17,7 +17,7 @@ void FlowChannel::processMessage(cMessage *msg, simtime_t t, result_t &result) {
         return;
     }
 
-    // datarate modeling
+    // datarate modelling
     if (datarate!=0 && msg->isPacket()) {
         simtime_t duration = ((cPacket *)msg)->getBitLength() / datarate;
         result.duration = duration;
@@ -27,7 +27,7 @@ void FlowChannel::processMessage(cMessage *msg, simtime_t t, result_t &result) {
         txfinishtime = t;
     }
 
-    // propagation delay modeling
+    // propagation delay modelling
     result.delay = delay;
 
     // bit error modeling
@@ -42,3 +42,22 @@ void FlowChannel::processMessage(cMessage *msg, simtime_t t, result_t &result) {
 
 //~ void FlowChannel::handleParameterChange (const char *parname) {
 //~ }
+
+double FlowChannel::getUsedBW() {
+    return used;
+}
+
+void FlowChannel::setUsedBW(double bps) {
+    if (bps > datarate) {
+        throw cRuntimeError("Using more bandwidth than channel is capable of.");
+    }
+    else if (bps < 0) {
+        throw cRuntimeError("Setting bandwidth usage to negative.");
+    }
+    used = bps;
+}
+
+void FlowChannel::addUsedBW(double bps) {
+    setUsedBW(used + bps);
+}
+
