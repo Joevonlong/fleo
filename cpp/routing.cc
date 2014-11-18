@@ -4,6 +4,7 @@
 #include "reply_m.h"
 #include "mypacket_m.h"
 
+typedef cTopology::Node Node;
 cTopology topo;
 
 cGate* getNextGate(Logic* current, cMessage* msg) {
@@ -104,3 +105,46 @@ void topoSetup()
   */
 }
 
+Node *source;
+Node *target;
+std::vector<Node*> path; // used as a stack, but need iterator and access
+std::set<Node*> seen;
+bool _stuck(Node *n) { // helper function
+    if (n == target) {return false;}
+    int i = n->getNumOutLinks();
+    for (; i>0; i--) {
+        Node *m = n->getLinkOut(i)->getRemoteNode();
+        if (seen.find(m) == seen.end()) { // i.e. m not in seen
+            seen.insert(m);
+            if (!_stuck(m)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+void _search(Node *n) { // helper function
+    if (n == target) {
+        // found a path. output it somewhere...
+    }
+    seen = std::set<Node*>(path.begin(), path.end()); // copy path to seen
+    if (_stuck(n)) {return;}
+    // run search on each neighbour of n
+    int i = n->getNumOutLinks();
+    for (; i>0; i--) {
+        Node *m = n->getLinkOut(i)->getRemoteNode();
+        path.push_back(m);
+        _search(m);
+        path.pop_back(); // should be m
+    }
+}
+void calculatePathsBetween(cModule *srcMod, cModule *dstMod) {
+    // initialise source & target nodes
+    source = topo.getNodeFor(srcMod);
+    target = topo.getNodeFor(dstMod);
+    // (re-)initialise stack
+    path = std::vector<Node*>();
+    path.push_back(source);
+    // begin search
+    _search(source);
+}
