@@ -105,37 +105,46 @@ void topoSetup()
   */
 }
 
+// algo taken from http://mathoverflow.net/a/18634
+// also consider: An algorithm for computing all paths in a graph
+// [http://link.springer.com/article/10.1007%2FBF01966095]
 Node *source;
 Node *target;
-std::vector<Node*> path; // used as a stack, but need iterator and access
+std::vector<Node*> path; // used as a stack, but vector provides iterator and random access
 std::set<Node*> seen;
 bool _stuck(Node *n) { // helper function
     if (n == target) {return false;}
-    int i = n->getNumOutLinks();
-    for (; i>0; i--) {
-        Node *m = n->getLinkOut(i)->getRemoteNode();
-        if (seen.find(m) == seen.end()) { // i.e. m not in seen
-            seen.insert(m);
-            if (!_stuck(m)) {
-                return false;
+    for (int i = n->getNumOutLinks()-1; i>=0; i--) {
+        EV << "stuck:numout: " << i << endl;
+        Node *m = n->getLinkOut(i)->getRemoteNode(); // for each node beside head
+        if (seen.find(m) == seen.end()) { // if it has not been seen yet
+            seen.insert(m); // set it as seen
+            if (!_stuck(m)) { // and if it is not stuck
+                return false; // this head is also not stuck
             }
         }
     }
     return true;
 }
 void _search(Node *n) { // helper function
+    EV << "searching @ " << n->getModule()->getFullPath() << endl;
     if (n == target) {
         // found a path. output it somewhere...
+        EV << "Path found:";
+        for (std::vector<Node*>::iterator it = path.begin() ; it != path.end(); it++) {
+            EV << " " << (*it)->getModule()->getFullPath();
+        }
+        EV << endl;
     }
     seen = std::set<Node*>(path.begin(), path.end()); // copy path to seen
     if (_stuck(n)) {return;}
     // run search on each neighbour of n
-    int i = n->getNumOutLinks();
-    for (; i>0; i--) {
+    for (int i = n->getNumOutLinks()-1; i>=0 ; i--) {
+        EV << "search:numout: " << i << endl;
         Node *m = n->getLinkOut(i)->getRemoteNode();
         path.push_back(m);
         _search(m);
-        path.pop_back(); // should be m
+        path.pop_back(); // popped item should be m
     }
 }
 void calculatePathsBetween(cModule *srcMod, cModule *dstMod) {

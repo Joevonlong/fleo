@@ -93,6 +93,9 @@ void User::sendRequest()
     //~ idle();
     //~ return;
 
+    // temp...
+    calculatePathsBetween(this, simulation.getModule(nearestCache));
+
     MyPacket *req = new MyPacket("Request");
     req->setBitLength(headerBitLength);
     req->setSourceID(getId());
