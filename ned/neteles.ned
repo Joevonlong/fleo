@@ -76,7 +76,9 @@ simple Logic
     parameters:
     @class(Logic);
     gates:
-        inout gate[];
+        inout gate[]; // to be phased out
+        input receive[];
+        output transmit[];
         inout testlink[];
 }
 
@@ -119,13 +121,13 @@ module Router
         input in[];
         output out[];
     submodules:
-        buffer[sizeof(in)]: Buffer;
+        //buffer[sizeof(in)]: Buffer;
         cache: Cache;
     connections:
-        for i=0..sizeof(in)-1 {
-            buffer[i].transmit --> out++;
-            buffer[i].receive <-- in++;
-        }
+        //for i=0..sizeof(in)-1 {
+            // buffer[i].transmit --> out++;
+            // buffer[i].receive <-- in++;
+        //}
 }
 
 module PoP extends Router
@@ -136,7 +138,8 @@ module PoP extends Router
         pop: Logic;
     connections:
         for i=0..sizeof(in)-1 {
-            pop.gate++ <--> buffer[i].logicIO;
+            pop.transmit++ --> out[i];
+            pop.receive++ <-- in[i];
         }
 }
 
@@ -148,7 +151,8 @@ module Core extends Router
         core: Logic;
     connections:
         for i=0..sizeof(in)-1 {
-            core.gate++ <--> buffer[i].logicIO;
+            core.transmit++ --> out[i];
+            core.receive++ <-- in[i];
         }
 }
 
@@ -160,7 +164,8 @@ module Beyond extends Router
         beyond: Logic;
     connections:
         for i=0..sizeof(in)-1 {
-            beyond.gate++ <--> buffer[i].logicIO;
+            beyond.transmit++ --> out[i];
+            beyond.receive++ <-- in[i];
         }
 }
 
