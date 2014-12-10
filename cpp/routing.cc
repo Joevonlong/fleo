@@ -143,6 +143,13 @@ void _search(Node *n) { // helper function
     for (int i = n->getNumOutLinks()-1; i>=0 ; i--) {
         EV << "search:numout: " << i << endl;
         Node *m = n->getLinkOut(i)->getRemoteNode();
+        // do not go backwards:
+        bool neighbour_in_path = false;
+        for (int j = path.size()-1; j >= 0; j--) {
+            if (path[j] == m) {neighbour_in_path = true;}
+        }
+        if (neighbour_in_path) {continue;}
+        // ----------
         path.push_back(m);
         _search(m);
         path.pop_back(); // popped item should be m
