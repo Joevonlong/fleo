@@ -115,10 +115,10 @@ std::set<Node*> seen;
 bool _stuck(Node *n) { // helper function
     if (n == target) {return false;}
     for (int i = n->getNumOutLinks()-1; i>=0; i--) {
-        EV << "stuck:numout: " << i << endl;
+        EV << "in stuck trying numout #" << i << endl;
         Node *m = n->getLinkOut(i)->getRemoteNode(); // for each node beside head
-        if (seen.find(m) == seen.end()) { // if it has not been seen yet
-            seen.insert(m); // set it as seen
+        std::pair<std::set<Node*>::iterator,bool> ret = seen.insert(m); // try add it to seen
+        if (ret.second) { // if inserted i.e. m was not in seen
             if (!_stuck(m)) { // and if it is not stuck
                 return false; // this head is also not stuck
             }
@@ -136,6 +136,7 @@ void _search(Node *n) { // helper function
         }
         EV << endl;
     }
+    // check if stuck
     seen = std::set<Node*>(path.begin(), path.end()); // copy path to seen
     if (_stuck(n)) {return;}
     // run search on each neighbour of n
