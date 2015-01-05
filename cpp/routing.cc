@@ -112,6 +112,7 @@ Node *source;
 Node *target;
 std::vector<Node*> path; // used as a stack, but vector provides iterator and random access
 std::set<Node*> seen;
+std::vector<std::vector<Node*> > paths;
 bool _stuck(Node *n) { // helper function
     if (n == target) {return false;}
     for (int i = n->getNumOutLinks()-1; i>=0; i--) {
@@ -132,9 +133,10 @@ void _search(Node *n) { // helper function
         // found a path. output it somewhere...
         EV << "Path found:";
         for (std::vector<Node*>::iterator it = path.begin() ; it != path.end(); it++) {
-            EV << " " << (*it)->getModule()->getFullPath();
+            EV << " > " << (*it)->getModule()->getFullPath();
         }
         EV << endl;
+        paths.push_back(std::vector<Node*>(path));
     }
     // check if stuck
     seen = std::set<Node*>(path.begin(), path.end()); // copy path to seen
@@ -155,13 +157,25 @@ void _search(Node *n) { // helper function
         path.pop_back(); // popped item should be m
     }
 }
-void calculatePathsBetween(cModule *srcMod, cModule *dstMod) {
+std::vector<std::vector<Node*> > calculatePathsBetween(cModule *srcMod, cModule *dstMod) {
     // initialise source & target nodes
     source = topo.getNodeFor(srcMod);
     target = topo.getNodeFor(dstMod);
     // (re-)initialise stack
     path = std::vector<Node*>();
     path.push_back(source);
+    // (re-)initialise path list
+    paths = std::vector<std::vector<Node*> >();
     // begin search
     _search(source);
+    // relist all found paths
+    EV << "Relisting paths found...\n";
+    for (std::vector<std::vector<Node*> >::iterator outer_it = paths.begin() ; outer_it != paths.end(); outer_it++) {
+        EV << "path: ";
+        for (std::vector<Node*>::iterator inner_it = (*outer_it).begin() ; inner_it != (*outer_it).end(); inner_it++) {
+            EV << (*inner_it)->getModule()->getFullPath() << " > ";
+        }
+        EV << endl;
+    }
+    return std::vector<std::vector<Node*> >(paths); // return a copy
 }
