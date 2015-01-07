@@ -94,7 +94,14 @@ void User::sendRequest()
     //~ return;
 
     // temp...
-    calculatePathsBetween(this, simulation.getModule(nearestCache));
+    PathList paths = calculatePathsBetween(this, simulation.getModule(nearestCache));
+    Path path = getShortestPath(paths);
+    EV << "shortest hop length: " << path.size() << "... ";
+    for (Path::iterator it = path.begin() ; it != path.end(); it++) {
+        EV << (*it)->getModule()->getFullPath() << " > ";
+    }
+    EV << endl;
+    // end temp
 
     MyPacket *req = new MyPacket("Request");
     req->setBitLength(headerBitLength);

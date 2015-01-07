@@ -13,3 +13,4 @@ extern int getNearestID(int originID, std::vector<int> candidateIDs);
 typedef std::vector<cTopology::Node*> Path;
 typedef std::vector<Path> PathList;
 extern PathList calculatePathsBetween(cModule *srcMod, cModule *dstMod);
+extern Path getShortestPath(PathList paths);

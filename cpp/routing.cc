@@ -130,7 +130,7 @@ bool _stuck(Node *n) { // helper function
 void _search(Node *n) { // helper function
     EV << "searching @ " << n->getModule()->getFullPath() << endl;
     if (n == target) {
-        // found a path. output it somewhere...
+        // found a path
         EV << "Path found:";
         for (Path::iterator it = path.begin() ; it != path.end(); it++) {
             EV << " > " << (*it)->getModule()->getFullPath();
@@ -178,4 +178,22 @@ PathList calculatePathsBetween(cModule *srcMod, cModule *dstMod) {
         EV << endl;
     }
     return PathList(paths); // return a copy
+}
+
+Path getShortestPath(PathList paths) {
+    /**
+     * Returns Path with the least number of Nodes.
+     * TODO check bandwidth availability
+     **/
+    // initialisation
+    unsigned int minHops = UINT_MAX;
+    Path shortest = Path();
+    //
+    for (PathList::iterator it = paths.begin() ; it != paths.end(); it++) {
+        if (it->size() < minHops) {
+            minHops = it->size();
+            shortest = Path(*it);
+        }
+    }
+    return shortest;
 }
