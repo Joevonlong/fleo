@@ -132,7 +132,7 @@ void _search(Node *n) { // helper function
     if (n == target) {
         // found a path
         EV << "Path found:";
-        for (Path::iterator it = path.begin() ; it != path.end(); it++) {
+        for (Path::iterator it = path.begin(); it != path.end(); it++) {
             EV << " > " << (*it)->getModule()->getFullPath();
         }
         EV << endl;
@@ -170,9 +170,9 @@ PathList calculatePathsBetween(cModule *srcMod, cModule *dstMod) {
     _search(source);
     // relist all found paths
     EV << "Relisting paths found...\n";
-    for (PathList::iterator outer_it = paths.begin() ; outer_it != paths.end(); outer_it++) {
+    for (PathList::iterator outer_it = paths.begin(); outer_it != paths.end(); outer_it++) {
         EV << "path: ";
-        for (Path::iterator inner_it = (*outer_it).begin() ; inner_it != (*outer_it).end(); inner_it++) {
+        for (Path::iterator inner_it = (*outer_it).begin(); inner_it != (*outer_it).end(); inner_it++) {
             EV << (*inner_it)->getModule()->getFullPath() << " > ";
         }
         EV << endl;
@@ -188,12 +188,49 @@ Path getShortestPath(PathList paths) {
     // initialisation
     unsigned int minHops = UINT_MAX;
     Path shortest = Path();
-    //
-    for (PathList::iterator it = paths.begin() ; it != paths.end(); it++) {
+    // for each path, if shorter than current shortest, become new shortest
+    for (PathList::iterator it = paths.begin(); it != paths.end(); it++) {
         if (it->size() < minHops) {
             minHops = it->size();
             shortest = Path(*it);
         }
     }
     return shortest;
+}
+
+bool _getAvailablePathsHelper(Node *from, Node *to, double datarate) {
+    /**
+     * Checks if datarate is available between from and to
+     **/
+    for (int i = from->getNumOutLinks()-1; i>=0; i--) { // try each link
+        if (from->getLinkOut(i)->getRemoteNode() == to) { // until the other node is found
+            if (from->getLinkOut(i)->getLocalGate()->getTransmissionChannel()->getNominalDatarate() >= datarate) { // then check if bandwidth is available
+                return true;
+            }
+        }
+    }
+    return false;
+}
+PathList getAvailablePaths(PathList paths, double datarate) {
+    /**
+     * Filters given paths to only those that have the datarate in all links
+     **/
+    // initialisation
+    PathList available = PathList();
+    bool possible = false;
+    // for each path, if all links have at least datarate, copy onto available
+    for (PathList::iterator outer_it = paths.begin(); outer_it != paths.end(); outer_it++) { // for each path
+        possible = true;
+        for (Path::iterator inner_it = outer_it->begin(); inner_it != outer_it->end()-1; inner_it++) { // starting from the first node
+            if (!_getAvailablePathsHelper(*inner_it, *(inner_it+1), datarate)) {
+                possible = false;
+                break;
+            }
+            // assert(possible);
+        }
+        if (possible) {
+            available.push_back(Path(*outer_it));
+        }
+    }
+    return available;
 }

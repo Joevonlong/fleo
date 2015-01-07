@@ -14,3 +14,4 @@ typedef std::vector<cTopology::Node*> Path;
 typedef std::vector<Path> PathList;
 extern PathList calculatePathsBetween(cModule *srcMod, cModule *dstMod);
 extern Path getShortestPath(PathList paths);
+extern PathList getAvailablePaths(PathList paths, double datarate);
