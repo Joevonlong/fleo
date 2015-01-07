@@ -9,4 +9,7 @@ extern cGate* getNextGate(Logic* current, cMessage* msg);
 extern double getDistanceBetween(int originID, int destID);
 extern int getNearestCacheID(int userID);
 extern int getNearestID(int originID, std::vector<int> candidateIDs);
-extern std::vector<std::vector<cTopology::Node*> > calculatePathsBetween(cModule *srcMod, cModule *dstMod);
+
+typedef std::vector<cTopology::Node*> Path;
+typedef std::vector<Path> PathList;
+extern PathList calculatePathsBetween(cModule *srcMod, cModule *dstMod);
