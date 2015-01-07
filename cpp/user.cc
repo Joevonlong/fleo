@@ -96,11 +96,21 @@ void User::sendRequest()
     // temp...
     PathList paths = calculatePathsBetween(this, simulation.getModule(nearestCache));
     Path path = getShortestPath(paths);
-    EV << "shortest hop length: " << path.size() << "... ";
+    EV << "shortest path length by hops: " << path.size() << "... ";
     for (Path::iterator it = path.begin() ; it != path.end(); it++) {
         EV << (*it)->getModule()->getFullPath() << " > ";
     }
     EV << endl;
+    // try a BW req that can pass 1 path but not the other
+    paths = getAvailablePaths(paths, 1e8);
+    EV << "available paths:\n";
+    for (PathList::iterator outer_it = paths.begin(); outer_it != paths.end(); outer_it++) {
+        EV << "path: ";
+        for (Path::iterator inner_it = (*outer_it).begin(); inner_it != (*outer_it).end(); inner_it++) {
+            EV << (*inner_it)->getModule()->getFullPath() << " > ";
+        }
+        EV << endl;
+    }
     // end temp
 
     MyPacket *req = new MyPacket("Request");

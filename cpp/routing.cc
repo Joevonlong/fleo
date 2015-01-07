@@ -234,3 +234,5 @@ PathList getAvailablePaths(PathList paths, double datarate) {
     }
     return available;
 }
+
+// alternatively, add method to return path's bandwidth instead?
