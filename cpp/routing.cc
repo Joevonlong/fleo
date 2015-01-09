@@ -105,6 +105,18 @@ void topoSetup()
   */
 }
 
+void printPath(Path path) {
+    for (Path::iterator it = path.begin(); it != path.end(); it++) {
+        EV << (*it)->getModule()->getFullPath() << " > ";
+    }
+    EV << endl;
+}
+void printPaths(PathList paths) {
+    for (PathList::iterator it = paths.begin(); it != paths.end(); it++) {
+        printPath(*it);
+    }
+}
+
 // algo taken from http://mathoverflow.net/a/18634
 // also consider: An algorithm for computing all paths in a graph
 // [http://link.springer.com/article/10.1007%2FBF01966095]
@@ -131,11 +143,8 @@ void _search(Node *n) { // helper function
     EV << "searching @ " << n->getModule()->getFullPath() << endl;
     if (n == target) {
         // found a path
-        EV << "Path found:";
-        for (Path::iterator it = path.begin(); it != path.end(); it++) {
-            EV << " > " << (*it)->getModule()->getFullPath();
-        }
-        EV << endl;
+        EV << "Path found: ";
+        printPath(path);
         paths.push_back(Path(path));
     }
     // check if stuck
@@ -170,13 +179,7 @@ PathList calculatePathsBetween(cModule *srcMod, cModule *dstMod) {
     _search(source);
     // relist all found paths
     EV << "Relisting paths found...\n";
-    for (PathList::iterator outer_it = paths.begin(); outer_it != paths.end(); outer_it++) {
-        EV << "path: ";
-        for (Path::iterator inner_it = (*outer_it).begin(); inner_it != (*outer_it).end(); inner_it++) {
-            EV << (*inner_it)->getModule()->getFullPath() << " > ";
-        }
-        EV << endl;
-    }
+    printPaths(paths);
     return PathList(paths); // return a copy
 }
 
