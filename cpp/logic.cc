@@ -116,7 +116,7 @@ void Logic::handleMessage(cMessage *msg) {
                 EV << simulation.getModule(outerPkt->getDestinationID())
                     ->getFullPath() << endl;
                 outerPkt->encapsulate(pkt);
-                cGate* outGate = getNextGate(this, outerPkt);
+                cGate* outGate = NULL;//getNextGate(this, outerPkt);
                 send(outerPkt, outGate);
                 return;
             }
@@ -144,7 +144,7 @@ void Logic::handleMessage(cMessage *msg) {
                 EV << "Requested item #" << pkt->getCustomID()
                    << " is cached. Sending reply.\n";
                 global->recordRequestedLength(pkt->getVideoLength());
-                cGate* outGate = getNextGate(this, pkt);
+                cGate* outGate = NULL;// getNextGate(this, pkt);
                 send(pkt, outGate);
                 return;
             }
@@ -181,7 +181,7 @@ void Logic::handleMessage(cMessage *msg) {
                 EV << simulation.getModule(outerPkt->getDestinationID())
                     ->getFullPath() << endl;
                 outerPkt->encapsulate(pkt);
-                cGate* outGate = getNextGate(this, outerPkt);
+                cGate* outGate = NULL;// getNextGate(this, outerPkt);
                 send(outerPkt, outGate);
                 return;
             }
@@ -202,7 +202,7 @@ void Logic::handleMessage(cMessage *msg) {
                 pkt->setBitLength(pkt->getVideoSegmentLength()*bitRate);
                 pkt->setVideoLengthPending(
                     pkt->getVideoSegmentLength() - pkt->getVideoSegmentLength());
-                cGate* outGate = getNextGate(this, pkt);
+                cGate* outGate = NULL;// getNextGate(this, pkt);
                 send(pkt, outGate);
                 return;
             }
@@ -229,7 +229,7 @@ void Logic::handleMessage(cMessage *msg) {
                 innerPkt->setVideoLengthPending(pkt->getVideoLengthPending());
                 innerPkt->setBitLength(pkt->getBitLength());
                 // not using bitsPending
-                cGate* outGate = getNextGate(this, innerPkt);
+                cGate* outGate = NULL;// getNextGate(this, innerPkt);
                 send(innerPkt, outGate);
                 delete pkt;
                 return;
@@ -244,7 +244,7 @@ void Logic::handleMessage(cMessage *msg) {
             pkt->setHops(pkt->getHops()+1);
         }
         // ---
-        cGate* outGate = getNextGate(this, pkt);
+        cGate* outGate = NULL;// getNextGate(this, pkt);
         send(pkt, outGate);
         EV << "Forwarding request via " << outGate->getFullName() << endl;
         return;

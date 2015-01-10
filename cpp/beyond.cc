@@ -51,9 +51,11 @@ void BeyondLogic::handleMessage(cMessage *msg)
     delete msg;
   }
   // choose gate using routing
-  cGate* outGate = getNextGate(this, reply);
-  send(reply, outGate);
-  EV << "Sending reply out of " << outGate->getFullName() << endl;
+
+  //~ cGate* outGate = getNextGate(this, reply);
+  //~ send(reply, outGate);
+  //~ EV << "Sending reply out of " << outGate->getFullName() << endl;
+
   // choose random output gate
   //cGate *outGate = gate("gate$o", intuniform(0, gateSize("gate")-1));
   //send(reply, outGate);

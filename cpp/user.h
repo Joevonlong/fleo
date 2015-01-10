@@ -2,7 +2,7 @@
 #include <omnetpp.h>
 #include "global.h"
 //#include "logic.h"
-#include "routing.h"
+#include "path.h"
 
 class User : public cSimpleModule
 {

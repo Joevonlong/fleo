@@ -1,3 +1,4 @@
+#pragma once
 #include <omnetpp.h>
 
 class FlowChannel : public cDatarateChannel {

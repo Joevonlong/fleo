@@ -7,30 +7,30 @@
 
 cTopology topo;
 
-cGate* getNextGate(Logic* current, cMessage* msg) {
-    // get destination module ID
-    int destID = (check_and_cast<MyPacket*>(msg))->getDestinationID();
-
-    // check if answer is not cached
-    if (!current->nextGate[destID]) {
-        EV << "next gate not cached\n";
-        cTopology::Node *destNode =
-            topo.getNodeFor(simulation.getModule(destID));
-        EV << "destnode " << destNode << endl;
-        topo.calculateUnweightedSingleShortestPathsTo(destNode);
-        cTopology::Node *currentNode = topo.getNodeFor(current);
-        //EV << "currentnode " << currentNode << endl;
-        cTopology::LinkOut *next = currentNode->getPath(0);
-        //EV << "next " << next << endl;
-
-        // cache the answer
-        current->nextGate[destID] = next->getLocalGate();
-    }
-    else {
-        EV << "next gate is cached\n";
-    }
-    return current->nextGate[destID];
-}
+//~ cGate* getNextGate(Logic* current, cMessage* msg) {
+    //~ // get destination module ID
+    //~ int destID = (check_and_cast<MyPacket*>(msg))->getDestinationID();
+//~ 
+    //~ // check if answer is not cached
+    //~ if (!current->nextGate[destID]) {
+        //~ EV << "next gate not cached\n";
+        //~ cTopology::Node *destNode =
+            //~ topo.getNodeFor(simulation.getModule(destID));
+        //~ EV << "destnode " << destNode << endl;
+        //~ topo.calculateUnweightedSingleShortestPathsTo(destNode);
+        //~ cTopology::Node *currentNode = topo.getNodeFor(current);
+        //~ //EV << "currentnode " << currentNode << endl;
+        //~ cTopology::LinkOut *next = currentNode->getPath(0);
+        //~ //EV << "next " << next << endl;
+//~ 
+        //~ // cache the answer
+        //~ current->nextGate[destID] = next->getLocalGate();
+    //~ }
+    //~ else {
+        //~ EV << "next gate is cached\n";
+    //~ }
+    //~ return current->nextGate[destID];
+//~ }
 
 // returns number of hops between the two module IDs
 double getDistanceBetween(int originID, int destID) {

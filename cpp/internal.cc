@@ -42,7 +42,7 @@ void InternalLogic::handleMessage(cMessage *msg)
   */
   if (msg->getKind() == requestKind) {
     // logging
-    Request *req = check_and_cast<Request*>(msg);
+    // unused: Request *req = check_and_cast<Request*>(msg);
     //uint64_t size = req->getSize();
     //emit(requestSignal, (double)size);
 
@@ -56,16 +56,18 @@ void InternalLogic::handleMessage(cMessage *msg)
 //    else {
 //      // EV << "Upstream free. Forwarding now.\n";
     // forward to first gate (which should be towards the beyond)
-      cGate* outGate = getNextGate(this, req);
-      send(req, outGate);
+
+      //~ cGate* outGate = getNextGate(this, req);
+      //~ send(req, outGate);
+
       //send(msg, "gate$o", 0);
 //    }
   }
   else if (msg->getKind() == replyKind) {
-    Reply *reply = check_and_cast<Reply*>(msg);
-    cGate* outGate = getNextGate(this, reply);
-    send(reply, outGate);
-    EV << "got reply. sending out of " << outGate->getFullName() << endl;
+    //~ Reply *reply = check_and_cast<Reply*>(msg);
+    //~ cGate* outGate = getNextGate(this, reply);
+    //~ send(reply, outGate);
+    //~ EV << "got reply. sending out of " << outGate->getFullName() << endl;
   }
 }
 
