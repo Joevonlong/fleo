@@ -2,6 +2,7 @@
 #include <omnetpp.h>
 #include "global.h"
 //#include "logic.h"
+#include "routing.h"
 
 class User : public cSimpleModule
 {
@@ -37,5 +38,8 @@ protected:
     virtual void handleMessage(cMessage *msg);
     //void setupFlowTo(int destID);
     virtual void finish();
+    
+    // for flow-based
+    //PathList currentFlows;
 };
 

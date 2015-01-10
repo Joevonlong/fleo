@@ -43,6 +43,10 @@ void FlowChannel::processMessage(cMessage *msg, simtime_t t, result_t &result) {
 //~ void FlowChannel::handleParameterChange (const char *parname) {
 //~ }
 
+double FlowChannel::getAvailableBW() {
+    return datarate - used;
+}
+
 double FlowChannel::getUsedBW() {
     return used;
 }

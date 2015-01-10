@@ -93,7 +93,7 @@ void User::sendRequest()
     //~ idle();
     //~ return;
 
-    // temp...
+    // new flow based...
     PathList paths = calculatePathsBetween(this, simulation.getModule(nearestCache));
     Path path = getShortestPath(paths);
     EV << "shortest path length by hops: " << path.size() << " hops : ";
@@ -102,7 +102,7 @@ void User::sendRequest()
     paths = getAvailablePaths(paths, 1e8);
     EV << "available paths:\n";
     printPaths(paths);
-    // end temp
+    // section end
 
     MyPacket *req = new MyPacket("Request");
     req->setBitLength(headerBitLength);

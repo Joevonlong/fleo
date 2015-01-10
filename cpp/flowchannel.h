@@ -3,6 +3,7 @@
 class FlowChannel : public cDatarateChannel {
     public:
         bool assignDatarate(double bps);
+        double getAvailableBW();
         double getUsedBW();
         void setUsedBW(double bps);
         void addUsedBW(double bps);
