@@ -5,7 +5,7 @@ typedef std::vector<Path> PathList;
 struct Flow {
     Path path;
     // remember gates too?
-    double bitrate;
+    double bps;
 };
 
 extern void printPath(Path path);

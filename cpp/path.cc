@@ -124,7 +124,7 @@ PathList getAvailablePaths(PathList paths, double datarate) {
     for (PathList::iterator outer_it = paths.begin(); outer_it != paths.end(); outer_it++) { // for each path
         possible = true;
         for (Path::iterator inner_it = outer_it->begin(); inner_it != outer_it->end()-1; inner_it++) { // starting from the first node
-            if (!_getAvailablePathsHelper(*inner_it, *(inner_it+1), datarate)) {
+            if (!_getAvailablePathsHelper(*inner_it, *(inner_it+1), datarate)) { // check if datarate is available on each link
                 possible = false;
                 break;
             }
@@ -152,10 +152,10 @@ Flow createFlow(Path path, double bps) {
             }
         }
     }
-    Flow ret;
-    ret.path = path;
-    ret.bitrate = bps;
-    return ret;
+    Flow flow;
+    flow.path = path;
+    flow.bps = bps;
+    return flow;
 }
 
 bool revokeFlow(Flow flow) {
@@ -166,10 +166,10 @@ bool revokeFlow(Flow flow) {
         for (int i = (*it)->getNumOutLinks()-1; i>=0; i--) { // try each link
             if ((*it)->getLinkOut(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel();
-                ((FlowChannel*)ch)->addUsedBW(-flow.bitrate);
+                ((FlowChannel*)ch)->addUsedBW(-flow.bps);
                 break;
             }
         }
     }
-    return false;
+    return true;
 }
