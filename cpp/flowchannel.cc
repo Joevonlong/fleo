@@ -48,11 +48,11 @@ void FlowChannel::processMessage(cMessage *msg, simtime_t t, result_t &result) {
 //~ }
 
 double FlowChannel::getAvailableBW() {
-    return getDatarate() - used;
+    return getDatarate() - par("used").doubleValue();
 }
 
 double FlowChannel::getUsedBW() {
-    return used;
+    return par("used").doubleValue();
 }
 
 void FlowChannel::setUsedBW(double bps) {
@@ -66,7 +66,6 @@ void FlowChannel::setUsedBW(double bps) {
 }
 
 void FlowChannel::addUsedBW(double bps) {
-    EV << "current datarate" << getDatarate() << endl; // temp
-    setUsedBW(used + bps);
+    setUsedBW(par("used").doubleValue() + bps);
 }
 

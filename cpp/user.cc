@@ -99,11 +99,17 @@ void User::sendRequest()
     EV << "shortest path length by hops: " << path.size()-1 << " hops : ";
     printPath(path);
     // try a BW req that can pass 1 path but not the other
-    paths = getAvailablePaths(paths, 1e8);
+    PathList pathstemp = getAvailablePaths(paths, 1e8);
     EV << "available paths:\n";
-    printPaths(paths);
+    printPaths(pathstemp);
     // choose first available path
-    reservePath(paths[0], 1e8);
+    std::vector<Flow> flows;
+    flows.push_back(createFlow(pathstemp[0], 1e8));
+    EV << "first reservation done\n";
+    pathstemp = getAvailablePaths(paths, 1e7);
+    EV << "available paths pt2:\n";
+    printPaths(pathstemp);
+    revokeFlow(flows[0]);
     // section end
 
     MyPacket *req = new MyPacket("Request");

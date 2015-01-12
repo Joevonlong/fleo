@@ -2,9 +2,16 @@
 
 typedef std::vector<cTopology::Node*> Path;
 typedef std::vector<Path> PathList;
+struct Flow {
+    Path path;
+    // remember gates too?
+    double bitrate;
+};
+
 extern void printPath(Path path);
 extern void printPaths(PathList paths);
 extern PathList calculatePathsBetween(cModule *srcMod, cModule *dstMod);
 extern Path getShortestPath(PathList paths);
 extern PathList getAvailablePaths(PathList paths, double datarate);
-extern void reservePath(Path path, double bps);
+extern Flow createFlow(Path path, double bps);
+extern bool revokeFlow(Flow flow);

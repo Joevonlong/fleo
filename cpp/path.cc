@@ -86,7 +86,7 @@ Path getShortestPath(PathList paths) {
     /**
      * Returns Path with the least number of Nodes.
      * TODO check bandwidth availability
-     **/
+     */
     // initialisation
     unsigned int minHops = UINT_MAX;
     Path shortest = Path();
@@ -103,10 +103,10 @@ Path getShortestPath(PathList paths) {
 bool _getAvailablePathsHelper(Node *from, Node *to, double datarate) {
     /**
      * Checks if datarate is available between from and to
-     **/
+     */
     for (int i = from->getNumOutLinks()-1; i>=0; i--) { // try each link
         if (from->getLinkOut(i)->getRemoteNode() == to) { // until the other node is found
-            if (from->getLinkOut(i)->getLocalGate()->getTransmissionChannel()->getNominalDatarate() >= datarate) { // then check if bandwidth is available
+            if (((FlowChannel*)from->getLinkOut(i)->getLocalGate()->getTransmissionChannel())->getAvailableBW() >= datarate) { // then check if bandwidth is available
                 return true;
             }
         }
@@ -116,7 +116,7 @@ bool _getAvailablePathsHelper(Node *from, Node *to, double datarate) {
 PathList getAvailablePaths(PathList paths, double datarate) {
     /**
      * Filters given paths to only those that have the datarate in all links
-     **/
+     */
     // initialisation
     PathList available = PathList();
     bool possible = false;
@@ -139,10 +139,10 @@ PathList getAvailablePaths(PathList paths, double datarate) {
 
 // alternatively, add method to return path's bandwidth instead?
 
-void reservePath(Path path, double bps) {
+Flow createFlow(Path path, double bps) {
     /**
      * Increments used bandwidth for all gates along path.
-     **/
+     */
     for (Path::iterator it = path.begin(); it != path.end()-1; it++) {
         for (int i = (*it)->getNumOutLinks()-1; i>=0; i--) { // try each link
             if ((*it)->getLinkOut(i)->getRemoteNode() == *(it+1)) { // until the other node is found
@@ -151,6 +151,25 @@ void reservePath(Path path, double bps) {
                 break;
             }
         }
-        cRuntimeError("pause");
     }
+    Flow ret;
+    ret.path = path;
+    ret.bitrate = bps;
+    return ret;
+}
+
+bool revokeFlow(Flow flow) {
+    /**
+     * Decrements used bandwidth for all gates along path.
+     */
+    for (Path::iterator it = flow.path.begin(); it != flow.path.end()-1; it++) {
+        for (int i = (*it)->getNumOutLinks()-1; i>=0; i--) { // try each link
+            if ((*it)->getLinkOut(i)->getRemoteNode() == *(it+1)) { // until the other node is found
+                cChannel *ch = (*it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel();
+                ((FlowChannel*)ch)->addUsedBW(-flow.bitrate);
+                break;
+            }
+        }
+    }
+    return false;
 }
