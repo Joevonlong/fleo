@@ -9,6 +9,7 @@ class FlowChannel : public cDatarateChannel {
         void setUsedBW(double bps);
         void addUsedBW(double bps);
     protected:
+        //virtual void initialize();
         bool isTransmissionChannel() const;
         simtime_t getTransmissionFinishTime() const;
         void processMessage(cMessage *msg, simtime_t t, result_t &result);

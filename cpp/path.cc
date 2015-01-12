@@ -1,5 +1,6 @@
 #include "path.h"
 #include "routing.h"
+#include "flowchannel.h"
 
 typedef cTopology::Node Node;
 
@@ -15,7 +16,7 @@ void printPaths(PathList paths) {
     }
 }
 
-// algo taken from http://mathoverflow.net/a/18634
+// algo modified from http://mathoverflow.net/a/18634
 // also consider: An algorithm for computing all paths in a graph
 // [http://link.springer.com/article/10.1007%2FBF01966095]
 Node *source;
@@ -137,3 +138,19 @@ PathList getAvailablePaths(PathList paths, double datarate) {
 }
 
 // alternatively, add method to return path's bandwidth instead?
+
+void reservePath(Path path, double bps) {
+    /**
+     * Increments used bandwidth for all gates along path.
+     **/
+    for (Path::iterator it = path.begin(); it != path.end()-1; it++) {
+        for (int i = (*it)->getNumOutLinks()-1; i>=0; i--) { // try each link
+            if ((*it)->getLinkOut(i)->getRemoteNode() == *(it+1)) { // until the other node is found
+                cChannel *ch = (*it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel();
+                ((FlowChannel*)ch)->addUsedBW(bps);
+                break;
+            }
+        }
+        cRuntimeError("pause");
+    }
+}

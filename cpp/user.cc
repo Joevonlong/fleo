@@ -96,12 +96,14 @@ void User::sendRequest()
     // new flow based...
     PathList paths = calculatePathsBetween(this, simulation.getModule(nearestCache));
     Path path = getShortestPath(paths);
-    EV << "shortest path length by hops: " << path.size() << " hops : ";
+    EV << "shortest path length by hops: " << path.size()-1 << " hops : ";
     printPath(path);
     // try a BW req that can pass 1 path but not the other
     paths = getAvailablePaths(paths, 1e8);
     EV << "available paths:\n";
     printPaths(paths);
+    // choose first available path
+    reservePath(paths[0], 1e8);
     // section end
 
     MyPacket *req = new MyPacket("Request");

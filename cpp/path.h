@@ -7,3 +7,4 @@ extern void printPaths(PathList paths);
 extern PathList calculatePathsBetween(cModule *srcMod, cModule *dstMod);
 extern Path getShortestPath(PathList paths);
 extern PathList getAvailablePaths(PathList paths, double datarate);
+extern void reservePath(Path path, double bps);

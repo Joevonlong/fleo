@@ -2,6 +2,10 @@
 
 Define_Channel(FlowChannel);
 
+//~ void FlowChannel::initialize() {
+    //~ EV << datarate << endl;
+//~ }
+
 bool FlowChannel::isTransmissionChannel() const {
     return true;
 }
@@ -18,8 +22,8 @@ void FlowChannel::processMessage(cMessage *msg, simtime_t t, result_t &result) {
     }
 
     // datarate modelling
-    if (datarate!=0 && msg->isPacket()) {
-        simtime_t duration = ((cPacket *)msg)->getBitLength() / datarate;
+    if (getDatarate()!=0 && msg->isPacket()) {
+        simtime_t duration = ((cPacket *)msg)->getBitLength() / getDatarate();
         result.duration = duration;
         txfinishtime = t + duration;
     }
@@ -44,7 +48,7 @@ void FlowChannel::processMessage(cMessage *msg, simtime_t t, result_t &result) {
 //~ }
 
 double FlowChannel::getAvailableBW() {
-    return datarate - used;
+    return getDatarate() - used;
 }
 
 double FlowChannel::getUsedBW() {
@@ -52,16 +56,17 @@ double FlowChannel::getUsedBW() {
 }
 
 void FlowChannel::setUsedBW(double bps) {
-    if (bps > datarate) {
+    if (bps > getDatarate()) {
         throw cRuntimeError("Using more bandwidth than channel is capable of.");
     }
     else if (bps < 0) {
         throw cRuntimeError("Setting bandwidth usage to negative.");
     }
-    used = bps;
+    par("used").setDoubleValue(bps);
 }
 
 void FlowChannel::addUsedBW(double bps) {
+    EV << "current datarate" << getDatarate() << endl; // temp
     setUsedBW(used + bps);
 }
 
