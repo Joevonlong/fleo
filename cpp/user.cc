@@ -38,7 +38,6 @@ void User::initialize(int stage) {
         //
         lagVector.setName("Total time minus ");
         idleTimer = new cMessage("idle timer");
-        //idleTime = par("initIdleTime");
         underflowTimer = new cMessage("underflow timer");
         idle();
         cacheTries = par("cacheTries");
@@ -95,21 +94,23 @@ void User::sendRequest()
 
     // new flow based...
     PathList paths = calculatePathsBetween(this, simulation.getModule(nearestCache));
-    Path path = getShortestPath(paths);
-    EV << "shortest path length by hops: " << path.size()-1 << " hops : ";
-    printPath(path);
     // try a BW req that can pass 1 path but not the other
     PathList pathstemp = getAvailablePaths(paths, 1e8);
     EV << "available paths:\n";
     printPaths(pathstemp);
-    // choose first available path
+    // filter to shortest ones
+    PathList shortestPaths = getShortestPaths(pathstemp);
+    EV << "shortest paths by hops (" << shortestPaths[0].size()-1 << " hops):\n";
+    printPaths(shortestPaths);
+    // choose first one of these
     std::vector<Flow> flows;
-    flows.push_back(createFlow(pathstemp[0], 1e8));
+    flows.push_back(createFlow(shortestPaths[0], 1e8));
     EV << "first reservation done\n";
+    // see whats available for a smaller flow
     pathstemp = getAvailablePaths(paths, 1e7);
     EV << "available paths pt2:\n";
     printPaths(pathstemp);
-    revokeFlow(flows[0]);
+    // revokeFlow(flows[0]);
     // section end
 
     MyPacket *req = new MyPacket("Request");

@@ -82,19 +82,23 @@ PathList calculatePathsBetween(cModule *srcMod, cModule *dstMod) {
     return PathList(paths); // return a copy
 }
 
-Path getShortestPath(PathList paths) {
+PathList getShortestPaths(PathList paths) {
     /**
-     * Returns Path with the least number of Nodes.
-     * TODO check bandwidth availability
+     * Returns PathList with the least number of Nodes.
+     * TODO check bandwidth availability?
      */
     // initialisation
     unsigned int minHops = UINT_MAX;
-    Path shortest = Path();
+    PathList shortest = PathList();
     // for each path, if shorter than current shortest, become new shortest
     for (PathList::iterator it = paths.begin(); it != paths.end(); it++) {
         if (it->size() < minHops) {
             minHops = it->size();
-            shortest = Path(*it);
+            shortest.clear();
+            shortest.push_back(*it);
+        }
+        else if (it->size() == minHops) {
+            shortest.push_back(*it);
         }
     }
     return shortest;
@@ -102,7 +106,7 @@ Path getShortestPath(PathList paths) {
 
 bool _getAvailablePathsHelper(Node *from, Node *to, double datarate) {
     /**
-     * Checks if datarate is available between from and to
+     * Checks if datarate is available between two adjacent nodes
      */
     for (int i = from->getNumOutLinks()-1; i>=0; i--) { // try each link
         if (from->getLinkOut(i)->getRemoteNode() == to) { // until the other node is found
