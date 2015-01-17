@@ -103,15 +103,20 @@ void User::sendRequest()
     EV << "shortest paths by hops (" << shortestPaths[0].size()-1 << " hops):\n";
     printPaths(shortestPaths);
     // choose first one of these
-    std::vector<Flow> flows;
     flows.push_back(createFlow(shortestPaths[0], 1e8));
     EV << "first reservation done\n";
     // see whats available for a smaller flow
     pathstemp = getAvailablePaths(paths, 1e7);
+    int vID = getRandCustomVideoID();
+    uint64_t vidLen = getVideoSeconds(vID);
+    cMessage *vidComplete = new cMessage("video transfer complete");
+    scheduleAt(simTime()+vidLen, vidComplete);
+    flowMap[vidComplete] = flows.back();
     EV << "available paths pt2:\n";
     printPaths(pathstemp);
-    // revokeFlow(flows[0]);
+    // revokeFlow(flows[0]); flows.pop_back();
     // section end
+    return;
 
     MyPacket *req = new MyPacket("Request");
     req->setBitLength(headerBitLength);
@@ -144,10 +149,12 @@ void User::endRequest(MyPacket *pkt) {
 void User::handleMessage(cMessage *msg)
 {
     if (msg == idleTimer) { // if idle timer is back
-        //uint64_t size = getVideoSize();
-        //requestHistogram.collect(size);
-        //requestingBits = size;
         sendRequest();
+    }
+    else if (flowMap.count(msg) == 1) {
+        // flow has finished
+        revokeFlow(flowMap[msg]);
+        // flows.erase(???);
     }
     else if (msg == underflowTimer) {
         // record underflow statistics

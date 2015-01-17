@@ -40,6 +40,7 @@ protected:
     virtual void finish();
     
     // for flow-based
-    //PathList currentFlows;
+    std::vector<Flow> flows;
+    std::map<cMessage*, Flow> flowMap;
 };
 

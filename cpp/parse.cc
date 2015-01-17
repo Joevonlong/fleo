@@ -74,7 +74,15 @@ unsigned long getMaxCustomVideoID() {
     return arraySize;
 }
 
+uint64_t getVideoSeconds(int customID) {
+    return lengths[customID];
+}
+
 uint64_t getVideoBitSize(int customID) {
     return lengths[customID]*bitRate;
 }
 
+uint64_t getBitRate(int customID, int quality) {
+    // to expand on in future...
+    return bitRate;
+}
