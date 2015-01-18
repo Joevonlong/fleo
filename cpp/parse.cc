@@ -83,6 +83,8 @@ uint64_t getVideoBitSize(int customID) {
 }
 
 uint64_t getBitRate(int customID, int quality) {
+    // should return additional bitrate due to given quality only
+    // ie. does not include bitrate of lower qualities
     // to expand on in future...
     return bitRate;
 }

@@ -155,6 +155,8 @@ void User::handleMessage(cMessage *msg)
         // flow has finished
         revokeFlow(flowMap[msg]);
         // flows.erase(???);
+        delete msg;
+        idle(); // sure?
     }
     else if (msg == underflowTimer) {
         // record underflow statistics
