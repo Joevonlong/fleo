@@ -183,6 +183,14 @@ bool revokeFlow(Flow flow) {
                 break;
             }
         }
+        // should break before this else nodes were not adjacent
+        for (int i = (*it)->getNumInLinks()-1; i>=0; i--) { // try each link
+            if ((*it)->getLinkIn(i)->getRemoteNode() == *(it+1)) { // until the other node is found
+                cChannel *ch = (*it)->getLinkIn(i)->getRemoteGate()->getTransmissionChannel();
+                ((FlowChannel*)ch)->addUsedBW(-flow.bps);
+                break;
+            }
+        }
     }
     return true;
 }
