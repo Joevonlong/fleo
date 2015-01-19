@@ -74,6 +74,18 @@ void User::idle(simtime_t t) {
     //~ 
 //~ }
 
+void viewVideo(int customID, int cacheID) {
+    // gets number of qualities
+    // for i from 1 to quality
+    // get bitrate
+    // setup conn
+    //   need to cancel lower priorities... query central DB of flows?
+    //     getAvailablePaths needs to accept priority argument?
+}
+
+// MAYBE factor out into another method that takes ID as intake, then basically
+// try to set up all the avaibale comms for such.
+
 void User::sendRequest()
 {
     //~ // add gates

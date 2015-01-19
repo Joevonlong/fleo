@@ -146,11 +146,20 @@ PathList getAvailablePaths(PathList paths, double datarate) {
 Flow createFlow(Path path, double bps) {
     /**
      * Increments used bandwidth for all gates along path.
+     * (Currently only in outgoing direction.)
      */
     for (Path::iterator it = path.begin(); it != path.end()-1; it++) {
         for (int i = (*it)->getNumOutLinks()-1; i>=0; i--) { // try each link
             if ((*it)->getLinkOut(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel();
+                ((FlowChannel*)ch)->addUsedBW(bps);
+                break;
+            }
+        }
+        // should break before this else nodes were not adjacent
+        for (int i = (*it)->getNumInLinks()-1; i>=0; i--) { // try each link
+            if ((*it)->getLinkIn(i)->getRemoteNode() == *(it+1)) { // until the other node is found
+                cChannel *ch = (*it)->getLinkIn(i)->getRemoteGate()->getTransmissionChannel();
                 ((FlowChannel*)ch)->addUsedBW(bps);
                 break;
             }

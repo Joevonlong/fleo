@@ -88,3 +88,8 @@ uint64_t getBitRate(int customID, int quality) {
     // to expand on in future...
     return bitRate;
 }
+
+int getQualities(int customID) {
+    // number of quality levels
+    return 3;
+}
