@@ -1,6 +1,7 @@
 #include <omnetpp.h>
 #include "flow.h"
 
+extern cModule* getSourceModule(Flow *flow);
 extern void printPath(Path path);
 extern void printPaths(PathList paths);
 extern PathList calculatePathsBetween(cModule *srcMod, cModule *dstMod);

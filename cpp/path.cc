@@ -4,6 +4,10 @@
 
 typedef cTopology::Node Node;
 
+cModule* getSourceModule(Flow *flow) {
+    return flow->path[0]->getModule();
+}
+
 void printPath(Path path) {
     for (Path::iterator it = path.begin(); it != path.end(); it++) {
         EV << (*it)->getModule()->getFullPath() << " > ";

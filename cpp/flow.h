@@ -1,3 +1,5 @@
+#pragma once
+
 typedef std::vector<cTopology::Node*> Path;
 typedef std::vector<Path> PathList;
 
