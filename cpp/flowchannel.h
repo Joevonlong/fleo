@@ -15,7 +15,7 @@ class FlowChannel : public cDatarateChannel {
         bool isTransmissionChannel() const;
         simtime_t getTransmissionFinishTime() const;
         void processMessage(cMessage *msg, simtime_t t, result_t &result);
-        std::vector<Flow> currentFlows;
+        std::vector<Flow*> currentFlows;
     private:
         bool isDisabled;
         double delay;
