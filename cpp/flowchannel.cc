@@ -51,12 +51,15 @@ double FlowChannel::getAvailableBW() {
     return getDatarate() - par("used").doubleValue();
 }
 
-double FlowChannel::getAvailableBW(int priority) {
-    std::set<int> prioritySet = getPrioritySet();
+double FlowChannel::getAvailableBW(Priority p) {
+    std::set<Priority> prioritySet = getPrioritySet();
     // iterating through flows
     // if priority is higher than that requested
     // subtract from total available
     // return remainder
+    for (std::vector<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); it++) {
+        
+    }
     //...
     return -1;
 }
@@ -79,8 +82,8 @@ void FlowChannel::addUsedBW(double bps) {
     setUsedBW(par("used").doubleValue() + bps);
 }
 
-std::set<int> FlowChannel::getPrioritySet() {
-    std::set<int> prioritySet;
+std::set<Priority> FlowChannel::getPrioritySet() {
+    std::set<Priority> prioritySet;
     for (std::vector<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); it++) {
         prioritySet.insert((*it)->priority);
     }
