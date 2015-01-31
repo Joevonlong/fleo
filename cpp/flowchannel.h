@@ -5,12 +5,12 @@
 class FlowChannel : public cDatarateChannel {
     public:
         bool assignDatarate(double bps);
-        double getAvailableBW();
-        double getAvailableBW(Priority p);
-        double getUsedBW();
+        double getAvailableBps();
+        double getAvailableBps(Priority p);
+        double getUsedBps();
         // supercede these...
-        void setUsedBW(double bps);
-        void addUsedBW(double bps);
+        void setUsedBps(double bps);
+        void addUsedBps(double bps);
         // with these...
         void addFlow(Flow* f);
         void removeFlow(Flow* f);
@@ -23,9 +23,7 @@ class FlowChannel : public cDatarateChannel {
         void processMessage(cMessage *msg, simtime_t t, result_t &result);
         // new to subclass:
         std::set<Flow*> currentFlows;
-        std::map<Priority, int> priorityUsage; // not needed?
-        std::map<Priority, double> bandwidthLeftAtPriority;
-        std::set<Priority>getPrioritySet(); // not needed?
+        std::map<Priority, double> bpsLeftAtPriority;
     private:
         bool isDisabled;
         double delay;

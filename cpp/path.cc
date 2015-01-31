@@ -114,7 +114,7 @@ bool _getAvailablePathsHelper(Node *from, Node *to, double datarate) {
      */
     for (int i = from->getNumOutLinks()-1; i>=0; i--) { // try each link
         if (from->getLinkOut(i)->getRemoteNode() == to) { // until the other node is found
-            if (((FlowChannel*)from->getLinkOut(i)->getLocalGate()->getTransmissionChannel())->getAvailableBW() >= datarate) { // then check if bandwidth is available
+            if (((FlowChannel*)from->getLinkOut(i)->getLocalGate()->getTransmissionChannel())->getAvailableBps() >= datarate) { // then check if bandwidth is available
                 return true;
             }
         }
@@ -156,7 +156,7 @@ Flow createFlow(Path path, double bps) {
         for (int i = (*it)->getNumOutLinks()-1; i>=0; i--) { // try each link
             if ((*it)->getLinkOut(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel();
-                ((FlowChannel*)ch)->addUsedBW(bps);
+                ((FlowChannel*)ch)->addUsedBps(bps);
                 break;
             }
         }
@@ -164,7 +164,7 @@ Flow createFlow(Path path, double bps) {
         for (int i = (*it)->getNumInLinks()-1; i>=0; i--) { // try each link
             if ((*it)->getLinkIn(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkIn(i)->getRemoteGate()->getTransmissionChannel();
-                ((FlowChannel*)ch)->addUsedBW(bps);
+                ((FlowChannel*)ch)->addUsedBps(bps);
                 break;
             }
         }
@@ -183,7 +183,7 @@ bool revokeFlow(Flow flow) {
         for (int i = (*it)->getNumOutLinks()-1; i>=0; i--) { // try each link
             if ((*it)->getLinkOut(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel();
-                ((FlowChannel*)ch)->addUsedBW(-flow.bps);
+                ((FlowChannel*)ch)->addUsedBps(-flow.bps);
                 break;
             }
         }
@@ -191,7 +191,7 @@ bool revokeFlow(Flow flow) {
         for (int i = (*it)->getNumInLinks()-1; i>=0; i--) { // try each link
             if ((*it)->getLinkIn(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkIn(i)->getRemoteGate()->getTransmissionChannel();
-                ((FlowChannel*)ch)->addUsedBW(-flow.bps);
+                ((FlowChannel*)ch)->addUsedBps(-flow.bps);
                 break;
             }
         }
