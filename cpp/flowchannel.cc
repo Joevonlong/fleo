@@ -63,7 +63,7 @@ double FlowChannel::getUsedBps() {
 
 void FlowChannel::setUsedBps(double bps) {
     if (bps > getDatarate()) {
-        throw cRuntimeError("Using more bandwidth than channel is capable of.");
+        throw cRuntimeError("Using more bandwidth than total channel capacity.");
     }
     else if (bps < 0) {
         throw cRuntimeError("Setting bandwidth usage to negative.");
@@ -132,3 +132,7 @@ void FlowChannel::removeFlow(Flow* f) {
     } it->second += f->bps; // because loop doesnt act on first element.
 }
 //
+
+bool FlowChannel::isFlowPossible(Flow* f) {
+    return f->bps <= getAvailableBps(f->priority);
+}

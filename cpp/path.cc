@@ -108,20 +108,20 @@ PathList getShortestPaths(PathList paths) {
     return shortest;
 }
 
-bool _getAvailablePathsHelper(Node *from, Node *to, double datarate) {
+bool _getAvailablePathsHelper(Node *from, Node *to, Flow* f) {
     /**
      * Checks if datarate is available between two adjacent nodes
      */
     for (int i = from->getNumOutLinks()-1; i>=0; i--) { // try each link
         if (from->getLinkOut(i)->getRemoteNode() == to) { // until the other node is found
-            if (((FlowChannel*)from->getLinkOut(i)->getLocalGate()->getTransmissionChannel())->getAvailableBps() >= datarate) { // then check if bandwidth is available
+            if (((FlowChannel*)from->getLinkOut(i)->getLocalGate()->getTransmissionChannel())->isFlowPossible(f)) {
                 return true;
             }
         }
     }
     return false;
 }
-PathList getAvailablePaths(PathList paths, double datarate) {
+PathList getAvailablePaths(PathList paths, Flow* f) {
     /**
      * Filters given paths to only those that have the datarate in all links
      */
@@ -129,17 +129,17 @@ PathList getAvailablePaths(PathList paths, double datarate) {
     PathList available = PathList();
     bool possible = false;
     // for each path, if all links have at least datarate, copy onto available
-    for (PathList::iterator outer_it = paths.begin(); outer_it != paths.end(); outer_it++) { // for each path
+    for (PathList::iterator path_it = paths.begin(); path_it != paths.end(); path_it++) { // for each path
         possible = true;
-        for (Path::iterator inner_it = outer_it->begin(); inner_it != outer_it->end()-1; inner_it++) { // starting from the first node
-            if (!_getAvailablePathsHelper(*inner_it, *(inner_it+1), datarate)) { // check if datarate is available on each link
+        for (Path::iterator node_it = path_it->begin(); node_it != path_it->end()-1; node_it++) { // starting from the first node
+            if (!_getAvailablePathsHelper(*node_it, *(node_it+1), f)) { // check if datarate is available on each link
                 possible = false;
                 break;
             }
             // assert(possible);
         }
         if (possible) {
-            available.push_back(Path(*outer_it));
+            available.push_back(Path(*path_it));
         }
     }
     return available;
