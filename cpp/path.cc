@@ -108,20 +108,20 @@ PathList getShortestPaths(PathList paths) {
     return shortest;
 }
 
-bool _getAvailablePathsHelper(Node *from, Node *to, Flow* f) {
+bool _getAvailablePathsHelper(Node *from, Node *to, double bps, Priority p) {
     /**
      * Checks if datarate is available between two adjacent nodes
      */
     for (int i = from->getNumOutLinks()-1; i>=0; i--) { // try each link
         if (from->getLinkOut(i)->getRemoteNode() == to) { // until the other node is found
-            if (((FlowChannel*)from->getLinkOut(i)->getLocalGate()->getTransmissionChannel())->isFlowPossible(f)) {
+            if (((FlowChannel*)from->getLinkOut(i)->getLocalGate()->getTransmissionChannel())->isFlowPossible(bps, p)) {
                 return true;
             }
         }
     }
     return false;
 }
-PathList getAvailablePaths(PathList paths, Flow* f) {
+PathList getAvailablePaths(PathList paths, double bps, Priority p) {
     /**
      * Filters given paths to only those that have the datarate in all links
      */
@@ -132,7 +132,7 @@ PathList getAvailablePaths(PathList paths, Flow* f) {
     for (PathList::iterator path_it = paths.begin(); path_it != paths.end(); path_it++) { // for each path
         possible = true;
         for (Path::iterator node_it = path_it->begin(); node_it != path_it->end()-1; node_it++) { // starting from the first node
-            if (!_getAvailablePathsHelper(*node_it, *(node_it+1), f)) { // check if datarate is available on each link
+            if (!_getAvailablePathsHelper(*node_it, *(node_it+1), bps, p)) { // check if datarate is available on each link
                 possible = false;
                 break;
             }
@@ -147,54 +147,55 @@ PathList getAvailablePaths(PathList paths, Flow* f) {
 
 // alternatively, add method to return path's bandwidth instead?
 
-Flow createFlow(Path path, double bps) {
+Flow* createFlow(Path path, double bps, Priority p) {
     /**
      * Increments used bandwidth for all gates along path.
-     * (Currently only in outgoing direction.)
      */
-    for (Path::iterator it = path.begin(); it != path.end()-1; it++) {
-        for (int i = (*it)->getNumOutLinks()-1; i>=0; i--) { // try each link
+    Flow* f = new Flow;
+    f->path = path;
+    f->bps = bps;
+    f->priority = p;
+    for (Path::iterator it = path.begin(); it != path.end()-1; it++) { // for each node in the path
+        for (int i = (*it)->getNumOutLinks()-1; i>=0; i--) { // try each outgoing link
             if ((*it)->getLinkOut(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel();
-                ((FlowChannel*)ch)->addUsedBps(bps);
+                ((FlowChannel*)ch)->addFlow(f);
                 break;
             }
         }
         // should break before this else nodes were not adjacent
-        for (int i = (*it)->getNumInLinks()-1; i>=0; i--) { // try each link
+        for (int i = (*it)->getNumInLinks()-1; i>=0; i--) { // try each incoming link
             if ((*it)->getLinkIn(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkIn(i)->getRemoteGate()->getTransmissionChannel();
-                ((FlowChannel*)ch)->addUsedBps(bps);
+                ((FlowChannel*)ch)->addFlow(f);
                 break;
             }
         }
     }
-    Flow flow;
-    flow.path = path;
-    flow.bps = bps;
-    return flow;
+    return f;
 }
 
-bool revokeFlow(Flow flow) {
+bool revokeFlow(Flow* f) {
     /**
      * Decrements used bandwidth for all gates along path.
      */
-    for (Path::iterator it = flow.path.begin(); it != flow.path.end()-1; it++) {
-        for (int i = (*it)->getNumOutLinks()-1; i>=0; i--) { // try each link
+    for (Path::iterator it = f->path.begin(); it != f->path.end()-1; it++) {
+        for (int i = (*it)->getNumOutLinks()-1; i>=0; i--) { // try each outgoing link
             if ((*it)->getLinkOut(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel();
-                ((FlowChannel*)ch)->addUsedBps(-flow.bps);
+                ((FlowChannel*)ch)->removeFlow(f);
                 break;
             }
         }
         // should break before this else nodes were not adjacent
-        for (int i = (*it)->getNumInLinks()-1; i>=0; i--) { // try each link
+        for (int i = (*it)->getNumInLinks()-1; i>=0; i--) { // try each incoming link
             if ((*it)->getLinkIn(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkIn(i)->getRemoteGate()->getTransmissionChannel();
-                ((FlowChannel*)ch)->addUsedBps(-flow.bps);
+                ((FlowChannel*)ch)->removeFlow(f);
                 break;
             }
         }
     }
+    delete f;
     return true;
 }

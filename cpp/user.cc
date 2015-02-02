@@ -107,7 +107,7 @@ void User::sendRequest()
     // new flow based...
     PathList paths = calculatePathsBetween(this, simulation.getModule(nearestCache));
     // try a BW req that can pass 1 path but not the other
-    PathList pathstemp = getAvailablePaths(paths, 1e8);
+    PathList pathstemp = getAvailablePaths(paths, 1e8, 1);
     EV << "available paths:\n";
     printPaths(pathstemp);
     // filter to shortest ones
@@ -115,10 +115,10 @@ void User::sendRequest()
     EV << "shortest paths by hops (" << shortestPaths[0].size()-1 << " hops):\n";
     printPaths(shortestPaths);
     // choose first one of these
-    flows.push_back(createFlow(shortestPaths[0], 1e8));
+    flows.push_back(createFlow(shortestPaths[0], 1e8, 1));
     EV << "first reservation done\n";
     // see whats available for a smaller flow
-    pathstemp = getAvailablePaths(paths, 1e7);
+    pathstemp = getAvailablePaths(paths, 1e7, 1);
     int vID = getRandCustomVideoID();
     uint64_t vidLen = getVideoSeconds(vID);
     cMessage *vidComplete = new cMessage("video transfer complete");

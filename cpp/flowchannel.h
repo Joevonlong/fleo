@@ -14,7 +14,8 @@ class FlowChannel : public cDatarateChannel {
         void addFlow(Flow* f);
         void removeFlow(Flow* f);
         //
-        bool isFlowPossible(Flow* f);
+        bool isFlowPossible(double bps, Priority p);
+        bool isFlowPossible(Flow* f); // unused?
     protected:
         virtual void initialize();
         bool isTransmissionChannel() const;

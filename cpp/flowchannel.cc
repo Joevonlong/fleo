@@ -133,6 +133,9 @@ void FlowChannel::removeFlow(Flow* f) {
 }
 //
 
+bool FlowChannel::isFlowPossible(double bps, Priority p) {
+    return bps <= getAvailableBps(p);
+}
 bool FlowChannel::isFlowPossible(Flow* f) {
     return f->bps <= getAvailableBps(f->priority);
 }
