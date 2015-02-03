@@ -88,22 +88,6 @@ void viewVideo(int customID, int cacheID) {
 
 void User::sendRequest()
 {
-    //~ // add gates
-    //~ int userlinks = gateSize("testlink");
-    //~ setGateSize("testlink", userlinks+1);
-    //~ cModule *pop = getParentModule()->getSubmodule("pop")->getSubmodule("pop");
-    //~ int poplinks = pop->gateSize("testlink");
-    //~ pop->setGateSize("testlink", poplinks+1);
-    //~ // connect them
-    //~ cDelayChannel *temp = (cDelayChannel*)cChannelType::getDelayChannelType()->create("test");
-    //~ temp->setDelay(0.01);
-    //~ temp = (cDelayChannel*)gate("testlink$o", userlinks)->connectTo(pop->gate("testlink$i", poplinks), temp);
-    //~ EV << temp->info() << endl;
-    //~ temp = (cDelayChannel*)pop->gate("testlink$o", poplinks)->connectTo(gate("testlink$i", userlinks));
-    //~ //EV << temp->info() << endl;
-    //~ idle();
-    //~ return;
-
     // new flow based...
     PathList paths = calculatePathsBetween(this, simulation.getModule(nearestCache));
     // try a BW req that can pass 1 path but not the other

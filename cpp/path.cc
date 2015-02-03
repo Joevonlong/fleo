@@ -31,7 +31,7 @@ PathList paths;
 bool _stuck(Node *n) { // helper function
     if (n == target) {return false;}
     for (int i = n->getNumOutLinks()-1; i>=0; i--) {
-        EV << "in stuck trying numout #" << i << endl;
+        // EV << "in stuck trying numout #" << i << endl;
         Node *m = n->getLinkOut(i)->getRemoteNode(); // for each node beside head
         std::pair<std::set<Node*>::iterator,bool> ret = seen.insert(m); // try add it to seen
         if (ret.second) { // if inserted i.e. m was not in seen
@@ -46,7 +46,7 @@ void _search(Node *n) { // helper function
     EV << "searching @ " << n->getModule()->getFullPath() << endl;
     if (n == target) {
         // found a path
-        EV << "Path found: ";
+        // EV << "Path found: ";
         printPath(path);
         paths.push_back(Path(path));
     }
@@ -55,7 +55,7 @@ void _search(Node *n) { // helper function
     if (_stuck(n)) {return;}
     // run search on each neighbour of n
     for (int i = n->getNumOutLinks()-1; i>=0 ; i--) {
-        EV << "search:numout: " << i << endl;
+        // EV << "search:numout: " << i << endl;
         Node *m = n->getLinkOut(i)->getRemoteNode();
         // do not go backwards:
         bool neighbour_in_path = false;
@@ -81,7 +81,7 @@ PathList calculatePathsBetween(cModule *srcMod, cModule *dstMod) {
     // begin search
     _search(source);
     // relist all found paths
-    EV << "Relisting paths found...\n";
+    // EV << "Relisting paths found...\n";
     printPaths(paths);
     return PathList(paths); // return a copy
 }
