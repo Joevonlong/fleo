@@ -43,11 +43,11 @@ bool _stuck(Node *n) { // helper function
     return true;
 }
 void _search(Node *n) { // helper function
-    EV << "searching @ " << n->getModule()->getFullPath() << endl;
+    // EV << "searching @ " << n->getModule()->getFullPath() << endl;
     if (n == target) {
         // found a path
         // EV << "Path found: ";
-        printPath(path);
+        // printPath(path);
         paths.push_back(Path(path));
     }
     // check if stuck
@@ -82,14 +82,14 @@ PathList calculatePathsBetween(cModule *srcMod, cModule *dstMod) {
     _search(source);
     // relist all found paths
     // EV << "Relisting paths found...\n";
-    printPaths(paths);
+    // printPaths(paths);
     return PathList(paths); // return a copy
 }
 
 PathList getShortestPaths(PathList paths) {
     /**
      * Returns PathList with the least number of Nodes.
-     * TODO check bandwidth availability?
+     * TODO? check bandwidth availability
      */
     // initialisation
     unsigned int minHops = UINT_MAX;

@@ -92,24 +92,28 @@ void User::sendRequest()
     PathList paths = calculatePathsBetween(this, simulation.getModule(nearestCache));
     // try a BW req that can pass 1 path but not the other
     PathList pathstemp = getAvailablePaths(paths, 1e8, 1);
-    EV << "available paths:\n";
-    printPaths(pathstemp);
+    if (pathstemp.size() == 0) {
+        EV << "No paths available\n";
+        return;
+    }
+    //EV << "available paths:\n";
+    //printPaths(pathstemp);
     // filter to shortest ones
     PathList shortestPaths = getShortestPaths(pathstemp);
-    EV << "shortest paths by hops (" << shortestPaths[0].size()-1 << " hops):\n";
-    printPaths(shortestPaths);
+    //EV << "shortest paths by hops (" << shortestPaths[0].size()-1 << " hops):\n";
+    //printPaths(shortestPaths);
     // choose first one of these
-    flows.push_back(createFlow(shortestPaths[0], 1e8, 1));
-    EV << "first reservation done\n";
+    //////flows.push_back();
+    //EV << "first reservation done\n";
     // see whats available for a smaller flow
     pathstemp = getAvailablePaths(paths, 1e7, 1);
     int vID = getRandCustomVideoID();
     uint64_t vidLen = getVideoSeconds(vID);
     cMessage *vidComplete = new cMessage("video transfer complete");
     scheduleAt(simTime()+vidLen, vidComplete);
-    flowMap[vidComplete] = flows.back();
-    EV << "available paths pt2:\n";
-    printPaths(pathstemp);
+    flowMap[vidComplete] = createFlow(shortestPaths[0], 1e8, 1);
+    //EV << "available paths pt2:\n";
+    //printPaths(pathstemp);
     // revokeFlow(flows[0]); flows.pop_back();
     // section end
     return;
@@ -146,13 +150,15 @@ void User::handleMessage(cMessage *msg)
 {
     if (msg == idleTimer) { // if idle timer is back
         sendRequest();
+        idle();
     }
     else if (flowMap.count(msg) == 1) {
         // flow has finished
         revokeFlow(flowMap[msg]);
-        // flows.erase(???);
+        //////flows.erase(flows.);
+        flowMap.erase(msg);
         delete msg;
-        idle(); // sure?
+        //idle(); // sure?
     }
     else if (msg == underflowTimer) {
         // record underflow statistics

@@ -13,6 +13,7 @@ class FlowChannel : public cDatarateChannel {
         // with these...
         void addFlow(Flow* f);
         void removeFlow(Flow* f);
+        void printBpsLeftAtPriority();
         //
         bool isFlowPossible(double bps, Priority p);
         bool isFlowPossible(Flow* f); // unused?

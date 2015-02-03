@@ -126,12 +126,21 @@ void FlowChannel::removeFlow(Flow* f) {
             bpsLeftAtPriority.erase(f->priority);
         }
     }
+    std::map<Priority, double>::iterator addBpsBefore = it;
     // now add available bandwidth to all lower priorities
-    for (--it; it != bpsLeftAtPriority.begin(); --it) {
+    for (it = bpsLeftAtPriority.begin(); it != addBpsBefore; ++it) {
         it->second += f->bps;
-    } it->second += f->bps; // because loop doesnt act on first element.
+    }
 }
 //
+
+// for debugging output
+void FlowChannel::printBpsLeftAtPriority() {
+    for (std::map<Priority, double>::iterator it = bpsLeftAtPriority.begin();
+        it != bpsLeftAtPriority.end(); ++it) {
+        EV << it->second << " bps left at priority " << it->first << endl;
+    }
+}
 
 bool FlowChannel::isFlowPossible(double bps, Priority p) {
     return bps <= getAvailableBps(p);
