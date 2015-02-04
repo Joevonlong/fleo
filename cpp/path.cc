@@ -27,19 +27,21 @@ Node *source;
 Node *target;
 Path path; // used as a stack, but vector provides iterator and random access
 std::set<Node*> seen;
+std::map<Node*, bool> stuckCache;
 PathList paths;
 bool _stuck(Node *n) { // helper function
-    if (n == target) {return false;}
+    if (stuckCache.find(n) != stuckCache.end()) {return stuckCache[n];}
     for (int i = n->getNumOutLinks()-1; i>=0; i--) {
         // EV << "in stuck trying numout #" << i << endl;
         Node *m = n->getLinkOut(i)->getRemoteNode(); // for each node beside head
-        std::pair<std::set<Node*>::iterator,bool> ret = seen.insert(m); // try add it to seen
-        if (ret.second) { // if inserted i.e. m was not in seen
+        if (seen.insert(m).second == true) { // true means insertion successful i.e. m was not in seen
             if (!_stuck(m)) { // and if it is not stuck
+                stuckCache[m] = false;
                 return false; // this head is also not stuck
             }
         }
     }
+    stuckCache[n] = true;
     return true;
 }
 void _search(Node *n) { // helper function
@@ -76,6 +78,9 @@ PathList calculatePathsBetween(cModule *srcMod, cModule *dstMod) {
     // (re-)initialise stack
     path = Path();
     path.push_back(source);
+    // (re-)initialise which nodes are stuck
+    stuckCache.clear();
+    stuckCache[target] = false;
     // (re-)initialise path list
     paths = PathList();
     // begin search

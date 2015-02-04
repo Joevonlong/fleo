@@ -90,6 +90,7 @@ void User::sendRequest()
 {
     // new flow based...
     PathList paths = calculatePathsBetween(this, simulation.getModule(nearestCache));
+    return;
     // try a BW req that can pass 1 path but not the other
     PathList pathstemp = getAvailablePaths(paths, 1e8, 1);
     if (pathstemp.size() == 0) {
