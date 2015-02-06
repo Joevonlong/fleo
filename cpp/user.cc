@@ -89,8 +89,17 @@ void viewVideo(int customID, int cacheID) {
 void User::sendRequest()
 {
     // new flow based...
-    PathList paths = calculatePathsBetween(this, simulation.getModule(nearestCache));
+    // try dijkstra speed
+    //~ Path path = getDijkstraPath(this, simulation.getModule(nearestCache));
+    //~ printPath(path);
+    Path path2 = getBfsPath(this, simulation.getModule(nearestCache));
+    printPath(path2);
+    //~ if (path != path2) {
+        //~ error("diff shortest path");
+    //~ }
     return;
+    // end try
+    PathList paths = calculatePathsBetween(this, simulation.getModule(nearestCache));
     // try a BW req that can pass 1 path but not the other
     PathList pathstemp = getAvailablePaths(paths, 1e8, 1);
     if (pathstemp.size() == 0) {

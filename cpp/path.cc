@@ -1,3 +1,4 @@
+#include <deque>
 #include "path.h"
 #include "routing.h"
 #include "flowchannel.h"
@@ -9,15 +10,61 @@ cModule* getSourceModule(Flow *flow) {
 }
 
 void printPath(Path path) {
-    for (Path::iterator it = path.begin(); it != path.end(); it++) {
+    for (Path::iterator it = path.begin(); it != path.end(); ++it) {
         EV << (*it)->getModule()->getFullPath() << " > ";
     }
     EV << endl;
 }
 void printPaths(PathList paths) {
-    for (PathList::iterator it = paths.begin(); it != paths.end(); it++) {
+    for (PathList::iterator it = paths.begin(); it != paths.end(); ++it) {
         printPath(*it);
     }
+}
+
+Path getDijkstraPath(cModule *srcMod, cModule *dstMod) {
+    // initialise
+    Path ret;
+    Node* current = topo.getNodeFor(srcMod);
+    Node* target = topo.getNodeFor(dstMod);
+    // run Dijkstra's algorithm
+    topo.calculateUnweightedSingleShortestPathsTo(target);
+    while (current != target) {
+        ret.push_back(current);
+        current = current->getPath(0)->getRemoteNode();
+    } ret.push_back(current); // once more to push target onto path
+    return ret;
+}
+Path getBfsPath(cModule *srcMod, cModule *dstMod) {
+    /**
+     * seems to process about 2/3 more paths than getDijkstraPath
+     */
+    // initialise
+    Path path;
+    Node* n;
+    Node* m;
+    std::deque<Path> paths;
+    Node* current = topo.getNodeFor(srcMod);
+    Node* target = topo.getNodeFor(dstMod);
+    std::set<Node*> seen; seen.insert(current);
+    paths.push_back(Path(1, current));
+    // breadth-first search
+    while (paths.size() != 0) {
+        path = paths.front(); // taking the least recent path
+        n = path.back(); // go to its tail ie. furthest from source
+        for (int i = n->getNumOutLinks()-1; i>=0; i--) {
+            m = n->getLinkOut(i)->getRemoteNode(); // and for each adjacent node
+            if (seen.count(m) == 0) { // if it has not been seen before
+                path.push_back(m);
+                if (m == target) {return path;}
+                seen.insert(m);
+                paths.push_back(path);
+                path.pop_back();
+            }
+            // else ignore node
+        }
+        paths.pop_front();
+    }
+    return Path(); // nothing found (should not reach this)
 }
 
 // algo modified from http://mathoverflow.net/a/18634
@@ -30,18 +77,19 @@ std::set<Node*> seen;
 std::map<Node*, bool> stuckCache;
 PathList paths;
 bool _stuck(Node *n) { // helper function
-    if (stuckCache.find(n) != stuckCache.end()) {return stuckCache[n];}
+    //if (stuckCache.find(n) != stuckCache.end()) {return stuckCache[n];}
+    if (n == target) {return false;}
     for (int i = n->getNumOutLinks()-1; i>=0; i--) {
         // EV << "in stuck trying numout #" << i << endl;
         Node *m = n->getLinkOut(i)->getRemoteNode(); // for each node beside head
         if (seen.insert(m).second == true) { // true means insertion successful i.e. m was not in seen
             if (!_stuck(m)) { // and if it is not stuck
-                stuckCache[m] = false;
+                //stuckCache[m] = false;
                 return false; // this head is also not stuck
             }
         }
     }
-    stuckCache[n] = true;
+    //stuckCache[n] = true;
     return true;
 }
 void _search(Node *n) { // helper function
@@ -51,10 +99,11 @@ void _search(Node *n) { // helper function
         // EV << "Path found: ";
         // printPath(path);
         paths.push_back(Path(path));
+        return;
     }
     // check if stuck
-    seen = std::set<Node*>(path.begin(), path.end()); // copy path to seen
-    if (_stuck(n)) {return;}
+    //seen = std::set<Node*>(path.begin(), path.end()); // copy path to seen
+    //if (_stuck(n)) {return;}
     // run search on each neighbour of n
     for (int i = n->getNumOutLinks()-1; i>=0 ; i--) {
         // EV << "search:numout: " << i << endl;
