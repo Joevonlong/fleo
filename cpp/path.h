@@ -4,8 +4,8 @@
 extern cModule* getSourceModule(Flow *flow);
 extern void printPath(Path path);
 extern void printPaths(PathList paths);
-extern Path getDijkstraPath(cModule *srcMod, cModule *dstMod);
-extern Path getBfsPath(cModule *srcMod, cModule *dstMod);
+extern Path getShortestPathDijkstra(cModule *srcMod, cModule *dstMod);
+extern Path getShortestPathBfs(cModule *srcMod, cModule *dstMod);
 extern PathList calculatePathsBetween(cModule *srcMod, cModule *dstMod);
 extern PathList getShortestPaths(PathList paths);
 extern PathList getAvailablePaths(PathList paths, double bps, Priority p);

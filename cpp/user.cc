@@ -90,11 +90,11 @@ void User::sendRequest()
 {
     // new flow based...
     // try dijkstra speed
-    //~ Path path = getDijkstraPath(this, simulation.getModule(nearestCache));
+    //~ Path path = getShortestPathDijkstra(this, simulation.getModule(nearestCache));
     //~ printPath(path);
-    Path path2 = getBfsPath(this, simulation.getModule(nearestCache));
+    Path path2 = getShortestPathBfs(this, simulation.getModule(nearestCache));
     printPath(path2);
-    //~ if (path != path2) {
+    //~ if (path.size() != path2.size()) {
         //~ error("diff shortest path");
     //~ }
     return;

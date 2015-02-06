@@ -21,7 +21,10 @@ void printPaths(PathList paths) {
     }
 }
 
-Path getDijkstraPath(cModule *srcMod, cModule *dstMod) {
+Path getShortestPathDijkstra(cModule *srcMod, cModule *dstMod) {
+    /**
+     * useful for checking correctness of my BFS function
+     */
     // initialise
     Path ret;
     Node* current = topo.getNodeFor(srcMod);
@@ -34,26 +37,25 @@ Path getDijkstraPath(cModule *srcMod, cModule *dstMod) {
     } ret.push_back(current); // once more to push target onto path
     return ret;
 }
-Path getBfsPath(cModule *srcMod, cModule *dstMod) {
+Path getShortestPathBfs(cModule *srcMod, cModule *dstMod) {
     /**
-     * seems to process about 2/3 more paths than getDijkstraPath
+     * seems to process about 2/3 more paths than getShortestPathDijkstra
      */
     // initialise
-    Path path;
-    Node* n;
-    Node* m;
-    std::deque<Path> paths;
+    Path path; Node* n; Node* m; int i; // minor speedup observed from initialising out of loop
+    std::deque<Path> paths; // faster than flipping two vectors
     Node* current = topo.getNodeFor(srcMod);
     Node* target = topo.getNodeFor(dstMod);
     std::set<Node*> seen; seen.insert(current);
     paths.push_back(Path(1, current));
     // breadth-first search
     while (paths.size() != 0) {
-        path = paths.front(); // taking the least recent path
+        path = paths.front(); // taking the least recent partial-path
         n = path.back(); // go to its tail ie. furthest from source
-        for (int i = n->getNumOutLinks()-1; i>=0; i--) {
+        for (i = n->getNumOutLinks()-1; i>=0; i--) {
             m = n->getLinkOut(i)->getRemoteNode(); // and for each adjacent node
             if (seen.count(m) == 0) { // if it has not been seen before
+                // add new partial-path with this node to queue
                 path.push_back(m);
                 if (m == target) {return path;}
                 seen.insert(m);
@@ -64,7 +66,9 @@ Path getBfsPath(cModule *srcMod, cModule *dstMod) {
         }
         paths.pop_front();
     }
-    return Path(); // nothing found (should not reach this)
+    // nothing found (should not reach here)
+    throw cRuntimeError("BFS did not find any paths.");
+    return Path();
 }
 
 // algo modified from http://mathoverflow.net/a/18634
