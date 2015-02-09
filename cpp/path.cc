@@ -1,3 +1,4 @@
+#include <algorithm> // for std::find
 #include <deque>
 #include "path.h"
 #include "routing.h"
@@ -52,7 +53,7 @@ Path getShortestPathBfs(cModule *srcMod, cModule *dstMod) {
     while (paths.size() != 0) {
         path = paths.front(); // taking the least recent partial-path
         n = path.back(); // go to its tail ie. furthest from source
-        for (i = n->getNumOutLinks()-1; i>=0; i--) {
+        for (i = n->getNumOutLinks()-1; i>=0; --i) {
             m = n->getLinkOut(i)->getRemoteNode(); // and for each adjacent node
             if (seen.count(m) == 0) { // if it has not been seen before
                 // add new partial-path with this node to queue
@@ -70,6 +71,50 @@ Path getShortestPathBfs(cModule *srcMod, cModule *dstMod) {
     throw cRuntimeError("BFS did not find any paths.");
     return Path();
 }
+PathList getPathsAroundShortest(cModule *srcMod, cModule *dstMod) {
+    std::set<Path> detours;
+    std::set<Path>::size_type prevSize = detours.size();
+    Node* m;
+    detours.insert(getShortestPathBfs(srcMod, dstMod)); // size is now 1
+    //std::set<Node*> inAPath(detours[0].begin(), detours[0].end()); // ???
+    while (prevSize != detours.size()) { // until no new paths are found
+        prevSize = detours.size();
+        for (std::set<Path>::iterator p = detours.begin(); p != detours.end(); ++p) { // for each known path,
+            for (Path::const_iterator n = (*p).begin(); n != (*p).end()-1; ++n) { // for each of its nodes,
+                for (int i = (*n)->getNumOutLinks()-1; i>=0; --i) { // for each neighbour...
+                    if (std::find((*p).begin(), (*p).end(), (*n)->getLinkOut(i)->getRemoteNode()) == (*p).end()) { // ... that is not also in the path,
+                        m = (*n)->getLinkOut(i)->getRemoteNode();
+                        for (int j = m->getNumOutLinks()-1; j>=0; --j) { // for each of that neighbour's neighbours
+                            Path::const_iterator o = std::find((*p).begin(), (*p).end(), m->getLinkOut(j)->getRemoteNode()); // look for a node in the aforementioned known path
+                            if (o == n) {continue;} // cannot backtrack
+                            else if (o == (*p).end()) {continue;} // must rejoin path
+                            else { // if so, that forms a new path
+                                Path tmp((*p).begin(), n); // note: does not include n itself
+                                tmp.push_back(*n); // add node at start of detour
+                                tmp.push_back(m); // add detour node
+                                tmp.insert(tmp.end(), o, (*p).end()); // add node where detour rejoins path and remainder
+                                detours.insert(tmp); // but it is not necessarily found uniquely
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return PathList(detours.begin(), detours.end());
+    /*
+     * [insight] if a node has only 2 neighbours, it is traversed only by paths going to the other side
+     * []may be optimisations exploiting the fact that input path is shortest
+     * make set from shortest path
+     * add all nodes adjacent to the unstuck set to another set (nodes to try)
+     * loop {
+     *  for each node to try
+     *      if 2 adj, and both unstuck: self is unstuck and not node to try anymore
+     *      else 2 adj, and one unstuck
+     *      (only other case is both not unstuck
+     * } until no new nodes are added to the unstuck set
+     */
+}
 
 // algo modified from http://mathoverflow.net/a/18634
 // also consider: An algorithm for computing all paths in a graph
@@ -83,7 +128,7 @@ PathList paths;
 bool _stuck(Node *n) { // helper function
     //if (stuckCache.find(n) != stuckCache.end()) {return stuckCache[n];}
     if (n == target) {return false;}
-    for (int i = n->getNumOutLinks()-1; i>=0; i--) {
+    for (int i = n->getNumOutLinks()-1; i>=0; --i) {
         // EV << "in stuck trying numout #" << i << endl;
         Node *m = n->getLinkOut(i)->getRemoteNode(); // for each node beside head
         if (seen.insert(m).second == true) { // true means insertion successful i.e. m was not in seen
@@ -109,12 +154,12 @@ void _search(Node *n) { // helper function
     //seen = std::set<Node*>(path.begin(), path.end()); // copy path to seen
     //if (_stuck(n)) {return;}
     // run search on each neighbour of n
-    for (int i = n->getNumOutLinks()-1; i>=0 ; i--) {
+    for (int i = n->getNumOutLinks()-1; i>=0 ; --i) {
         // EV << "search:numout: " << i << endl;
         Node *m = n->getLinkOut(i)->getRemoteNode();
         // do not go backwards:
         bool neighbour_in_path = false;
-        for (int j = path.size()-1; j >= 0; j--) {
+        for (int j = path.size()-1; j >= 0; --j) {
             if (path[j] == m) {neighbour_in_path = true;}
         }
         if (neighbour_in_path) {continue;}
@@ -153,7 +198,7 @@ PathList getShortestPaths(PathList paths) {
     unsigned int minHops = UINT_MAX;
     PathList shortest = PathList();
     // for each path, if shorter than current shortest, become new shortest
-    for (PathList::iterator it = paths.begin(); it != paths.end(); it++) {
+    for (PathList::iterator it = paths.begin(); it != paths.end(); ++it) {
         if (it->size() < minHops) {
             minHops = it->size();
             shortest.clear();
@@ -170,7 +215,7 @@ bool _getAvailablePathsHelper(Node *from, Node *to, double bps, Priority p) {
     /**
      * Checks if datarate is available between two adjacent nodes
      */
-    for (int i = from->getNumOutLinks()-1; i>=0; i--) { // try each link
+    for (int i = from->getNumOutLinks()-1; i>=0; --i) { // try each link
         if (from->getLinkOut(i)->getRemoteNode() == to) { // until the other node is found
             if (((FlowChannel*)from->getLinkOut(i)->getLocalGate()->getTransmissionChannel())->isFlowPossible(bps, p)) {
                 return true;
@@ -187,9 +232,9 @@ PathList getAvailablePaths(PathList paths, double bps, Priority p) {
     PathList available = PathList();
     bool possible = false;
     // for each path, if all links have at least datarate, copy onto available
-    for (PathList::iterator path_it = paths.begin(); path_it != paths.end(); path_it++) { // for each path
+    for (PathList::iterator path_it = paths.begin(); path_it != paths.end(); ++path_it) { // for each path
         possible = true;
-        for (Path::iterator node_it = path_it->begin(); node_it != path_it->end()-1; node_it++) { // starting from the first node
+        for (Path::iterator node_it = path_it->begin(); node_it != path_it->end()-1; ++node_it) { // starting from the first node
             if (!_getAvailablePathsHelper(*node_it, *(node_it+1), bps, p)) { // check if datarate is available on each link
                 possible = false;
                 break;
@@ -213,8 +258,8 @@ Flow* createFlow(Path path, double bps, Priority p) {
     f->path = path;
     f->bps = bps;
     f->priority = p;
-    for (Path::iterator it = path.begin(); it != path.end()-1; it++) { // for each node in the path
-        for (int i = (*it)->getNumOutLinks()-1; i>=0; i--) { // try each outgoing link
+    for (Path::iterator it = path.begin(); it != path.end()-1; ++it) { // for each node in the path
+        for (int i = (*it)->getNumOutLinks()-1; i>=0; --i) { // try each outgoing link
             if ((*it)->getLinkOut(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel();
                 ((FlowChannel*)ch)->addFlow(f);
@@ -222,7 +267,7 @@ Flow* createFlow(Path path, double bps, Priority p) {
             }
         }
         // should break before this else nodes were not adjacent
-        for (int i = (*it)->getNumInLinks()-1; i>=0; i--) { // try each incoming link
+        for (int i = (*it)->getNumInLinks()-1; i>=0; --i) { // try each incoming link
             if ((*it)->getLinkIn(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkIn(i)->getRemoteGate()->getTransmissionChannel();
                 ((FlowChannel*)ch)->addFlow(f);
@@ -237,8 +282,8 @@ bool revokeFlow(Flow* f) {
     /**
      * Decrements used bandwidth for all gates along path.
      */
-    for (Path::iterator it = f->path.begin(); it != f->path.end()-1; it++) {
-        for (int i = (*it)->getNumOutLinks()-1; i>=0; i--) { // try each outgoing link
+    for (Path::iterator it = f->path.begin(); it != f->path.end()-1; ++it) {
+        for (int i = (*it)->getNumOutLinks()-1; i>=0; --i) { // try each outgoing link
             if ((*it)->getLinkOut(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel();
                 ((FlowChannel*)ch)->removeFlow(f);
@@ -246,7 +291,7 @@ bool revokeFlow(Flow* f) {
             }
         }
         // should break before this else nodes were not adjacent
-        for (int i = (*it)->getNumInLinks()-1; i>=0; i--) { // try each incoming link
+        for (int i = (*it)->getNumInLinks()-1; i>=0; --i) { // try each incoming link
             if ((*it)->getLinkIn(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkIn(i)->getRemoteGate()->getTransmissionChannel();
                 ((FlowChannel*)ch)->removeFlow(f);

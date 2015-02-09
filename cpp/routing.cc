@@ -55,7 +55,7 @@ int getNearestID(int originID, std::vector<int> candidateIDs) {
         topo.getNodeFor(simulation.getModule(originID));
     topo.calculateUnweightedSingleShortestPathsTo(originNode);
     for (std::vector<int>::iterator id = candidateIDs.begin();
-        id != candidateIDs.end(); id++) {
+        id != candidateIDs.end(); ++id) {
         if (*id != originID) {
             cTopology::Node *candidateNode =
                 topo.getNodeFor(simulation.getModule(*id));

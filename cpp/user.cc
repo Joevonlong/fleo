@@ -93,7 +93,9 @@ void User::sendRequest()
     //~ Path path = getShortestPathDijkstra(this, simulation.getModule(nearestCache));
     //~ printPath(path);
     Path path2 = getShortestPathBfs(this, simulation.getModule(nearestCache));
-    printPath(path2);
+    //printPath(path2);
+    PathList plist = getPathsAroundShortest(this, simulation.getModule(nearestCache));
+    printPaths(plist);
     //~ if (path.size() != path2.size()) {
         //~ error("diff shortest path");
     //~ }
