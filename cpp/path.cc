@@ -71,29 +71,46 @@ Path getShortestPathBfs(cModule *srcMod, cModule *dstMod) {
     throw cRuntimeError("BFS did not find any paths.");
     return Path();
 }
+
+//~ Node* nodeCmpTo;
+//~ bool _nodeCmp(Node* n) {
+    //~ return n->getModuleId() == nodeCmpTo->getModuleId();
+//~ }
+bool _hasLoop(Path p) {
+    return std::set<Node*>(p.begin(), p.end()).size() != p.size();
+}
 PathList getPathsAroundShortest(cModule *srcMod, cModule *dstMod) {
     std::set<Path> detours;
     std::set<Path>::size_type prevSize = detours.size();
-    Node* m;
+    //Node* detour;
     detours.insert(getShortestPathBfs(srcMod, dstMod)); // size is now 1
     //std::set<Node*> inAPath(detours[0].begin(), detours[0].end()); // ???
-    while (prevSize != detours.size()) { // until no new paths are found
+    while ((prevSize != detours.size()) /*&& (detours.size() < 100)*/) { // until no new paths are found
         prevSize = detours.size();
-        for (std::set<Path>::iterator p = detours.begin(); p != detours.end(); ++p) { // for each known path,
-            for (Path::const_iterator n = (*p).begin(); n != (*p).end()-1; ++n) { // for each of its nodes,
-                for (int i = (*n)->getNumOutLinks()-1; i>=0; --i) { // for each neighbour...
-                    if (std::find((*p).begin(), (*p).end(), (*n)->getLinkOut(i)->getRemoteNode()) == (*p).end()) { // ... that is not also in the path,
-                        m = (*n)->getLinkOut(i)->getRemoteNode();
-                        for (int j = m->getNumOutLinks()-1; j>=0; --j) { // for each of that neighbour's neighbours
-                            Path::const_iterator o = std::find((*p).begin(), (*p).end(), m->getLinkOut(j)->getRemoteNode()); // look for a node in the aforementioned known path
-                            if (o == n) {continue;} // cannot backtrack
-                            else if (o == (*p).end()) {continue;} // must rejoin path
+        for (std::set<Path>::iterator path_it = detours.begin(); path_it != detours.end(); ++path_it) { // for each known path,
+            for (Path::const_iterator branch_it = path_it->begin(); branch_it != path_it->end()-1; ++branch_it) { // for each of its nodes except the last (destinataion),
+                for (int i = (*branch_it)->getNumOutLinks()-1; i>=0; --i) { // for each neighbour...
+                    Node* detour = (*branch_it)->getLinkOut(i)->getRemoteNode();
+                    //nodeCmpTo = detour;
+                    if (std::find(path_it->begin(), path_it->end(), detour) == path_it->end()) { // ... that is not also in the path,
+                        for (int j = detour->getNumOutLinks()-1; j>=0; --j) { // for each of that neighbour's neighbours
+                            Path::const_iterator merge_it = std::find(path_it->begin(), path_it->end(), detour->getLinkOut(j)->getRemoteNode()); // look for a node in the aforementioned known path
+                            if (merge_it == path_it->end()) {continue;} // must rejoin path
+                            //nodeCmpTo = detour->getLinkOut(j)->getRemoteNode();
+                            if (std::find(path_it->begin(), branch_it+1, detour->getLinkOut(j)->getRemoteNode()) != branch_it+1) {continue;} // and after branching point
                             else { // if so, that forms a new path
-                                Path tmp((*p).begin(), n); // note: does not include n itself
-                                tmp.push_back(*n); // add node at start of detour
-                                tmp.push_back(m); // add detour node
-                                tmp.insert(tmp.end(), o, (*p).end()); // add node where detour rejoins path and remainder
-                                detours.insert(tmp); // but it is not necessarily found uniquely
+                                Path tmp(path_it->begin(), branch_it); // note: does not include n itself
+                                tmp.push_back(*branch_it); // add node at start of detour
+                                tmp.push_back(detour); // add detour node
+                                tmp.insert(tmp.end(), merge_it, path_it->end()); // add node where detour rejoins path and remainder
+                                if (detours.insert(tmp).second) { // but it is not necessarily found uniquely
+                                    if (_hasLoop(tmp)){
+                                        EV << "loop found. based on "; printPath(*path_it);
+                                        EV << "we get "; printPath(tmp);
+                                        cRuntimeError("");
+                                    }
+                                }
+                                if (detours.size() > 100) {goto end;}
                             }
                         }
                     }
@@ -101,6 +118,7 @@ PathList getPathsAroundShortest(cModule *srcMod, cModule *dstMod) {
             }
         }
     }
+    end:
     return PathList(detours.begin(), detours.end());
     /*
      * [insight] if a node has only 2 neighbours, it is traversed only by paths going to the other side
