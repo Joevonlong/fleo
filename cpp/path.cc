@@ -80,14 +80,14 @@ bool _hasLoop(Path p) {
     return std::set<Node*>(p.begin(), p.end()).size() != p.size();
 }
 PathList getPathsAroundShortest(cModule *srcMod, cModule *dstMod) {
-    std::set<Path> detours;
+    std::set<Path> searchAround, detours;
     std::set<Path>::size_type prevSize = detours.size();
     //Node* detour;
-    detours.insert(getShortestPathBfs(srcMod, dstMod)); // size is now 1
+    searchAround.insert(getShortestPathBfs(srcMod, dstMod)); // size is now 1
     //std::set<Node*> inAPath(detours[0].begin(), detours[0].end()); // ???
-    while ((prevSize != detours.size()) /*&& (detours.size() < 100)*/) { // until no new paths are found
-        prevSize = detours.size();
-        for (std::set<Path>::iterator path_it = detours.begin(); path_it != detours.end(); ++path_it) { // for each known path,
+    while (searchAround.size() != 0 /*&& (detours.size() < 100)*/) { // until no new paths are found
+        //prevSize = detours.size();
+        std::set<Path>::iterator path_it = searchAround.begin(); { // for each known path,
             for (Path::const_iterator branch_it = path_it->begin(); branch_it != path_it->end()-1; ++branch_it) { // for each of its nodes except the last (destinataion),
                 for (int i = (*branch_it)->getNumOutLinks()-1; i>=0; --i) { // for each neighbour...
                     Node* detour = (*branch_it)->getLinkOut(i)->getRemoteNode();
@@ -103,20 +103,23 @@ PathList getPathsAroundShortest(cModule *srcMod, cModule *dstMod) {
                                 tmp.push_back(*branch_it); // add node at start of detour
                                 tmp.push_back(detour); // add detour node
                                 tmp.insert(tmp.end(), merge_it, path_it->end()); // add node where detour rejoins path and remainder
-                                if (detours.insert(tmp).second) { // but it is not necessarily found uniquely
+                                if (detours.count(tmp)) {continue;}
+                                if (searchAround.insert(tmp).second) { // but it is not necessarily found uniquely
                                     if (_hasLoop(tmp)){
                                         EV << "loop found. based on "; printPath(*path_it);
                                         EV << "we get "; printPath(tmp);
                                         cRuntimeError("");
                                     }
                                 }
-                                if (detours.size() > 100) {goto end;}
+                                //if (detours.size() > 100) {goto end;}
                             }
                         }
                     }
                 }
             }
         }
+        detours.insert(*path_it);
+        searchAround.erase(path_it);
     }
     end:
     return PathList(detours.begin(), detours.end());
