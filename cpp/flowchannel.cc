@@ -4,6 +4,7 @@ Define_Channel(FlowChannel);
 
 void FlowChannel::initialize() {
     bpsLeftAtPriority[INT_MAX] = par("datarate").doubleValue(); // getDatarate() returns 0 during initialization
+    utilVec.setName("Utilisation fraction of channel");
 }
 
 bool FlowChannel::isTransmissionChannel() const {
@@ -97,6 +98,7 @@ void FlowChannel::addFlow(Flow* f) {
     for (; subtractBpsUpTo != bpsLeftAtPriority.begin(); --subtractBpsUpTo) {
         subtractBpsUpTo->second -= f->bps;
     } subtractBpsUpTo->second -= f->bps; // because loop doesnt act on first element.
+    recordUtil();
 }
 
 void FlowChannel::removeFlow(Flow* f) {
@@ -131,6 +133,7 @@ void FlowChannel::removeFlow(Flow* f) {
     for (it = bpsLeftAtPriority.begin(); it != addBpsBefore; ++it) {
         it->second += f->bps;
     }
+    recordUtil();
 }
 //
 
@@ -147,4 +150,8 @@ bool FlowChannel::isFlowPossible(double bps, Priority p) {
 }
 bool FlowChannel::isFlowPossible(Flow* f) {
     return f->bps <= getAvailableBps(f->priority);
+}
+
+void FlowChannel::recordUtil() {
+    utilVec.record(1 - getAvailableBps(INT_MIN)/getDatarate());
 }

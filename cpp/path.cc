@@ -111,9 +111,9 @@ PathList getPathsAroundShortest(cModule *srcMod, cModule *dstMod) {
                                     }
                                     searchingQ.push(tmp);
                                 }
-                                //~ if (searchedSet.size() +searchAroundSet.size()> 10000) {
-                                    //~ goto end;
-                                //~ }
+                                if (searchingQ.size() + searched.size()> 1000) {
+                                    goto end;
+                                }
                             }
                         }
                     }

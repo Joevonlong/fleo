@@ -25,6 +25,8 @@ class FlowChannel : public cDatarateChannel {
         // new to subclass:
         std::set<Flow*> currentFlows;
         std::map<Priority, double> bpsLeftAtPriority;
+        void recordUtil(); // will self convert to fraction
+        cOutVector utilVec; cDoubleHistogram utilHist;
     private:
         bool isDisabled;
         double delay;

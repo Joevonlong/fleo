@@ -36,18 +36,12 @@ public:
 protected:
     virtual int numInitStages() const;
     virtual void initialize(int stage);
-    cOutVector userD2CVec;
-    cDoubleHistogram userD2CHist;
-    cOutVector idleTimeVec;
-    cDoubleHistogram idleTimeHist;
-    cOutVector requestedLengthVec;
-    cDoubleHistogram requestedLengthHist;
-    cOutVector startupDelayVec;
-    cDoubleHistogram startupDelayHist;
-    cOutVector startupDelayL20Vec;
-    cDoubleHistogram startupDelayL20Hist;
-    cOutVector hopsVec;
-    cDoubleHistogram hopsHist;
+    cOutVector userD2CVec; cDoubleHistogram userD2CHist;
+    cOutVector idleTimeVec; cDoubleHistogram idleTimeHist;
+    cOutVector requestedLengthVec; cDoubleHistogram requestedLengthHist;
+    cOutVector startupDelayVec; cDoubleHistogram startupDelayHist;
+    cOutVector startupDelayL20Vec; cDoubleHistogram startupDelayL20Hist;
+    cOutVector hopsVec; cDoubleHistogram hopsHist;
     cOutVector underflowVec;
     virtual void finish();
 private:
