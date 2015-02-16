@@ -109,6 +109,9 @@ void User::sendRequest()
         EV << "No paths available\n";
         return;
     }
+    /**
+     * TODO trigger connection from replica to replica/origin if content not in cache
+     */
     //EV << "available paths:\n";
     //printPaths(pathstemp);
     // filter to shortest ones
