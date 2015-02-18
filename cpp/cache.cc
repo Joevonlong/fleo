@@ -7,7 +7,7 @@ Define_Module(Cache);
 // record request statistics
 
 void Cache::initialize() {
-    cacheSize = pow(10, 3*4) * 12; // 1.5TB
+    cacheSize = par("capacity").doubleValue() * pow(2,30); //pow(10, 3*4) * 12;
     diskUsed = 0;
     std::map<int, std::list<int>::iterator> idToIndex;
     std::list<int> leastRecent; // = new cQueue("cache insert order"); // for LRU replacement

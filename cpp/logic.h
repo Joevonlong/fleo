@@ -9,6 +9,7 @@ public:
     std::map<int, cGate*> nextGate; // maps user index to next cGate*
     //void setupFlowFrom(User *user);
     std::vector<int> findAvailablePathFrom(User *user, double bpsWanted);
+    Flow* processRequest(int vID, Path waypoints);
 protected:
     Global *global;
     virtual int numInitStages() const;

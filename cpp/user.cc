@@ -50,7 +50,7 @@ void User::initialize(int stage) {
             nearestCache = getNearestID(getId(), completeCacheIDs);
         }
         else {error("negative cacheTries value");}
-        global->recordUserD2C((getDistanceBetween(getId(), nearestCache)+1)/3);
+        global->recordUserD2C(getDistanceBetween(getId(), nearestCache));
         EV << "Nearest cache for " << getFullPath() << "(" << par("loc").stringValue() << ") is " << simulation.getModule(nearestCache)->getFullPath() << "(" << simulation.getModule(nearestCache)->getParentModule()->par("loc").stringValue() << ")." << endl;
     }
 }
@@ -107,6 +107,7 @@ void User::sendRequest()
     PathList pathstemp = getAvailablePaths(plist, 1e8, 1);
     if (pathstemp.size() == 0) {
         EV << "No paths available\n";
+        idle();
         return;
     }
     /**

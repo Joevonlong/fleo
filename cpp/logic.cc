@@ -334,3 +334,22 @@ std::vector<int> Logic::findAvailablePathFrom(User *user, double bpsWanted) {
     }
     return path;
 }
+
+Flow* Logic::processRequest(int vID, Path waypoints) {
+    int64_t bitsize = checkCache(vID);
+    if (bitsize == noCache) {error("user request not sent to cache");}
+    else if (bitsize == notCached){
+        // determine if content should be cached
+        // add waypoint if so
+        // forward request to next cache
+    }
+    else if (bitsize < 0) {error("invalid checkCache result");}
+    else {
+        // content is cached. build path using waypoints
+        // combine into flow
+    }
+    
+    //
+    Flow* ret = new Flow;
+    return ret;
+}
