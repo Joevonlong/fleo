@@ -27,6 +27,7 @@ void Logic::initialize(int stage) {
     }
     else if (stage == 1) {
         registerSelfIfCache();
+        return; // obsolete
         // if origin server, populate with all content
         if (getParentModule()->par("completeCache").boolValue() == true) {
             Cache* cache = (Cache*)(getParentModule()->getSubmodule("cache"));
@@ -249,6 +250,13 @@ void Logic::handleMessage(cMessage *msg) {
         EV << "Forwarding request via " << outGate->getFullName() << endl;
         return;
     }
+}
+
+bool Logic::hasCache() {
+    return ((Cache*)getParentModule()->getSubmodule("cache"))->hasCache();
+}
+bool Logic::isOrigin() {
+    return ((Cache*)getParentModule()->getSubmodule("cache"))->isOrigin();
 }
 
 // inserts logic's ID as value with location as key,

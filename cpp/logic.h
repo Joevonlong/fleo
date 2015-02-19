@@ -16,11 +16,15 @@ protected:
     virtual void initialize(int stage);
     virtual void handleMessage(cMessage *msg);
     cTopology topo;
+    // cache-related
     int nearestCache;
     int nearestCompleteCache;
     double distToCompleteCache;
     void registerSelfIfCache();
     int64_t checkCache(int customID);
+    bool hasCache();
+    bool isOrigin();
     void requestFromCache(int cacheID, int customID);
+    //
 private:
 };

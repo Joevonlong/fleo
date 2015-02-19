@@ -107,7 +107,6 @@ void User::sendRequest()
     PathList pathstemp = getAvailablePaths(plist, 1e8, 1);
     if (pathstemp.size() == 0) {
         EV << "No paths available\n";
-        idle();
         return;
     }
     /**
