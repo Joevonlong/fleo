@@ -19,6 +19,7 @@ void BeyondLogic::initialize(int stage)
         beyondPath = getFullPath();
         EV << beyondPath << endl;
         registerSelfIfCache();
+        return; //obsolete
         // populate cache with all content
         Cache* cache = (Cache*)(getParentModule()->getSubmodule("cache"));
         for (unsigned long maxID = getMaxCustomVideoID(); maxID != ULONG_MAX; maxID--) {

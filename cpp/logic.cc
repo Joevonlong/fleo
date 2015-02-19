@@ -27,19 +27,11 @@ void Logic::initialize(int stage) {
     }
     else if (stage == 1) {
         registerSelfIfCache();
-        return; // obsolete
-        // if origin server, populate with all content
-        if (getParentModule()->par("completeCache").boolValue() == true) {
-            Cache* cache = (Cache*)(getParentModule()->getSubmodule("cache"));
-            for (unsigned long maxID = getMaxCustomVideoID(); maxID != ULONG_MAX; maxID--) {
-                cache->setCached(maxID, true, true);
-            }
-        }
     }
     else if (stage == 3) {
-        if (getParentModule()->par("hasCache").boolValue() == true) {
+        if (hasCache()) {
             // find nearest origin server
-            if (getParentModule()->par("completeCache").boolValue() == false) {
+            if (!isOrigin()) {
                 nearestCompleteCache = getNearestID(getId(), completeCacheIDs);
                 distToCompleteCache = getDistanceBetween(getId(), nearestCompleteCache);
                 EV << "Master cache for " << getFullPath() << "("
@@ -56,7 +48,7 @@ void Logic::initialize(int stage) {
     }
     else if (stage == 4) {
         return;
-        if (getParentModule()->par("hasCache").boolValue() == true) {
+        if (hasCache()) {
             // find replica with smallest detour from origin
             double pathLength;
             double shortestPathLength = DBL_MAX;
@@ -262,19 +254,19 @@ bool Logic::isOrigin() {
 // inserts logic's ID as value with location as key,
 // as well as if cache is a complete one.
 void Logic::registerSelfIfCache() {
-    if (getParentModule()->par("hasCache").boolValue() == true) {
+    if (hasCache()) {
         locCaches[getParentModule()->par("loc").stringValue()] = getId();
-        if (getParentModule()->par("completeCache").boolValue() == true) {
+        if (isOrigin()) {
             completeCacheIDs.push_back(getId());
         }
     }
 }
 
 int64_t Logic::checkCache(int customID) {
-    if (getParentModule()->par("hasCache").boolValue() == false) {
+    if (!hasCache()) {
         return noCache; // module has no cache
     }
-    else if (getParentModule()->par("completeCache").boolValue() == true) {
+    else if (isOrigin()) {
         return getVideoBitSize(customID);
     }
     else if (((Cache*)(getParentModule()->getSubmodule("cache")))->isCached(customID)) {

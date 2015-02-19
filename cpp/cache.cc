@@ -46,10 +46,6 @@ bool Cache::isCached(int customID) {
 }
 
 void Cache::setCached(int customID, bool b) {
-    Cache::setCached(customID, b, false);
-}
-
-void Cache::setCached(int customID, bool b, bool force) {
     if (capacity == origin) {error("setCached used on origin server");}
     if (capacity == noCache) {error("setCached used on node without cache");}
     if (getVideoBitSize(customID) > capacity) {

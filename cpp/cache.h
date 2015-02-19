@@ -8,7 +8,6 @@ public:
     bool isOrigin();
     bool isCached(int customID);
     void setCached(int customID, bool b);
-    void setCached(int customID, bool b, bool force);
 protected:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
