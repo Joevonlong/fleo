@@ -5,6 +5,7 @@
 
 extern cModule* getSourceModule(Flow *flow);
 extern void printPath(Path path);
+extern void printNodeDeque(NodeDeque nd);
 extern void printPaths(PathList paths);
 extern Path getShortestPathDijkstra(cModule *srcMod, cModule *dstMod);
 extern Path getShortestPathBfs(cModule *srcMod, cModule *dstMod);

@@ -16,6 +16,12 @@ void printPath(Path path) {
     }
     EV << endl;
 }
+void printNodeDeque(NodeDeque nd) {
+    for (NodeDeque::iterator it = nd.begin(); it != nd.end(); ++it) {
+        EV << (*it)->getModule()->getFullPath() << " > ";
+    }
+    EV << endl;
+}
 void printPaths(PathList paths) {
     for (PathList::iterator it = paths.begin(); it != paths.end(); ++it) {
         printPath(*it);

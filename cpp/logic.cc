@@ -49,7 +49,6 @@ void Logic::initialize(int stage) {
         }
     }
     else if (stage == 4) {
-        return;
         if (hasCache()) {
             // find replica with smallest detour from origin
             double pathLength;
