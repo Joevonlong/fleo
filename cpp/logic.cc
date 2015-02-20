@@ -49,6 +49,10 @@ void Logic::initialize(int stage) {
         }
     }
     else if (stage == 4) {
+        if (isOrigin()) {
+            nearestCache = getId();
+            return;
+        }
         if (hasCache()) {
             // find replica with smallest detour from origin
             double pathLength;
@@ -338,9 +342,10 @@ std::vector<int> Logic::findAvailablePathFrom(User *user, double bpsWanted) {
 }
 */
 
-NodeDeque Logic::getRequestWaypoints(int vID, int tries) {
+std::deque<Logic*> Logic::getRequestWaypoints(int vID, int tries) {
     /**
      * Limit tries to at most 2 for now sinca replicas only know one other replica.
+     * TODO: for this reason, this function should be moved to controller.
      */
     int64_t bitsize = checkCache(vID);
     tries -= 1;
@@ -348,20 +353,21 @@ NodeDeque Logic::getRequestWaypoints(int vID, int tries) {
     else if (bitsize == notCached){
         // assume cache content since LRU. FUTURE: determine if content should be cached
         // add waypoint if so and forward request to next cache
-        NodeDeque ret;
+        std::deque<Logic*> ret;
         if (tries > 0) {
             ret = ((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID, tries);
         }
         else {
             ret = ((Logic*)simulation.getModule(nearestCompleteCache))->getRequestWaypoints(vID, tries);
         }
-        ret.push_front(topo.getNodeFor(this));
+        ret.push_front(this);
         return ret;
     }
     else if (bitsize < 0) {error("invalid checkCache result");}
     else {
         // content is cached. return self as last waypoint.
-        return NodeDeque(1, topo.getNodeFor(this));
+        return std::deque<Logic*>(1, this);
     }
-    return NodeDeque(); // just to remove warning; should not reach this.
+    error("Logic::getRequestWaypoints: should not reach this");
+    return std::deque<Logic*>(); // just to remove warning
 }

@@ -125,8 +125,12 @@ void User::sendRequest()
     // see whats available for a smaller flow
     //~ pathstemp = getAvailablePaths(paths, 1e7, 1);
     int vID = getRandCustomVideoID();
-    NodeDeque waypoints = ((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID, 2);
-    printNodeDeque(waypoints);
+    std::deque<Logic*> waypoints = ((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID, 2);
+    for (std::deque<Logic*>::iterator it = waypoints.begin(); it != waypoints.end(); ++it) {
+        EV << (*it)->getFullPath() << " > ";
+    }
+    EV << endl;
+
     return;
     uint64_t vidLen = getVideoSeconds(vID);
     cMessage *vidComplete = new cMessage("video transfer complete");

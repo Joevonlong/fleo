@@ -83,8 +83,8 @@ bool _hasLoop(Path p) {
 }
 PathList getPathsAroundShortest(cModule *srcMod, cModule *dstMod) {
     /**
-     * Starts with shortest path, then detours in a FIFO order.
-     * Thus the Paths returned should be some of the shortest.
+     * Starts with shortest path, followed by its detours in a FIFO order.
+     * Thus the Paths returned should be relatively short.
      * TODO: return "state" of the search: pair<searchingQ, searched>, so that
      * source nodes can cache partial searches and resume with no repetition.
      */
