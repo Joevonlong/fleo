@@ -345,8 +345,7 @@ Flow* Logic::processRequest(int vID, Path waypoints) {
     }
     else if (bitsize < 0) {error("invalid checkCache result");}
     else {
-        // content is cached. build path using waypoints
-        // combine into flow
+        // content is cached. build paths between consecutive nodes in waypoints
     }
     
     //

@@ -1,3 +1,10 @@
+struct Video {
+    int id;
+    simtime_t duration;
+    double bps;
+    int quality;
+};
+
 extern const uint64_t bitRate;
 void loadVideoLengthFile();
 //uint64_t getVideoSize();

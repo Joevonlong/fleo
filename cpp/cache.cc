@@ -28,20 +28,11 @@ bool Cache::isOrigin() {
 bool Cache::isCached(int customID) {
     /**
      * Assumes presence in mapping means cached.
-     * Will set item to most-recently-used.
+     * Does not affect LRU queue.
      */
     if (capacity == origin) {return true;}
     if (capacity == noCache) {error("checking content in node without cache");}
-    std::map<int, std::list<int>::iterator>::iterator it = idToIndex.find(customID); // find customID in mapping
-    if (it != idToIndex.end()) {
-        // move checked ID to the front of leastRecent
-        leastRecent.erase(it->second);
-        leastRecent.push_back(customID);
-        // and then update mapping
-        idToIndex[customID] = leastRecent.end();
-        --idToIndex[customID]; // end-1
-        return true;
-    }
+    if (idToIndex.count(customID)) {return true;}
     else {return false;}
 }
 
@@ -54,7 +45,14 @@ void Cache::setCached(int customID, bool b) {
         return;
     }
     if (b == true) {
-        if (idToIndex.count(customID) == 1) {error("inserting item that is already cached");}
+        std::map<int, std::list<int>::iterator>::iterator it = idToIndex.find(customID); // find customID in mapping
+        if (it != idToIndex.end()) { // found: move to back of LRU
+            leastRecent.erase(it->second);
+            leastRecent.push_back(customID);
+            // and then update mapping
+            idToIndex[customID] = leastRecent.end();
+            --idToIndex[customID]; // end-1
+        }
         else {push(customID);}
         while (diskUsed > capacity) {
             // assume LRU replacement
