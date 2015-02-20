@@ -4,6 +4,7 @@
 #include "reply_m.h"
 #include "mypacket_m.h"
 #include "user.h"
+#include "logic.h"
 #include "parse.h"
 #include "routing.h"
 #include "global.h"
@@ -124,8 +125,9 @@ void User::sendRequest()
     // see whats available for a smaller flow
     //~ pathstemp = getAvailablePaths(paths, 1e7, 1);
     int vID = getRandCustomVideoID();
-    NodeDeque waypoints = getRequestWaypoints(vID);
-    
+    NodeDeque waypoints = ((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID, 2);
+    printNodeDeque(waypoints);
+    return;
     uint64_t vidLen = getVideoSeconds(vID);
     cMessage *vidComplete = new cMessage("video transfer complete");
     scheduleAt(simTime()+vidLen, vidComplete);

@@ -338,13 +338,23 @@ std::vector<int> Logic::findAvailablePathFrom(User *user, double bpsWanted) {
 }
 */
 
-NodeDeque Logic::getRequestWaypoints(int vID) {
+NodeDeque Logic::getRequestWaypoints(int vID, int tries) {
+    /**
+     * Limit tries to at most 2 for now sinca replicas only know one other replica.
+     */
     int64_t bitsize = checkCache(vID);
+    tries -= 1;
     if (bitsize == noCache) {error("user request not sent to cache");}
     else if (bitsize == notCached){
         // assume cache content since LRU. FUTURE: determine if content should be cached
         // add waypoint if so and forward request to next cache
-        NodeDeque ret(((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID));
+        NodeDeque ret;
+        if (tries > 0) {
+            ret = ((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID, tries);
+        }
+        else {
+            ret = ((Logic*)simulation.getModule(nearestCompleteCache))->getRequestWaypoints(vID, tries);
+        }
         ret.push_front(topo.getNodeFor(this));
         return ret;
     }
