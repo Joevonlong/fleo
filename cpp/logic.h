@@ -16,7 +16,7 @@ protected:
     virtual int numInitStages() const;
     virtual void initialize(int stage);
     virtual void handleMessage(cMessage *msg);
-    cTopology topo;
+    // DELME cTopology topo;
     // cache-related
     int nearestCache;
     int nearestCompleteCache;

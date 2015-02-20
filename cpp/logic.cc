@@ -19,11 +19,13 @@ void Logic::initialize(int stage) {
     if (stage == 0) {
         global = (Global*)getParentModule()->getParentModule()
             ->getSubmodule("global");
+        /** DELME
         // build paths to this node
         topo.clear();
         topo.extractByNedTypeName(cStringTokenizer("Buffer PoPLogic CoreLogic BeyondLogic Logic User").asVector());
         cTopology::Node *thisNode = topo.getNodeFor(this);
         topo.calculateUnweightedSingleShortestPathsTo(thisNode);
+        */
     }
     else if (stage == 1) {
         registerSelfIfCache();
@@ -289,6 +291,7 @@ void requestFromCache(int cacheID, int customID) {
 //                reply->setDestinationID(req->getSourceID());
 }
 
+/** DELME
 std::vector<int> Logic::findAvailablePathFrom(User *user, double bpsWanted) {
     std::vector<int> path;
     // walk from user to this, finding smallest available BW
@@ -334,6 +337,7 @@ std::vector<int> Logic::findAvailablePathFrom(User *user, double bpsWanted) {
     }
     return path;
 }
+*/
 
 std::deque<int> Logic::getRequestWaypoints(int vID) {
     int64_t bitsize = checkCache(vID);
@@ -341,7 +345,7 @@ std::deque<int> Logic::getRequestWaypoints(int vID) {
     else if (bitsize == notCached){
         // assume cache content since LRU. FUTURE: determine if content should be cached
         // add waypoint if so and forward request to next cache
-        std::deque<int> ret = getRequestWaypoints(vID);
+        std::deque<int> ret = ((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID);
         ret.push_front(getId());
         return ret;
     }
