@@ -339,20 +339,20 @@ std::vector<int> Logic::findAvailablePathFrom(User *user, double bpsWanted) {
 }
 */
 
-std::deque<int> Logic::getRequestWaypoints(int vID) {
+NodeDeque Logic::getRequestWaypoints(int vID) {
     int64_t bitsize = checkCache(vID);
     if (bitsize == noCache) {error("user request not sent to cache");}
     else if (bitsize == notCached){
         // assume cache content since LRU. FUTURE: determine if content should be cached
         // add waypoint if so and forward request to next cache
-        std::deque<int> ret = ((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID);
-        ret.push_front(getId());
+        NodeDeque ret(((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID));
+        ret.push_front(topo.getNodeFor(this));
         return ret;
     }
     else if (bitsize < 0) {error("invalid checkCache result");}
     else {
         // content is cached. return self as last waypoint.
-        return std::deque<int>(1, getId());
+        return NodeDeque(1, topo.getNodeFor(this));
     }
-    return std::deque<int>(); // just to remove warning; should not reach this.
+    return NodeDeque(); // just to remove warning; should not reach this.
 }
