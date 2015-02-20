@@ -1,5 +1,6 @@
 #pragma once
 #include <omnetpp.h>
+#include <deque>
 #include "global.h"
 #include "user.h"
 
@@ -9,7 +10,7 @@ public:
     std::map<int, cGate*> nextGate; // maps user index to next cGate*
     //void setupFlowFrom(User *user);
     std::vector<int> findAvailablePathFrom(User *user, double bpsWanted);
-    Flow* processRequest(int vID, Path waypoints);
+    std::deque<int> getRequestWaypoints(int vID);
 protected:
     Global *global;
     virtual int numInitStages() const;
