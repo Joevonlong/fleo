@@ -93,10 +93,10 @@ void User::sendRequest()
     // try dijkstra speed
     //~ Path path = getShortestPathDijkstra(this, simulation.getModule(nearestCache));
     //~ printPath(path);
-    Path path2 = getShortestPathBfs(this, simulation.getModule(nearestCache));
+    //Path path2 = getShortestPathBfs(this, simulation.getModule(nearestCache));
     //printPath(path2);
-    PathList plist = getPathsAroundShortest(this, simulation.getModule(nearestCache));
-    EV << plist.size() << " paths found.\n";
+    //PathList plist = getPathsAroundShortest(this, simulation.getModule(nearestCache));
+    //EV << plist.size() << " paths found.\n";
     //printPaths(plist);
     //~ if (path.size() != path2.size()) {
         //~ error("diff shortest path");
@@ -105,11 +105,11 @@ void User::sendRequest()
     // end try
     //~ PathList paths = calculatePathsBetween(this, simulation.getModule(nearestCache));
     //~ // try a BW req that can pass 1 path but not the other
-    PathList pathstemp = getAvailablePaths(plist, 1e8, 1);
-    if (pathstemp.size() == 0) {
+    //PathList pathstemp = getAvailablePaths(plist, 1e8, 1);
+    /*if (pathstemp.size() == 0) {
         EV << "No paths available\n";
         return;
-    }
+    }*/
     /**
      * TODO trigger connection from replica to replica/origin if content not in cache
      */
@@ -127,6 +127,7 @@ void User::sendRequest()
     int vID = getRandCustomVideoID();
     std::deque<Logic*> waypoints = ((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID, 2); // note: doesn't include User itself
     // output for debugging
+    EV << "waypoints: ";
     for (std::deque<Logic*>::iterator it = waypoints.begin(); it != waypoints.end(); ++it) {
         EV << (*it)->getFullPath() << " > ";
     }
@@ -151,25 +152,34 @@ void User::sendRequest()
             break;
         }
         else {
-            //flowsToCreate.push_back();
+            Flow* f = new Flow;
+            f->path = candidatePaths.front();
+            f->bps = getBitRate(vID, 1);
+            f->priority = 1;
+            flowsToCreate.push_back(f);
+            // remember to delete
         }
     }
     // If all positive, set up flows. one self timers for each expiry. no need to link all flows together?
     if (connectible) {
-        for (Path::iterator path_it = waypointNodes.begin(); path_it != waypointNodes.end()-1; ++path_it) {
-            
+        for (std::deque<Flow*>::iterator flow_it = flowsToCreate.begin(); flow_it != flowsToCreate.end(); ++flow_it) {
+            cMessage *vidComplete = new cMessage("video transfer complete");
+            scheduleAt(simTime()+getVideoSeconds(vID), vidComplete);
+            flowMap[vidComplete] = createFlow(*flow_it); // trying flow signature
+            printPath((*flow_it)->path);
         }
     }
     else {
         idle(); // try again later
         return;
     }
+    flowsToCreate.clear(); //cleanup
 
     return;
     uint64_t vidLen = getVideoSeconds(vID);
     cMessage *vidComplete = new cMessage("video transfer complete");
     scheduleAt(simTime()+vidLen, vidComplete);
-    flowMap[vidComplete] = createFlow(pathstemp[0], 1e8, 1);
+    //flowMap[vidComplete] = createFlow(pathstemp[0], 1e8, 1);
     //EV << "available paths pt2:\n";
     //printPaths(pathstemp);
     // revokeFlow(flows[0]); flows.pop_back();
