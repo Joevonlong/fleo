@@ -2,9 +2,7 @@
 #include <deque>
 
 typedef std::vector<cTopology::Node*> Path;
-typedef std::deque<cTopology::Node*> NodeDeque;
 typedef std::vector<Path> PathList;
-typedef std::deque<NodeDeque> PathDeque;
 typedef int Priority;
 
 struct Flow {
