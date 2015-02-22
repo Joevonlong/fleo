@@ -308,6 +308,9 @@ Flow* createFlow(Path path, double bps, Priority p) {
     }
     return f;
 }
+Flow* createFlow(Flow* f) {
+    return createFlow(f->path, f->bps, f->priority);
+}
 
 bool revokeFlow(Flow* f) {
     /**

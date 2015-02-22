@@ -17,4 +17,5 @@ extern PathList calculatePathsBetween(cModule *srcMod, cModule *dstMod); // DFS
 extern PathList getShortestPaths(PathList paths);
 extern PathList getAvailablePaths(PathList paths, double bps, Priority p);
 extern Flow* createFlow(Path path, double bps, Priority p);
+extern Flow* createFlow(Flow* f);
 extern bool revokeFlow(Flow* f);
