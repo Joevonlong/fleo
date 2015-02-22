@@ -125,11 +125,25 @@ void User::sendRequest()
     // see whats available for a smaller flow
     //~ pathstemp = getAvailablePaths(paths, 1e7, 1);
     int vID = getRandCustomVideoID();
-    std::deque<Logic*> waypoints = ((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID, 2);
+    std::deque<Logic*> waypoints = ((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID, 2); // note: doesn't include User itself
+    // output for debugging
     for (std::deque<Logic*>::iterator it = waypoints.begin(); it != waypoints.end(); ++it) {
         EV << (*it)->getFullPath() << " > ";
     }
     EV << endl;
+    // end output
+    // Add user node to head...
+    Path waypointNodes;
+    waypointNodes.push_back(topo.getNodeFor(this));
+    // ... and convert the rest to nodes.
+    for (std::deque<Logic*>::iterator logic_it = waypoints.begin(); logic_it != waypoints.end(); ++logic_it) {
+        waypointNodes.push_back(topo.getNodeFor(*logic_it));
+    }
+    // Then look for a possible Flow for each node-pair
+    for (Path::iterator path_it = waypointNodes.begin(); path_it != waypointNodes.end()-1; ++path_it) {
+        //
+    }
+    // If all positive, set up flows. one self timers for each expiry. no need to link all flows together?
 
     return;
     uint64_t vidLen = getVideoSeconds(vID);
