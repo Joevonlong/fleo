@@ -4,8 +4,6 @@
 #include "routing.h"
 #include "flowchannel.h"
 
-typedef cTopology::Node Node;
-
 cModule* getSourceModule(Flow *flow) {
     return flow->path[0]->getModule();
 }
@@ -38,17 +36,15 @@ Path getShortestPathDijkstra(cModule *srcMod, cModule *dstMod) {
     } ret.push_back(current); // once more to push target onto path
     return ret;
 }
-Path getShortestPathBfs(cModule *srcMod, cModule *dstMod) {
+Path getShortestPathBfs(Node *srcNode, Node *dstNode) {
     /**
      * seems to process about 2/3 more paths than getShortestPathDijkstra
      */
     // initialise
     Path path; Node* n; Node* m; int i; // minor speedup observed from initialising out of loop
     std::deque<Path> paths; // faster than flipping two vectors
-    Node* current = topo.getNodeFor(srcMod);
-    Node* target = topo.getNodeFor(dstMod);
-    std::set<Node*> seen; seen.insert(current);
-    paths.push_back(Path(1, current));
+    std::set<Node*> seen; seen.insert(srcNode);
+    paths.push_back(Path(1, srcNode));
     // breadth-first search
     while (paths.size() != 0) {
         path = paths.front(); // taking the least recent partial-path
@@ -58,7 +54,7 @@ Path getShortestPathBfs(cModule *srcMod, cModule *dstMod) {
             if (seen.count(m) == 0) { // if it has not been seen before
                 // add new partial-path with this node to queue
                 path.push_back(m);
-                if (m == target) {return path;}
+                if (m == dstNode) {return path;}
                 seen.insert(m);
                 paths.push_back(path);
                 path.pop_back();
@@ -71,11 +67,16 @@ Path getShortestPathBfs(cModule *srcMod, cModule *dstMod) {
     throw cRuntimeError("BFS did not find any paths.");
     return Path();
 }
+Path getShortestPathBfs(cModule *srcMod, cModule *dstMod) {
+    Node* srcNode = topo.getNodeFor(srcMod);
+    Node* dstNode = topo.getNodeFor(dstMod);
+    return getShortestPathBfs(srcNode, dstNode);
+}
 
 bool _hasLoop(Path p) {
     return std::set<Node*>(p.begin(), p.end()).size() != p.size();
 }
-PathList getPathsAroundShortest(cModule *srcMod, cModule *dstMod) {
+PathList getPathsAroundShortest(Node *srcNode, Node *dstNode) {
     /**
      * Starts with shortest path, followed by its detours in a FIFO order.
      * Thus the Paths returned should be relatively short.
@@ -85,7 +86,7 @@ PathList getPathsAroundShortest(cModule *srcMod, cModule *dstMod) {
     std::queue<Path> searchingQ;
     PathList searched;
     std::set<Path> searchingSet, searchedSet;
-    searchingQ.push(getShortestPathBfs(srcMod, dstMod)); // size is now 1
+    searchingQ.push(getShortestPathBfs(srcNode, dstNode)); // size is now 1
     searchingSet.insert(searchingQ.front());
     //std::set<Node*> inAPath(searched[0].begin(), searched[0].end()); // ???
     while (searchingQ.size() != 0 /*&& (searched.size() < 100)*/) { // until no new paths are found
@@ -139,6 +140,11 @@ PathList getPathsAroundShortest(cModule *srcMod, cModule *dstMod) {
      *      (only other case is both not unstuck
      * } until no new nodes are added to the unstuck set
      */
+}
+PathList getPathsAroundShortest(cModule *srcMod, cModule *dstMod) {
+    Node* srcNode = topo.getNodeFor(srcMod);
+    Node* dstNode = topo.getNodeFor(dstMod);
+    return getPathsAroundShortest(srcNode, dstNode);
 }
 
 // algo modified from http://mathoverflow.net/a/18634

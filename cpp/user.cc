@@ -141,7 +141,11 @@ void User::sendRequest()
     }
     // Then look for a possible Flow for each node-pair
     for (Path::iterator path_it = waypointNodes.begin(); path_it != waypointNodes.end()-1; ++path_it) {
-        //
+        PathList candidatePaths = getPathsAroundShortest(*path_it, *(path_it+1));
+        candidatePaths = getAvailablePaths(candidatePaths, getBitRate(vID, 1), 1);
+        if (candidatePaths.size() == 0) {
+            // unable to link 2 waypoints
+        }
     }
     // If all positive, set up flows. one self timers for each expiry. no need to link all flows together?
 
