@@ -73,6 +73,7 @@ Path getShortestPathBfs(cModule *srcMod, cModule *dstMod) {
     return getShortestPathBfs(srcNode, dstNode);
 }
 
+std::map<std::pair<Node*, Node*>, PathList> pathsAroundShortestCache; // TODO find more suitable place for this eg. controller
 bool _hasLoop(Path p) {
     return std::set<Node*>(p.begin(), p.end()).size() != p.size();
 }
@@ -83,6 +84,11 @@ PathList getPathsAroundShortest(Node *srcNode, Node *dstNode) {
      * TODO: return "state" of the search: pair<searchingQ, searched>, so that
      * source nodes can cache partial searches and resume with no repetition.
      */
+    // check for cached result
+    if (pathsAroundShortestCache.count(std::make_pair(srcNode, dstNode))) {
+        return pathsAroundShortestCache[std::make_pair(srcNode, dstNode)];
+    }
+    // end check
     std::queue<Path> searchingQ;
     PathList searched;
     std::set<Path> searchingSet, searchedSet;
@@ -127,6 +133,7 @@ PathList getPathsAroundShortest(Node *srcNode, Node *dstNode) {
         searchingQ.pop(); searchingSet.erase(path);
     }
     end:
+    pathsAroundShortestCache[std::make_pair(srcNode, dstNode)] = searched; // cache result
     return searched;
     /*
      * [insight] if a node has only 2 neighbours, it is traversed only by paths going to the other side
