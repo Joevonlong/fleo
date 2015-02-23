@@ -110,39 +110,37 @@ void User::sendRequest()
         waypointNodes.push_back(topo.getNodeFor(*logic_it));
     }
     // Then look for a possible Flow for each node-pair
-    bool connectible = true;
-    std::deque<Flow*> flowsToCreate;
+    std::deque<cMessage*> couldBeCancelled;
+    bool cancel = false;
+    // method: immediately set up flows, tracking what has just been added so that they can be revoked if any fail.
     for (Path::iterator path_it = waypointNodes.begin(); path_it != waypointNodes.end()-1; ++path_it) {
         PathList candidatePaths = getPathsAroundShortest(*path_it, *(path_it+1));
         candidatePaths = getAvailablePaths(candidatePaths, getBitRate(vID, 1), 1);
-        if (candidatePaths.size() == 0) {
-            // unable to link 2 waypoints
-            connectible = false;
-            break;
-        }
-        else {
-            Flow* f = new Flow;
-            f->path = candidatePaths.front();
-            f->bps = getBitRate(vID, 1);
-            f->priority = 1;
-            flowsToCreate.push_back(f);
-            // remember to delete
-        }
-    }
-    // If all positive, set up flows
-    if (connectible) {
-        for (std::deque<Flow*>::iterator flow_it = flowsToCreate.begin(); flow_it != flowsToCreate.end(); ++flow_it) {
+        if (candidatePaths.size() != 0) {
             cMessage *vidComplete = new cMessage("video transfer complete"); // one self timer for each expiry (no need to link all flows together?)
             scheduleAt(simTime()+getVideoSeconds(vID), vidComplete);
-            flowMap[vidComplete] = createFlow(*flow_it);
-            printPath((*flow_it)->path);
+            Flow* f = createFlow(candidatePaths.front(), getBitRate(vID, 1), 1);
+            printPath(f->path);
+            flowMap[vidComplete] = f;
+            couldBeCancelled.push_back(vidComplete);
         }
-        global->recordFlowSuccess(true);
+        else {
+            // unable to link 2 waypoints: revoke all flows made thus far
+            cancel = true;
+            break;
+        }
     }
-    else {
+    if (cancel) {
+        for (std::deque<cMessage*>::iterator cancel_it = couldBeCancelled.begin(); cancel_it != couldBeCancelled.end(); ++cancel_it) {
+            revokeFlow(flowMap[*cancel_it]);
+            flowMap.erase(*cancel_it);
+            cancelAndDelete(*cancel_it);
+        }
         global->recordFlowSuccess(false);
     }
-    flowsToCreate.clear(); //cleanup
+    else {
+        global->recordFlowSuccess(true);
+    }
     return;
 
     EV << "Sending request for Custom ID " << vID << endl;
