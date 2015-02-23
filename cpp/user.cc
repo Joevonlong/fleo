@@ -90,40 +90,9 @@ void viewVideo(int customID, int cacheID) {
 void User::sendRequest()
 {
     // new flow based...
-    // try dijkstra speed
-    //~ Path path = getShortestPathDijkstra(this, simulation.getModule(nearestCache));
-    //~ printPath(path);
-    //Path path2 = getShortestPathBfs(this, simulation.getModule(nearestCache));
-    //printPath(path2);
-    //PathList plist = getPathsAroundShortest(this, simulation.getModule(nearestCache));
-    //EV << plist.size() << " paths found.\n";
-    //printPaths(plist);
-    //~ if (path.size() != path2.size()) {
-        //~ error("diff shortest path");
-    //~ }
-    //~ return;
-    // end try
-    //~ PathList paths = calculatePathsBetween(this, simulation.getModule(nearestCache));
-    //~ // try a BW req that can pass 1 path but not the other
-    //PathList pathstemp = getAvailablePaths(plist, 1e8, 1);
-    /*if (pathstemp.size() == 0) {
-        EV << "No paths available\n";
-        return;
-    }*/
     /**
      * TODO trigger connection from replica to replica/origin if content not in cache
      */
-    //EV << "available paths:\n";
-    //printPaths(pathstemp);
-    // filter to shortest ones
-    //~ PathList shortestPaths = getShortestPaths(pathstemp);
-    //EV << "shortest paths by hops (" << shortestPaths[0].size()-1 << " hops):\n";
-    //printPaths(shortestPaths);
-    // choose first one of these
-    //////flows.push_back();
-    //EV << "first reservation done\n";
-    // see whats available for a smaller flow
-    //~ pathstemp = getAvailablePaths(paths, 1e7, 1);
     int vID = getRandCustomVideoID();
     std::deque<Logic*> waypoints = ((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID, 2); // note: doesn't include User itself
     // output for debugging
@@ -160,47 +129,27 @@ void User::sendRequest()
             // remember to delete
         }
     }
-    // If all positive, set up flows. one self timers for each expiry. no need to link all flows together?
+    // If all positive, set up flows
     if (connectible) {
         for (std::deque<Flow*>::iterator flow_it = flowsToCreate.begin(); flow_it != flowsToCreate.end(); ++flow_it) {
-            cMessage *vidComplete = new cMessage("video transfer complete");
+            cMessage *vidComplete = new cMessage("video transfer complete"); // one self timer for each expiry (no need to link all flows together?)
             scheduleAt(simTime()+getVideoSeconds(vID), vidComplete);
-            flowMap[vidComplete] = createFlow(*flow_it); // trying flow signature
+            flowMap[vidComplete] = createFlow(*flow_it);
             printPath((*flow_it)->path);
         }
+        global->recordFlowSuccess(true);
     }
     else {
-        idle(); // try again later
-        return;
+        global->recordFlowSuccess(false);
     }
     flowsToCreate.clear(); //cleanup
-
-    return;
-    uint64_t vidLen = getVideoSeconds(vID);
-    cMessage *vidComplete = new cMessage("video transfer complete");
-    scheduleAt(simTime()+vidLen, vidComplete);
-    //flowMap[vidComplete] = createFlow(pathstemp[0], 1e8, 1);
-    //EV << "available paths pt2:\n";
-    //printPaths(pathstemp);
-    // revokeFlow(flows[0]); flows.pop_back();
-    // section end
     return;
 
-    MyPacket *req = new MyPacket("Request");
-    req->setBitLength(headerBitLength);
-    req->setSourceID(getId());
-    req->setHops(0);
-    req->setDestinationID(nearestCache);
-    req->setCustomID(getRandCustomVideoID());
-    EV << "Sending request for Custom ID " << req->getCustomID() << endl;
-    emit(requestSignal, req->getCustomID());
-    req->setCacheTries(cacheTries);
-    req->setState(stateStart);
-    send(req, "out");
+    EV << "Sending request for Custom ID " << vID << endl;
+    emit(requestSignal, vID);
     requestStartTime = simTime();
     playingBack = false;
     playbackTimeDownloaded = 0;
-    //~ ((Logic*)(simulation.getModule(nearestCache)))->setupFlowFrom(this);
 }
 
 /*
@@ -223,7 +172,6 @@ void User::handleMessage(cMessage *msg)
     else if (flowMap.count(msg) == 1) {
         // flow has finished
         revokeFlow(flowMap[msg]);
-        //////flows.erase(flows.);
         flowMap.erase(msg);
         delete msg;
         //idle(); // sure?

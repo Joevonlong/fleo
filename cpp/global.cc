@@ -56,6 +56,9 @@ void Global::initialize(int stage)
         requestedLengthHist.setRangeAutoUpper(0, 1000);
         requestedLengthHist.setNumCells(1000);
 
+        // whether at least one candidate path had bandwidth available for a flow
+        flowSuccessVec.setName("flow setup success vector");
+
         // startup delays
         //startupDelaySignal = registerSignal("startup delay");
         startupDelayVec.setName("startup delay vector");
@@ -141,6 +144,10 @@ void Global::recordIdleTime(simtime_t t) {
 void Global::recordRequestedLength(double len) {
     requestedLengthVec.record(len);
     requestedLengthHist.collect(len);
+}
+
+void Global::recordFlowSuccess(bool successful) {
+    flowSuccessVec.record(successful);
 }
 
 void Global::recordStartupDelay(simtime_t delay) {
