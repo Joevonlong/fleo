@@ -110,6 +110,12 @@ void User::sendRequest()
         waypointNodes.push_back(topo.getNodeFor(*logic_it));
     }
     // Then look for a possible Flow for each node-pair
+    /**
+     * Problem with immediately setting up flows and tearing the first ones down
+     * if they cannot all be set up:
+     * - messy statistics (usage goes up/down at the same timestamp, affecting count, average, etc.)
+     * - still have to wait for all flows to setup before setting cache states
+     */
     std::deque<cMessage*> couldBeCancelled;
     bool cancel = false;
     // method: immediately set up flows, tracking what has just been added so that they can be revoked if any fail.
@@ -142,6 +148,9 @@ void User::sendRequest()
         global->recordFlowSuccess(true);
     }
     return;
+    /**
+     * trying a proper multiflow check instead
+     */
 
     EV << "Sending request for Custom ID " << vID << endl;
     emit(requestSignal, vID);

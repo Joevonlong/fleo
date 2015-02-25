@@ -305,6 +305,8 @@ Flow* createFlow(Path path, double bps, Priority p) {
             }
         }
         // should break before this else nodes were not adjacent
+        /**
+         * removed: adding flow in reverse direction: video xfers are 99/1, not 50/50
         for (int i = (*it)->getNumInLinks()-1; i>=0; --i) { // try each incoming link
             if ((*it)->getLinkIn(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkIn(i)->getRemoteGate()->getTransmissionChannel();
@@ -312,6 +314,7 @@ Flow* createFlow(Path path, double bps, Priority p) {
                 break;
             }
         }
+        */
     }
     return f;
 }
@@ -332,6 +335,8 @@ bool revokeFlow(Flow* f) {
             }
         }
         // should break before this else nodes were not adjacent
+        /**
+         * removed: adding flow in reverse direction: video xfers are 99/1, not 50/50
         for (int i = (*it)->getNumInLinks()-1; i>=0; --i) { // try each incoming link
             if ((*it)->getLinkIn(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkIn(i)->getRemoteGate()->getTransmissionChannel();
@@ -339,6 +344,7 @@ bool revokeFlow(Flow* f) {
                 break;
             }
         }
+        */
     }
     delete f;
     return true;
