@@ -111,6 +111,29 @@ void User::sendRequest()
     }
     // Then look for a possible Flow for each node-pair
     /**
+     * trying a proper multiflow/waypoints check instead
+     */
+    PathList setMeUp = waypointsToAvailablePaths(waypointNodes, getBitRate(vID, 1), 1);
+    if (setMeUp.size() == 0) {
+        EV << "could not find bandwidth to serve request\n";
+        global->recordFlowSuccess(false);
+    }
+    else {
+        for (PathList::iterator setup_it = setMeUp.begin(); setup_it != setMeUp.end(); ++setup_it) {
+            cMessage *vidComplete = new cMessage("video transfer complete"); // one self timer for each expiry (no need to link all flows together?)
+            scheduleAt(simTime()+getVideoSeconds(vID), vidComplete);
+            Flow* f = createFlow(*setup_it, getBitRate(vID, 1), 1);
+            printPath(f->path);
+            flowMap[vidComplete] = f;
+        }
+        // cache at replicas too
+        for (std::deque<Logic*>::iterator it = waypoints.begin(); it != waypoints.end(); ++it) {
+            (*it)->setCached(vID, true);
+        }
+        global->recordFlowSuccess(true);
+    }
+    return;
+    /**
      * Problem with immediately setting up flows and tearing the first ones down
      * if they cannot all be set up:
      * - messy statistics (usage goes up/down at the same timestamp, affecting count, average, etc.)
@@ -148,9 +171,6 @@ void User::sendRequest()
         global->recordFlowSuccess(true);
     }
     return;
-    /**
-     * trying a proper multiflow check instead
-     */
 
     EV << "Sending request for Custom ID " << vID << endl;
     emit(requestSignal, vID);

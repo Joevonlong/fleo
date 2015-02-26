@@ -255,6 +255,9 @@ bool Logic::hasCache() {
 bool Logic::isOrigin() {
     return ((Cache*)getParentModule()->getSubmodule("cache"))->isOrigin();
 }
+void Logic::setCached(int customID, bool b) {
+    ((Cache*)getParentModule()->getSubmodule("cache"))->setCached(customID, b);
+}
 
 // inserts logic's ID as value with location as key,
 // as well as if cache is a complete one.
@@ -275,9 +278,11 @@ int64_t Logic::checkCache(int customID) {
         return getVideoBitSize(customID);
     }
     else if (((Cache*)(getParentModule()->getSubmodule("cache")))->isCached(customID)) {
+        global->recordCacheHit(true);
         return getVideoBitSize(customID); // should be video's bitsize
     }
     else {
+        global->recordCacheHit(false);
         return notCached; // requested item is not cached
     }
 }

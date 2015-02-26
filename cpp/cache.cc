@@ -38,12 +38,13 @@ bool Cache::isCached(int customID) {
 }
 
 void Cache::setCached(int customID, bool b) {
-    if (capacity == origin) {error("setCached used on origin server");}
+    if (capacity == origin) {return; error("setCached used on origin server");}
     if (capacity == noCache) {error("setCached used on node without cache");}
     if (getVideoBitSize(customID) > capacity) {
-        EV << "Item #" << customID << " larger than cache. Refusing.\n";
-        error("single item larger than cache.");
+        EV << "Item #" << customID << " of size " << getVideoBitSize(customID)
+           << " is larger than cache (" << capacity << "). Refusing.\n";
         return;
+        error("single item larger than cache.");
     }
     if (b == true) {
         std::map<int, std::list<int>::iterator>::iterator it = idToIndex.find(customID); // find customID in mapping

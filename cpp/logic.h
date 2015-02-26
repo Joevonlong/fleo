@@ -11,6 +11,7 @@ public:
     //void setupFlowFrom(User *user);
     std::vector<int> findAvailablePathFrom(User *user, double bpsWanted);
     std::deque<Logic*> getRequestWaypoints(int vID, int tries);
+    void setCached(int customID, bool b);
 protected:
     Global *global;
     virtual int numInitStages() const;

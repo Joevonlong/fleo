@@ -68,7 +68,7 @@ simple Buffer
 
 simple Cache {
     parameters:
-        double capacity @unit(B) = default(2.23GiB);
+        double capacity @unit(B) = default(4TiB);
 }
 
 simple Logic

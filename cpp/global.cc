@@ -59,6 +59,9 @@ void Global::initialize(int stage)
         // whether at least one candidate path had bandwidth available for a flow
         flowSuccessVec.setName("flow setup success vector");
 
+        // whether content was already cached at replica when requested
+        cacheHitVec.setName("cache hit vector");
+
         // startup delays
         //startupDelaySignal = registerSignal("startup delay");
         startupDelayVec.setName("startup delay vector");
@@ -148,6 +151,10 @@ void Global::recordRequestedLength(double len) {
 
 void Global::recordFlowSuccess(bool successful) {
     flowSuccessVec.record(successful);
+}
+
+void Global::recordCacheHit(bool hit) {
+    cacheHitVec.record(hit);
 }
 
 void Global::recordStartupDelay(simtime_t delay) {

@@ -249,7 +249,7 @@ PathList getShortestPaths(PathList paths) {
     return shortest;
 }
 
-bool _getAvailablePathsHelper(Node *from, Node *to, double bps, Priority p) {
+bool availableNodePair(Node *from, Node *to, double bps, Priority p) {
     /**
      * Checks if datarate is available between two adjacent nodes
      */
@@ -273,7 +273,7 @@ PathList getAvailablePaths(PathList paths, double bps, Priority p) {
     for (PathList::iterator path_it = paths.begin(); path_it != paths.end(); ++path_it) { // for each path
         possible = true;
         for (Path::iterator node_it = path_it->begin(); node_it != path_it->end()-1; ++node_it) { // starting from the first node
-            if (!_getAvailablePathsHelper(*node_it, *(node_it+1), bps, p)) { // check if datarate is available on each link
+            if (!availableNodePair(*node_it, *(node_it+1), bps, p)) { // check if datarate is available on each link
                 possible = false;
                 break;
             }
@@ -285,8 +285,51 @@ PathList getAvailablePaths(PathList paths, double bps, Priority p) {
     }
     return available;
 }
-
 // alternatively, add method to return path's bandwidth instead?
+
+PathList waypointsToAvailablePaths(Path waypoints, double bps, Priority p) {
+    /**
+     * Returns Paths that can support bps@p through given waypoints.
+     * Failure returns empty container.
+     */
+    // for each waypoint up till 2nd last
+        // for each path towards its next waypoint
+            // for each node up till 2nd last
+                // check node has bandwidth available to next one, including reservations
+            // if all node pairs available
+                // reserve bandwidth along this path
+                // break
+    PathList ret;
+    std::map<std::pair<Node*, Node*>, double> reservedBWs;
+    for (Path::iterator wp_it = waypoints.begin(); wp_it != waypoints.end()-1; ++wp_it) { // for each waypoint up till 2nd last
+        bool waypointsLinked = false;
+        PathList tryPaths = getPathsAroundShortest(*wp_it, *(wp_it+1));
+        for (PathList::iterator try_it = tryPaths.begin(); try_it != tryPaths.end(); ++try_it) { // for each path towards its next waypoint
+            bool pathPossible = true;
+            for (Path::iterator p_it = try_it->begin(); p_it != try_it->end()-1; ++p_it) { // for each node up till 2nd last
+                // check node has bandwidth available to next one, including reservations
+                if (!availableNodePair(*p_it, *(p_it+1),
+                    bps + reservedBWs[std::make_pair(*p_it, *(p_it+1))], p)) {
+                    pathPossible = false;
+                    break;
+                }
+            }
+            if (pathPossible) { // if all node pairs available
+                // reserve bandwidth along this path
+                for (Path::iterator p_it = try_it->begin(); p_it != try_it->end()-1; ++p_it) {
+                    reservedBWs[std::make_pair(*p_it, *(p_it+1))] += bps;
+                }
+                ret.push_back(*try_it);
+                waypointsLinked = true;
+                break;
+            }
+        }
+        if (!waypointsLinked) {
+            return PathList(); // failure
+        }
+    }
+    return ret;
+}
 
 Flow* createFlow(Path path, double bps, Priority p) {
     /**
@@ -305,8 +348,7 @@ Flow* createFlow(Path path, double bps, Priority p) {
             }
         }
         // should break before this else nodes were not adjacent
-        /**
-         * removed: adding flow in reverse direction: video xfers are 99/1, not 50/50
+        /* removed: adding flow in reverse direction: video xfers are 99/1, not 50/50
         for (int i = (*it)->getNumInLinks()-1; i>=0; --i) { // try each incoming link
             if ((*it)->getLinkIn(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkIn(i)->getRemoteGate()->getTransmissionChannel();
@@ -335,8 +377,7 @@ bool revokeFlow(Flow* f) {
             }
         }
         // should break before this else nodes were not adjacent
-        /**
-         * removed: adding flow in reverse direction: video xfers are 99/1, not 50/50
+        /* removed: adding flow in reverse direction: video xfers are 99/1, not 50/50
         for (int i = (*it)->getNumInLinks()-1; i>=0; --i) { // try each incoming link
             if ((*it)->getLinkIn(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkIn(i)->getRemoteGate()->getTransmissionChannel();
