@@ -54,4 +54,5 @@ private:
     void buildCacheVector();
     long bufferBlock;
     long bufferMin;
+    int numRequests;
 };

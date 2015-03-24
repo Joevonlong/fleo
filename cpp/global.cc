@@ -34,6 +34,7 @@ int Global::numInitStages () const {return 3;}
 void Global::initialize(int stage)
 {
     if (stage == 0) {
+        numRequests = 0;
         idleSignal = registerSignal("idle"); // name assigned to signal ID
         requestSignal = registerSignal("request"); // name assigned to signal ID
         videoLengthSignal = registerSignal("videoLength");
@@ -151,6 +152,9 @@ void Global::recordRequestedLength(double len) {
 
 void Global::recordFlowSuccess(bool successful) {
     flowSuccessVec.record(successful);
+    if (++numRequests > 1e5) {
+        endSimulation();
+    }
 }
 
 void Global::recordCacheHit(bool hit) {
