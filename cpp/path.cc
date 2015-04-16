@@ -134,6 +134,7 @@ PathList getPathsAroundShortest(Node *srcNode, Node *dstNode) {
     }
     end:
     pathsAroundShortestCache[std::make_pair(srcNode, dstNode)] = searched; // cache result
+    EV << searched.size() << " paths found\n";
     return searched;
     /*
      * [insight] if a node has only 2 neighbours, it is traversed only by paths going to the other side

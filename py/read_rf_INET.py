@@ -61,20 +61,6 @@ class AS:
             if (nuid,uid) not in self.links:
                 self.links.add((uid,nuid))
 
-    def update_node_neighs(self):
-        node_neighs_map = {}
-        for n1,n2 in self.links:
-            if n1 in node_neighs_map:
-                node_neighs_map[n1] += 1
-            else:
-                node_neighs_map[n1] = 1
-            if n2 in node_neighs_map:
-                node_neighs_map[n2] += 1
-            else:
-                node_neighs_map[n2] = 1
-        for n in node_neighs_map:
-            self.nodes[n].num_neigh = node_neighs_map[n]
-
     # first seen if more than 1
     def get_most_connected(self):
         max_neigh = 0
@@ -220,9 +206,6 @@ def manip_topo():
     print(str(len(asys.nodes))+' internal nodes after pruning unreachables')
     print(str(len(asys.links))+' internal links after pruning unreachables')
 
-    # for r0/r1 topologies
-    asys.update_node_neighs()
-
     # singly connected nodes will be users
     user_count = 0
     for node in asys.nodes:
@@ -265,27 +248,14 @@ def write_to_ned():
 
     # submodule section
     f.write(' '*4+'submodules:\n')
-    f.write(' '*8+'global: Global;\n')
-    f.write(' '*8+'controller: Controller;\n')
+    f.write(' '*8+'configurator: IPv4NetworkConfigurator;\n')
     for node in asys.nodes:
         if node.assignment == 'beyond':
-            f.write(' '*8+'beyond'+str(node.uid)+': Beyond{name="'
-                    +node.name+'";')
+            f.write(' '*8+'server'+str(node.uid)+': StandardHost;\n')
         elif node.assignment == 'user':
-            f.write(' '*8+'user'+str(node.uid)+': User{name="'
-                    +node.name+'";')
-        elif node.bb:
-            f.write(' '*8+'core'+str(node.uid)+': Core{name="'
-                    +node.name+'";')
+            f.write(' '*8+'client'+str(node.uid)+': StandardHost;\n')
         else:
-            f.write(' '*8+'access'+str(node.uid)+': PoP{name="'
-                    +node.name+'";')
-        f.write(' loc="'+node.loc+'";')
-        f.write(' rn='+str(node.rn)+';')
-        if (getattr(node, 'has_cache', False) == True):
-            f.write(' hasCache=true; cacheRank='+str(node.cache_rank)+
-                    '; @display("i=block/routing,green");')
-        f.write('};\n')
+            f.write(' '*8+'router'+str(node.uid)+': Router;\n')
 
     # connection section
     f.write(' '*4+'connections:\n')
@@ -306,40 +276,25 @@ def write_to_ned():
         if lag == -1:
             lag_str = ''
         else:
-            lag_str = '{delay='+str(lag)+'ms;}'
+            lag_str = 'delay='+str(lag)+'ms;'
         #print(loc1, loc2, lag)
         # assign node type
-        if asys.uids[n1].bb:
-            left = 'core'
-        else: # 'access'
-            left = 'access'
-        if asys.uids[n2].bb:
-            right = 'core'
-        else: # 'access'
-            right = 'access'
+        left = 'router'
+        right = 'router'
         # override if beyond
         if asys.uids[n1].assignment == 'beyond':
-            left = 'beyond'
+            left = 'server'
         if asys.uids[n2].assignment == 'beyond':
-            right = 'beyond'
+            right = 'server'
         # override if user
         if asys.uids[n1].assignment == 'user':
-            f.write(' '*8+'user'+str(n1)+'.out --> OC12'+lag_str+' --> '
-                    +right+str(n2)+'.in++;\n')
-            f.write(' '*8+'user'+str(n1)+'.in <-- OC12'+lag_str+' <-- '
-                    +right+str(n2)+'.out++;\n')
-            continue
+            left = 'client'
         if asys.uids[n2].assignment == 'user':
-            f.write(' '*8+left+str(n1)+'.out++ --> OC12'+lag_str+' --> '
-                    +'user'+str(n2)+'.in;\n')
-            f.write(' '*8+left+str(n1)+'.in++ <-- OC12'+lag_str+' <-- '
-                    +'user'+str(n2)+'.out;\n')
-            continue
-        f.write(' '*8+left+str(n1)+'.out++ --> OC12'+lag_str+' --> '
-                +right+str(n2)+'.in++;\n')
-        f.write(' '*8+left+str(n1)+'.in++ <-- OC12'+lag_str+' <-- '
-                +right+str(n2)+'.out++;\n')
+            right = 'client'
 
+        f.write(' '*8+left+str(n1)+'.pppg++ <--> '+
+                'DatarateChannel{'+lag_str+' datarate=100Mbps;} '+
+                '<--> '+right+str(n2)+'.pppg++;\n')
     f.write('}\n\n')
     f.close()
 
