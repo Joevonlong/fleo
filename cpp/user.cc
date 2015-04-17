@@ -94,7 +94,7 @@ void User::sendRequest()
      * TODO trigger connection from replica to replica/origin if content not in cache
      */
     int vID = getRandCustomVideoID();
-    std::deque<Logic*> waypoints = ((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID, 2); // note: doesn't include User itself
+    std::deque<Logic*> waypoints = ((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID, cacheTries); // note: doesn't include User itself
     // output for debugging
     EV << "waypoints: ";
     for (std::deque<Logic*>::iterator it = waypoints.begin(); it != waypoints.end(); ++it) {

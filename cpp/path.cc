@@ -73,10 +73,15 @@ Path getShortestPathBfs(cModule *srcMod, cModule *dstMod) {
     return getShortestPathBfs(srcNode, dstNode);
 }
 
-std::map<std::pair<Node*, Node*>, PathList> pathsAroundShortestCache; // TODO find more suitable place for this eg. controller
-bool _hasLoop(Path p) {
-    return std::set<Node*>(p.begin(), p.end()).size() != p.size();
+PathList getDetoursAroundNext() {
+    /**
+     * Takes the state of a search: Queue to search, and the set searched,
+     * and then finds all detours of only the next in the queue.
+     */
+    return PathList();
 }
+
+std::map<std::pair<Node*, Node*>, PathList> pathsAroundShortestCache; // TODO find more suitable place for this eg. controller
 PathList getPathsAroundShortest(Node *srcNode, Node *dstNode) {
     /**
      * Starts with shortest path, followed by its detours in a FIFO order.
@@ -92,6 +97,10 @@ PathList getPathsAroundShortest(Node *srcNode, Node *dstNode) {
     std::queue<Path> searchingQ;
     PathList searched;
     std::set<Path> searchingSet, searchedSet;
+    // temp
+    searched.push_back(getShortestPathBfs(srcNode, dstNode));
+    return searched;
+    //end temp
     searchingQ.push(getShortestPathBfs(srcNode, dstNode)); // size is now 1
     searchingSet.insert(searchingQ.front());
     //std::set<Node*> inAPath(searched[0].begin(), searched[0].end()); // ???
@@ -113,7 +122,7 @@ PathList getPathsAroundShortest(Node *srcNode, Node *dstNode) {
                                 tmp.insert(tmp.end(), merge_it, path.end()); // add node where detour rejoins path and remainder
                                 if (searchedSet.count(tmp)) {continue;}
                                 if (searchingSet.insert(tmp).second) { // but it is not necessarily found uniquely
-                                    if (_hasLoop(tmp)){
+                                    if (std::set<Node*>(tmp.begin(), tmp.end()).size() != tmp.size()){ // if non-unique node --> loop exists
                                         EV << "loop found. based on "; printPath(path);
                                         EV << "we get "; printPath(tmp);
                                         cRuntimeError("");

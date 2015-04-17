@@ -73,7 +73,7 @@ class AS:
             else:
                 node_neighs_map[n2] = 1
         for n in node_neighs_map:
-            self.nodes[n].num_neigh = node_neighs_map[n]
+            self.uids[n].num_neigh = node_neighs_map[n]
 
     # first seen if more than 1
     def get_most_connected(self):
@@ -221,7 +221,7 @@ def manip_topo():
     print(str(len(asys.links))+' internal links after pruning unreachables')
 
     # for r0/r1 topologies
-    asys.update_node_neighs()
+    #asys.update_node_neighs()
 
     # singly connected nodes will be users
     user_count = 0
