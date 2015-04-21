@@ -73,15 +73,78 @@ Path getShortestPathBfs(cModule *srcMod, cModule *dstMod) {
     return getShortestPathBfs(srcNode, dstNode);
 }
 
-PathList getDetoursAroundNext() {
-    /**
-     * Takes the state of a search: Queue to search, and the set searched,
-     * and then finds all detours of only the next in the queue.
-     */
-    return PathList();
-}
+/* return:
+ * mtda calls detourfinder with src dst
+ *   checks ret against bw/p
+ *   if fail retry but retry numb ltd by global car
+ *   if success ???
+ *   if detourfinder fails or retires capped, ret fail to user
+ */
 
 std::map<std::pair<Node*, Node*>, PathList> pathsAroundShortestCache; // TODO find more suitable place for this eg. controller
+// search state stored here: mapping from src-dst pair
+// to search-state (searching queue+set; searched vector+set)
+std::map<std::pair<Node*, Node*>, searchState> searchStates;
+
+Path getNextDetour(Node *srcNode, Node *dstNode) {
+    /**
+     * Begins or resumes a search, returning only the first path in the detour
+     * queue, but after queueing all its detours.
+     */
+    // create mapping if it does not exist
+    if (!searchStates.count(std::make_pair(srcNode, dstNode))) {
+        searchState newState;
+        // starting with the shortest path
+        newState.searchingQ.push(getShortestPathBfs(srcNode, dstNode));
+        newState.searchingSet.insert(newState.searchingQ.front());
+        searchStates[std::make_pair(srcNode, dstNode)] = newState;
+    }
+    // find detours of the queue head
+    searchState currentState = searchStates[std::make_pair(srcNode, dstNode)];
+    if (currentState.searchingQ.empty()) { // no more detours
+        return Path();
+    }
+    Path path = currentState.searchingQ.front();
+    // algorithm begins here:
+    for (Path::iterator branch_it = path.begin(); branch_it != path.end()-1; ++branch_it) { // for each of its nodes except the last (destinataion),
+        for (int i = (*branch_it)->getNumOutLinks()-1; i>=0; --i) { // for each neighbour...
+            Node* detour = (*branch_it)->getLinkOut(i)->getRemoteNode();
+            if (std::find(path.begin(), path.end(), detour) == path.end()) { // ... that is not also in the path,
+                for (int j = detour->getNumOutLinks()-1; j>=0; --j) { // for each of that neighbour's neighbours
+                    Path::iterator merge_it = std::find(path.begin(), path.end(), detour->getLinkOut(j)->getRemoteNode()); // look for a node in the aforementioned known path
+                    if (merge_it == path.end()) {continue;} // must rejoin path
+                    if (std::find(path.begin(), branch_it+1, detour->getLinkOut(j)->getRemoteNode()) != branch_it+1) {continue;} // and after branching point
+                    else { // if so, that forms a new path
+                        Path tmp(path.begin(), branch_it); // note: does not include branch node itself
+                        tmp.push_back(*branch_it); // so we add branch node
+                        tmp.push_back(detour); // add detour node
+                        tmp.insert(tmp.end(), merge_it, path.end()); // add node where detour rejoins path and remainder
+                        if (currentState.searchedSet.count(tmp)) {continue;} // check that new path has not been searched before...
+                        if (currentState.searchingSet.insert(tmp).second) { // ... nor has it already been queued for searching
+                            if (std::set<Node*>(tmp.begin(), tmp.end()).size() != tmp.size()){ // if non-unique node --> loop exists
+                                EV << "loop found. based on "; printPath(path);
+                                EV << "we get "; printPath(tmp);
+                                cRuntimeError("");
+                            }
+                            currentState.searchingQ.push(tmp);
+                        }
+                        //if (searchingQ.size() + searched.size()> 1000) {goto end;}
+                    }
+                }
+            }
+        }
+    }
+    // then move queue head into set before returning it
+    currentState.searched.push_back(path); currentState.searchedSet.insert(path);
+    currentState.searchingQ.pop(); currentState.searchingSet.erase(path);
+    return path;
+}
+Path getNextDetour(cModule *srcMod, cModule *dstMod) {
+    Node* srcNode = topo.getNodeFor(srcMod);
+    Node* dstNode = topo.getNodeFor(dstMod);
+    return getNextDetour(srcNode, dstNode);
+}
+
 PathList getPathsAroundShortest(Node *srcNode, Node *dstNode) {
     /**
      * Starts with shortest path, followed by its detours in a FIFO order.
@@ -97,10 +160,6 @@ PathList getPathsAroundShortest(Node *srcNode, Node *dstNode) {
     std::queue<Path> searchingQ;
     PathList searched;
     std::set<Path> searchingSet, searchedSet;
-    // temp
-    searched.push_back(getShortestPathBfs(srcNode, dstNode));
-    return searched;
-    //end temp
     searchingQ.push(getShortestPathBfs(srcNode, dstNode)); // size is now 1
     searchingSet.insert(searchingQ.front());
     //std::set<Node*> inAPath(searched[0].begin(), searched[0].end()); // ???
