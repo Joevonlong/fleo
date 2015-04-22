@@ -47,7 +47,7 @@ channel OC3 extends FlowChannel {
 }
 channel Cat5 extends FlowChannel {
     datarate = 100Mbps;
-    delay = 5ms;
+    delay = default(3.8ms) @unit(s);
 }
 channel T3 extends FlowChannel {
     datarate = 45Mbps;

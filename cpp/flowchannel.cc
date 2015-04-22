@@ -3,8 +3,10 @@
 Define_Channel(FlowChannel);
 
 void FlowChannel::initialize() {
-    bpsLeftAtPriority[INT_MAX] = par("datarate").doubleValue(); // getDatarate() returns 0 during initialization
+    bpsLeftAtPriority[INT_MAX] = par("datarate").doubleValue(); // workaround because getDatarate() returns 0 during initialization
     utilVec.setName("Utilisation fraction of channel");
+    prevRecAt = 0; prevBw = 0; cumBwT = 0;
+    //recordUtil();
 }
 
 bool FlowChannel::isTransmissionChannel() const {
@@ -153,5 +155,15 @@ bool FlowChannel::isFlowPossible(Flow* f) {
 }
 
 void FlowChannel::recordUtil() {
-    utilVec.record(1 - getAvailableBps(INT_MIN)/getDatarate());
+    // accumulate just-finished rectangle of bandwidth-time product
+    cumBwT += prevBw * (simTime()-prevRecAt).dbl();
+    // update data for new rectangle
+    prevBw = getDatarate() - getAvailableBps(INT_MIN);
+    prevRecAt = simTime();
+    // record current bandwidth usage
+    utilVec.record(1 - getAvailableBps(INT_MIN)/getDatarate()); // new prevBw ie. current BW usage
+}
+
+void FlowChannel::finish() {
+    recordScalar("Time-averaged utilisation", cumBwT/(getDatarate()*simTime().dbl()));
 }

@@ -263,6 +263,11 @@ def write_to_ned():
     f = open(file_out, 'w')
     f.write('network AS'+asn.replace('.','')+'\n{\n')
 
+    # types section
+    f.write(' '*4+'types:\n')
+    f.write(' '*8+'channel accessLink extends Cat5 {}\n')
+    f.write(' '*8+'channel coreLink extends Cat5 {}\n')
+
     # submodule section
     f.write(' '*4+'submodules:\n')
     f.write(' '*8+'global: Global;\n')
@@ -307,7 +312,7 @@ def write_to_ned():
             lag_str = ''
         else:
             lag_str = '{delay='+str(lag)+'ms;}'
-        #print(loc1, loc2, lag)
+        lag_str = '{delay=1ms;}' #temp
         # assign node type
         if asys.uids[n1].bb:
             left = 'core'
@@ -324,20 +329,20 @@ def write_to_ned():
             right = 'beyond'
         # override if user
         if asys.uids[n1].assignment == 'user':
-            f.write(' '*8+'user'+str(n1)+'.out --> OC12'+lag_str+' --> '
+            f.write(' '*8+'user'+str(n1)+'.out --> accessLink'+lag_str+' --> '
                     +right+str(n2)+'.in++;\n')
-            f.write(' '*8+'user'+str(n1)+'.in <-- OC12'+lag_str+' <-- '
+            f.write(' '*8+'user'+str(n1)+'.in <-- accessLink'+lag_str+' <-- '
                     +right+str(n2)+'.out++;\n')
             continue
         if asys.uids[n2].assignment == 'user':
-            f.write(' '*8+left+str(n1)+'.out++ --> OC12'+lag_str+' --> '
+            f.write(' '*8+left+str(n1)+'.out++ --> accessLink'+lag_str+' --> '
                     +'user'+str(n2)+'.in;\n')
-            f.write(' '*8+left+str(n1)+'.in++ <-- OC12'+lag_str+' <-- '
+            f.write(' '*8+left+str(n1)+'.in++ <-- accessLink'+lag_str+' <-- '
                     +'user'+str(n2)+'.out;\n')
             continue
-        f.write(' '*8+left+str(n1)+'.out++ --> OC12'+lag_str+' --> '
+        f.write(' '*8+left+str(n1)+'.out++ --> coreLink'+lag_str+' --> '
                 +right+str(n2)+'.in++;\n')
-        f.write(' '*8+left+str(n1)+'.in++ <-- OC12'+lag_str+' <-- '
+        f.write(' '*8+left+str(n1)+'.in++ <-- coreLink'+lag_str+' <-- '
                 +right+str(n2)+'.out++;\n')
 
     f.write('}\n\n')

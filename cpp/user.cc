@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <algorithm>
 #include "request_m.h"
 #include "reply_m.h"
 #include "mypacket_m.h"
@@ -40,7 +41,7 @@ void User::initialize(int stage) {
         lagVector.setName("Total time minus ");
         idleTimer = new cMessage("idle timer");
         underflowTimer = new cMessage("underflow timer");
-        idle();
+        idle(0);
         cacheTries = par("cacheTries");
     }
     else if (stage == 3) {
@@ -57,16 +58,16 @@ void User::initialize(int stage) {
 }
 
 void User::idle() {
-    idle(0);
-}
-void User::idle(simtime_t t) {
     // use initial idle time (avg 180s) before generating new one (avg 5s)
     idleTime = par("idleTime"); // changed via ini
-
-    emit(idleSignal, idleTime);
-    EV << getFullName() << " idling for " << idleTime << "s\n";
-    scheduleAt(simTime()+idleTime+t, idleTimer);
-    global->recordIdleTime(idleTime); // record at global module
+    idle(idleTime);
+}
+void User::idle(simtime_t t) {
+    EV << getFullName() << " idling for " << t << "s\n";
+    scheduleAt(simTime()+t, idleTimer);
+    // record stats
+    emit(idleSignal, t);
+    global->recordIdleTime(t);
     // clean up previous stream
     cancelEvent(underflowTimer);
 }
@@ -109,6 +110,8 @@ void User::sendRequest()
     for (std::deque<Logic*>::iterator logic_it = waypoints.begin(); logic_it != waypoints.end(); ++logic_it) {
         waypointNodes.push_back(topo.getNodeFor(*logic_it));
     }
+    // reverse since data flow moves from server/replica to user
+    std::reverse(waypointNodes.begin(), waypointNodes.end());
     // Then look for a possible Flow for each node-pair
     /**
      * trying a proper multiflow/waypoints check instead
@@ -121,7 +124,7 @@ void User::sendRequest()
     else {
         for (PathList::iterator setup_it = setMeUp.begin(); setup_it != setMeUp.end(); ++setup_it) {
             cMessage *vidComplete = new cMessage("video transfer complete"); // one self timer for each expiry (no need to link all flows together?)
-            scheduleAt(simTime()+getVideoSeconds(vID), vidComplete);
+            scheduleAt(simTime()+/*getVideoSeconds(vID)*/192, vidComplete);
             Flow* f = createFlow(*setup_it, getBitRate(vID, 1), 1);
             printPath(f->path);
             flowMap[vidComplete] = f;

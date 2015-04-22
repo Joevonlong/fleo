@@ -293,7 +293,7 @@ def write_to_ned():
             right = 'client'
 
         f.write(' '*8+left+str(n1)+'.pppg++ <--> '+
-                'DatarateChannel{'+lag_str+' datarate=100Mbps;} '+
+                'DatarateChannel{'+lag_str+'datarate=100Mbps;} '+
                 '<--> '+right+str(n2)+'.pppg++;\n')
     f.write('}\n\n')
     f.close()

@@ -19,6 +19,7 @@ class FlowChannel : public cDatarateChannel {
         bool isFlowPossible(Flow* f); // unused?
     protected:
         virtual void initialize();
+        virtual void finish();
         bool isTransmissionChannel() const;
         simtime_t getTransmissionFinishTime() const;
         void processMessage(cMessage *msg, simtime_t t, result_t &result);
@@ -27,6 +28,7 @@ class FlowChannel : public cDatarateChannel {
         std::map<Priority, double> bpsLeftAtPriority;
         void recordUtil(); // will self convert to fraction
         cOutVector utilVec; cDoubleHistogram utilHist;
+        simtime_t prevRecAt; double prevBw; double cumBwT;
     private:
         bool isDisabled;
         double delay;
