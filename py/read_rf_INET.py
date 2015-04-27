@@ -61,6 +61,20 @@ class AS:
             if (nuid,uid) not in self.links:
                 self.links.add((uid,nuid))
 
+    def update_node_neighs(self):
+        node_neighs_map = {}
+        for n1,n2 in self.links:
+            if n1 in node_neighs_map:
+                node_neighs_map[n1] += 1
+            else:
+                node_neighs_map[n1] = 1
+            if n2 in node_neighs_map:
+                node_neighs_map[n2] += 1
+            else:
+                node_neighs_map[n2] = 1
+        for n in node_neighs_map:
+            self.uids[n].num_neigh = node_neighs_map[n]
+
     # first seen if more than 1
     def get_most_connected(self):
         max_neigh = 0
@@ -206,6 +220,9 @@ def manip_topo():
     print(str(len(asys.nodes))+' internal nodes after pruning unreachables')
     print(str(len(asys.links))+' internal links after pruning unreachables')
 
+    # for r0/r1 topologies
+    #asys.update_node_neighs()
+
     # singly connected nodes will be users
     user_count = 0
     for node in asys.nodes:
@@ -245,6 +262,15 @@ def manip_topo():
 def write_to_ned():
     f = open(file_out, 'w')
     f.write('network AS'+asn.replace('.','')+'\n{\n')
+
+    # parameters section
+    f.write(' '*4+'parameters:\n')
+    f.write(' '*8+'volatile double channelDelay @unit(us) = replaceUnit(intuniform(1,2000), "us");\n')
+
+    # types section
+    f.write(' '*4+'types:\n')
+    f.write(' '*8+'channel AccessLink extends DatarateChannel{delay=channelDelay;datarate=100Mbps;}\n')
+    f.write(' '*8+'channel CoreLink extends DatarateChannel{delay=1ms;datarate=100Mbps;}\n')
 
     # submodule section
     f.write(' '*4+'submodules:\n')
@@ -291,10 +317,15 @@ def write_to_ned():
             left = 'client'
         if asys.uids[n2].assignment == 'user':
             right = 'client'
+        if asys.uids[n1].assignment == 'user' or asys.uids[n2].assignment == 'user':
+            f.write(' '*8+left+str(n1)+'.pppg++ <--> AccessLink <--> '
+                    +right+str(n2)+'.pppg++;\n')
+            continue
+        else:
+            f.write(' '*8+left+str(n1)+'.pppg++ <--> CoreLink <--> '
+                    +right+str(n2)+'.pppg++;\n')
+            continue
 
-        f.write(' '*8+left+str(n1)+'.pppg++ <--> '+
-                'DatarateChannel{'+lag_str+'datarate=100Mbps;} '+
-                '<--> '+right+str(n2)+'.pppg++;\n')
     f.write('}\n\n')
     f.close()
 
