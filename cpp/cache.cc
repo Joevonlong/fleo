@@ -11,8 +11,10 @@ const double noCache = 0;
 const double origin = -1;
 
 void Cache::initialize() {
+    if (!getParentModule()->par("hasCache").boolValue()) {
+        par("capacity").setDoubleValue(noCache);
+    }
     capacity = par("capacity").doubleValue();
-    if (!getParentModule()->par("hasCache").boolValue()) {capacity = noCache;}
     diskUsed = 0;
 }
 
