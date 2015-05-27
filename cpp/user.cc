@@ -41,7 +41,7 @@ void User::initialize(int stage) {
         lagVector.setName("Total time minus ");
         idleTimer = new cMessage("idle timer");
         underflowTimer = new cMessage("underflow timer");
-        idle(0);
+        idle(par("initIdleTime").doubleValue());
         cacheTries = par("cacheTries");
     }
     else if (stage == 3) {
@@ -58,7 +58,6 @@ void User::initialize(int stage) {
 }
 
 void User::idle() {
-    // use initial idle time (avg 180s) before generating new one (avg 5s)
     idleTime = par("idleTime"); // changed via ini
     idle(idleTime);
 }
