@@ -152,7 +152,7 @@ void Global::recordRequestedLength(double len) {
 
 void Global::recordFlowSuccess(bool successful) {
     flowSuccessVec.record(successful);
-    if (++numRequests > 1e5) {
+    if (++numRequests > 1e6) {
         endSimulation();
     }
 }
