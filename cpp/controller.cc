@@ -7,8 +7,19 @@ int Controller::numInitStages() const {
 }
 
 void Controller::initialize(int stage) {
-    
+
 }
 
 void Controller::finish() {
+}
+
+Flow* Controller::createFlow(Path path, uint64_t bps, Priority p) {
+
+}
+Flow* Controller::createFlow(Flow* f) {
+
+}
+
+bool Controller::revokeFlow(Flow* f) {
+
 }
