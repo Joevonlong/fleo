@@ -1,5 +1,4 @@
 #pragma once
-#include <deque>
 
 typedef std::vector<cTopology::Node*> Path;
 typedef std::vector<Path> PathList;
@@ -8,7 +7,9 @@ typedef int Priority;
 struct Flow {
     Path path;
     // remember gates too?
-    double bps;
+    double lag; // round-trip time / latency / lag / delay
+    uint64_t bps;
+    uint64_t bits_left;
     Priority priority; // larger number signifies higher priority eg. 5 overrides 3
     // MAYBE cMessage* completionTimer;
     // MAYBE uint64_t videoSize/videoLength;

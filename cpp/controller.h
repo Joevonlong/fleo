@@ -1,4 +1,5 @@
 #include <omnetpp.h>
+#include "flow.h"
 
 struct path {
     std::vector<cDatarateChannel*> links;
@@ -18,5 +19,6 @@ class Controller : public cSimpleModule {
         virtual void initialize(int stage);
         virtual void finish();
     private:
-        std::map<cDatarateChannel*, FlowPriority> flows;
+        //std::map<cDatarateChannel*, FlowPriority> flows;
+        std::map<cMessage*, Flow*> flows;
 };
