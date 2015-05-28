@@ -318,7 +318,7 @@ PathList getShortestPaths(PathList paths) {
     return shortest;
 }
 
-bool availableNodePair(Node *from, Node *to, double bps, Priority p) {
+bool availableNodePair(Node *from, Node *to, uint64_t bps, Priority p) {
     /**
      * Checks if datarate is available between two adjacent nodes
      */
@@ -331,7 +331,7 @@ bool availableNodePair(Node *from, Node *to, double bps, Priority p) {
     }
     return false;
 }
-PathList getAvailablePaths(PathList paths, double bps, Priority p) {
+PathList getAvailablePaths(PathList paths, uint64_t bps, Priority p) {
     /**
      * Filters given paths to only those that have the datarate in all links
      */
@@ -356,7 +356,7 @@ PathList getAvailablePaths(PathList paths, double bps, Priority p) {
 }
 // alternatively, add method to return path's bandwidth instead?
 
-PathList waypointsToAvailablePaths(Path waypoints, double bps, Priority p) {
+PathList waypointsToAvailablePaths(Path waypoints, uint64_t bps, Priority p) {
     /**
      * Returns Paths that can support bps@p through given waypoints.
      * Failure returns empty container.
@@ -400,7 +400,7 @@ PathList waypointsToAvailablePaths(Path waypoints, double bps, Priority p) {
     return ret;
 }
 
-Flow* createFlow(Path path, double bps, Priority p) {
+Flow* createFlow(Path path, uint64_t bps, Priority p) {
     /**
      * Increments used bandwidth for all gates along path.
      */

@@ -4,18 +4,18 @@
 
 class FlowChannel : public cDatarateChannel {
     public:
-        double getAvailableBps();
-        double getAvailableBps(Priority p);
-        double getUsedBps();
+        uint64_t getAvailableBps();
+        uint64_t getAvailableBps(Priority p);
+        uint64_t getUsedBps();
         // supercede these...
-        void setUsedBps(double bps);
-        void addUsedBps(double bps);
+        void setUsedBps(uint64_t bps);
+        void addUsedBps(uint64_t bps);
         // with these...
         void addFlow(Flow* f);
         void removeFlow(Flow* f);
         void printBpsLeftAtPriority();
         //
-        bool isFlowPossible(double bps, Priority p);
+        bool isFlowPossible(uint64_t bps, Priority p);
         bool isFlowPossible(Flow* f); // unused?
     protected:
         virtual void initialize();

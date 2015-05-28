@@ -26,9 +26,9 @@ extern PathList getPathsAroundShortest(cModule *srcMod, cModule *dstMod);
 extern PathList calculatePathsBetween(cModule *srcMod, cModule *dstMod); // DFS
 
 extern PathList getShortestPaths(PathList paths);
-extern PathList getAvailablePaths(PathList paths, double bps, Priority p);
-extern PathList waypointsToAvailablePaths(Path waypoints, double bps, Priority p);
+extern PathList getAvailablePaths(PathList paths, uint64_t bps, Priority p);
+extern PathList waypointsToAvailablePaths(Path waypoints, uint64_t bps, Priority p);
 
-extern Flow* createFlow(Path path, double bps, Priority p);
+extern Flow* createFlow(Path path, uint64_t bps, Priority p);
 extern Flow* createFlow(Flow* f);
 extern bool revokeFlow(Flow* f);

@@ -51,20 +51,20 @@ void FlowChannel::processMessage(cMessage *msg, simtime_t t, result_t &result) {
 //~ }
 
 // Bandwidth methods:
-double FlowChannel::getAvailableBps() {
+uint64_t FlowChannel::getAvailableBps() {
     // should be equal to getAvailableBW(INT_MIN)
     return getDatarate() - par("used").doubleValue();
 }
 
-double FlowChannel::getAvailableBps(Priority p) {
+uint64_t FlowChannel::getAvailableBps(Priority p) {
     return bpsLeftAtPriority.lower_bound(p)->second;
 }
 
-double FlowChannel::getUsedBps() {
+uint64_t FlowChannel::getUsedBps() {
     return par("used").doubleValue();
 }
 
-void FlowChannel::setUsedBps(double bps) {
+void FlowChannel::setUsedBps(uint64_t bps) {
     if (bps > getDatarate()) {
         throw cRuntimeError("Using more bandwidth than total channel capacity.");
     }
@@ -74,7 +74,7 @@ void FlowChannel::setUsedBps(double bps) {
     par("used").setDoubleValue(bps);
 }
 
-void FlowChannel::addUsedBps(double bps) {
+void FlowChannel::addUsedBps(uint64_t bps) {
     setUsedBps(par("used").doubleValue() + bps);
 }
 //
@@ -147,7 +147,7 @@ void FlowChannel::printBpsLeftAtPriority() {
     }
 }
 
-bool FlowChannel::isFlowPossible(double bps, Priority p) {
+bool FlowChannel::isFlowPossible(uint64_t bps, Priority p) {
     return bps <= getAvailableBps(p);
 }
 bool FlowChannel::isFlowPossible(Flow* f) {
