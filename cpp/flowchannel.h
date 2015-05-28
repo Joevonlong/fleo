@@ -25,7 +25,7 @@ class FlowChannel : public cDatarateChannel {
         void processMessage(cMessage *msg, simtime_t t, result_t &result);
         // new to subclass:
         std::set<Flow*> currentFlows;
-        std::map<Priority, double> bpsLeftAtPriority;
+        std::map<Priority, uint64_t> bpsLeftAtPriority;
         void recordUtil(); // will self convert to fraction
         cOutVector utilVec; cDoubleHistogram utilHist;
         simtime_t prevRecAt; double prevBw; double cumBwT;
