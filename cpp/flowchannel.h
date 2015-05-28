@@ -9,7 +9,7 @@ class FlowChannel : public cDatarateChannel {
         uint64_t getUsedBps();
         // supercede these...
         void setUsedBps(uint64_t bps);
-        void addUsedBps(uint64_t bps);
+        void addUsedBps(int64_t bps);
         // with these...
         void addFlow(Flow* f);
         void removeFlow(Flow* f);

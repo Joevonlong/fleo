@@ -4,7 +4,7 @@ Define_Channel(FlowChannel);
 
 void FlowChannel::initialize() {
     bpsLeftAtPriority[INT_MAX] = par("datarate").doubleValue(); // workaround because getDatarate() returns 0 during initialization
-    EV << "flowchannel init: bps at max p is " << bpsLeftAtPriority[INT_MAX] << endl;
+    EV << "flowchannel init: total available bps " << bpsLeftAtPriority[INT_MAX] << endl;
     utilVec.setName("Utilisation fraction of channel");
     prevRecAt = 0; prevBw = 0; cumBwT = 0;
     //recordUtil();
@@ -54,6 +54,7 @@ void FlowChannel::processMessage(cMessage *msg, simtime_t t, result_t &result) {
 // Bandwidth methods:
 uint64_t FlowChannel::getAvailableBps() {
     // should be equal to getAvailableBW(INT_MIN)
+    EV << "FlowChannel::getAvailableBps " << getDatarate() << "\t"  << par("used").doubleValue() << endl;
     return getDatarate() - par("used").doubleValue();
 }
 
@@ -62,6 +63,7 @@ uint64_t FlowChannel::getAvailableBps(Priority p) {
 }
 
 uint64_t FlowChannel::getUsedBps() {
+    EV << "FlowChannel::getUsedBps " << par("used").doubleValue() << endl;
     return par("used").doubleValue();
 }
 
@@ -73,10 +75,12 @@ void FlowChannel::setUsedBps(uint64_t bps) {
         throw cRuntimeError("Setting bandwidth usage to negative.");
     }
     par("used").setDoubleValue(bps);
+    EV << "FlowChannel::setUsedBps " << bps << "\t"  << par("used").doubleValue() << endl;
 }
 
-void FlowChannel::addUsedBps(uint64_t bps) {
+void FlowChannel::addUsedBps(int64_t bps) {
     setUsedBps(par("used").doubleValue() + bps);
+    EV << "FlowChannel::addUsedBps " << bps << "\t" << par("used").doubleValue() << endl;
 }
 //
 
