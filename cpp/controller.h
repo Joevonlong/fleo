@@ -11,9 +11,9 @@ enum FlowPriority{low, medium, high};
 // finds, assigns, tracks, and revokes flows
 class Controller : public cSimpleModule {
     public:
-        std::vector<path> findPathsBetween(cModule *src, cModule *dst);
-        double findHighestBps(cModule *src, cModule *dst);
-        bool reserveFlow(std::vector<cDatarateChannel*> path);
+        Flow* createFlow(Path path, uint64_t bps, Priority p);
+        Flow* createFlow(Flow* f);
+        bool revokeFlow(Flow* f);
     protected:
         virtual int numInitStages() const;
         virtual void initialize(int stage);
@@ -21,4 +21,5 @@ class Controller : public cSimpleModule {
     private:
         //std::map<cDatarateChannel*, FlowPriority> flows;
         std::map<cMessage*, Flow*> flows;
+        std::map<FlowChannel*, std::vector<Flow*> > channelFlows;
 };

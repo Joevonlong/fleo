@@ -9,6 +9,7 @@ struct Flow {
     // remember gates too?
     double lag; // round-trip time / latency / lag / delay
     uint64_t bps;
+    uint64_t bpsMin;
     uint64_t bits_left;
     Priority priority; // larger number signifies higher priority eg. 5 overrides 3
     // MAYBE cMessage* completionTimer;
