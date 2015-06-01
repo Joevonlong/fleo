@@ -108,6 +108,10 @@ void FlowChannel::addFlow(Flow* f) {
     recordUtil();
 }
 
+std::set<Flow*> FlowChannel::getFlows() {
+    return currentFlows;
+}
+
 void FlowChannel::removeFlow(Flow* f) {
     // check input
     std::map<Priority, uint64_t>::iterator it =

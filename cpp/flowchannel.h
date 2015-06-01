@@ -12,6 +12,7 @@ class FlowChannel : public cDatarateChannel {
         void addUsedBps(int64_t bps);
         // with these...
         void addFlow(Flow* f);
+        std::set<Flow*> getFlows();
         void removeFlow(Flow* f);
         void printBpsLeftAtPriority();
         //

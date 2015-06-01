@@ -1,6 +1,7 @@
 #pragma once
 #include <omnetpp.h>
 #include "global.h"
+#include "controller.h"
 //#include "logic.h"
 #include "path.h"
 
@@ -22,13 +23,15 @@ protected:
     cOutVector underflowVector;
     
     void sendRequest();
+    void sendRequestSPO();
     //void endRequest(MyPacket *pkt);
     simtime_t requestStartTime;
     bool playingBack;
     simtime_t playBackStart;
     uint64_t requestingBits;
     int nearestCache;
-    Global *global;
+    Global* global;
+    Controller* controller;
     cDoubleHistogram requestHistogram;
 //    cOutVector completionVector;
     cDoubleHistogram completionHistogram;

@@ -20,6 +20,18 @@ void printPaths(PathList paths) {
     }
 }
 
+simtime_t pathLag(Path path) {
+    simtime_t lag = 0;
+    for (Path::iterator p_it = path.begin(); p_it != path.end()-1; ++p_it) {
+        for (int i = (*p_it)->getNumOutLinks()-1; i>=0; --i) {
+            if ((*p_it)->getLinkOut(i)->getRemoteNode() == *(p_it+1)) {
+                lag += ((FlowChannel*)(*p_it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel())->getDelay();
+            }
+        }
+    }
+    return lag;
+}
+
 Path getShortestPathDijkstra(cModule *srcMod, cModule *dstMod) {
     /**
      * useful for checking correctness of my BFS function

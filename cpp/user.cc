@@ -8,7 +8,6 @@
 #include "logic.h"
 #include "parse.h"
 #include "routing.h"
-#include "global.h"
 
 Define_Module(User);
 
@@ -26,6 +25,7 @@ int User::numInitStages() const {return 4;}
 void User::initialize(int stage) {
     if (stage == 0) {
         global = (Global*)getParentModule()->getSubmodule("global");
+        controller = (Controller*)getParentModule()->getSubmodule("controller");
         requestingBits = 0;
         requestHistogram.setName("Request Size");
         requestHistogram.setRangeAutoUpper(0);
@@ -86,6 +86,16 @@ void viewVideo(int customID, int cacheID) {
 
 // MAYBE factor out into another method that takes ID as intake, then basically
 // try to set up all the avaibale comms for such.
+
+void User::sendRequestSPO() {
+    // using controller; implementing bandwidth sharing based on TCP behaviour
+    int vID = getRandCustomVideoID();
+    Path path = getShortestPathDijkstra((Logic*)simulation.getModule(nearestCache), this);
+    // assume shortest path only
+    controller->userCallsThis(path, vID);
+    global->recordFlowSuccess(true); // pointless atm
+    return;
+}
 
 void User::sendRequest()
 {
@@ -195,7 +205,7 @@ void User::endRequest(MyPacket *pkt) {
 void User::handleMessage(cMessage *msg)
 {
     if (msg == idleTimer) { // if idle timer is back
-        sendRequest();
+        sendRequestSPO();
         idle();
     }
     else if (flowMap.count(msg) == 1) {
