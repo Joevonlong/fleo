@@ -7,7 +7,7 @@ typedef int Priority;
 struct Flow {
     Path path;
     // remember gates too?
-    double lag; // round-trip time / latency / lag / delay
+    simtime_t lag; // round-trip time / latency / lag / delay
     uint64_t bps;
     uint64_t bpsMin;
     uint64_t bits_left;
