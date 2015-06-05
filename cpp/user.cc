@@ -92,6 +92,7 @@ void User::sendRequestSPO() {
     int vID = getRandCustomVideoID();
     Path path = getShortestPathDijkstra((Logic*)simulation.getModule(nearestCache), this);
     // assume shortest path only
+    //endMsgs.insert(controller->userCallsThis(path, vID));
     controller->userCallsThis(path, vID);
     global->recordFlowSuccess(true); // pointless atm
     return;
@@ -208,6 +209,12 @@ void User::handleMessage(cMessage *msg)
         sendRequestSPO();
         idle();
     }
+//    else if (endMsgs.count(msg) == 1) {
+//        EV << "jdklfajlskf";
+//        endMsgs.erase(msg);
+//        controller->end(msg);
+//        delete msg;
+//    }
     else if (flowMap.count(msg) == 1) {
         // flow has finished
         revokeFlow(flowMap[msg]);

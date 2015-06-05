@@ -15,6 +15,7 @@ extern cModule* getSourceModule(Flow *flow);
 extern void printPath(Path path);
 extern void printPaths(PathList paths);
 extern simtime_t pathLag(Path path);
+extern std::vector<cChannel*> getChannels(Path path);
 
 extern Path getShortestPathDijkstra(cModule *srcMod, cModule *dstMod);
 extern Path getShortestPathBfs(Node *srcNode, Node *dstNode);

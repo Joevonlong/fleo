@@ -108,8 +108,44 @@ void FlowChannel::addFlow(Flow* f) {
     recordUtil();
 }
 
-std::set<Flow*> FlowChannel::getFlows() {
-    return currentFlows;
+void FlowChannel::addFlowV2(Flow* f) {
+    currentFlows.insert(f);
+}
+
+void FlowChannel::shareBW(std::map<Flow*, cMessage*> flowEnds) {
+    // done in last loop bpsLeftAtPriority[0] = bpsLeftAtPriority[INT_MAX];
+    // (re)calculate bandwidth-share of all flows
+    for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
+        // update bits left
+        EV << (*it)->bits_left << endl;
+        (*it)->bits_left -= (*it)->bps * (simTime() - (*it)->lastUpdate).dbl();
+        EV << (*it)->bits_left << endl;
+        if ((*it)->bits_left < 0) {throw cRuntimeError("FlowChannel::shareBW: flow has negative bits remaining");}
+        (*it)->lastUpdate = simTime();
+        // assign new BW (assume equal split for now)
+        (*it)->bps = bpsLeftAtPriority[INT_MAX] / currentFlows.size();
+        // done in last loop bpsLeftAtPriority[0] -= (*it)->bps; // update this channel too
+        // update end-timer
+        flowEnds[*it]->setTimestamp(simTime() + (double)(*it)->bits_left / (double)(*it)->bps);
+        EV << "timestamp: " << flowEnds[*it]->getTimestamp()
+                << ", simtime: " << simTime()
+                << ", bits left: "<< (*it)->bits_left
+                << ", bps: "<< (*it)->bps << endl;
+    }
+    // update utilisations of all affected channels:
+    // all channels traversed by each flow in the first hop.
+    std::set<cChannel*> affectedChs; // to update each channel only once
+    for (std::set<Flow*>::iterator f_it = currentFlows.begin(); f_it != currentFlows.end(); ++f_it) {
+        affectedChs.insert((*f_it)->channels.begin(), (*f_it)->channels.end());
+    }
+    for (std::set<cChannel*>::iterator c_it = affectedChs.begin(); c_it != affectedChs.end(); ++c_it) {
+        FlowChannel *fc = check_and_cast<FlowChannel*>(*c_it);
+        fc->bpsLeftAtPriority[0] = fc->bpsLeftAtPriority[INT_MAX];
+        for (std::set<Flow*>::iterator f_it = fc->currentFlows.begin(); f_it != fc->currentFlows.end(); ++f_it) {
+            fc->bpsLeftAtPriority[0] -= (*f_it)->bps;
+        }
+        fc->recordUtil();
+    }
 }
 
 void FlowChannel::removeFlow(Flow* f) {
@@ -145,6 +181,10 @@ void FlowChannel::removeFlow(Flow* f) {
         it->second += f->bps;
     }
     recordUtil();
+}
+
+void FlowChannel::removeFlowV2(Flow* f) {
+    currentFlows.erase(f);
 }
 //
 

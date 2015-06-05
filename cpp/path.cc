@@ -32,6 +32,18 @@ simtime_t pathLag(Path path) {
     return lag;
 }
 
+std::vector<cChannel*> getChannels(Path path) {
+    std::vector<cChannel*> channels;
+    for (Path::iterator p_it = path.begin(); p_it != path.end()-1; ++p_it) {
+        for (int i = (*p_it)->getNumOutLinks()-1; i>=0; --i) {
+            if ((*p_it)->getLinkOut(i)->getRemoteNode() == *(p_it+1)) {
+                channels.push_back((*p_it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel());
+            }
+        }
+    }
+    return channels;
+}
+
 Path getShortestPathDijkstra(cModule *srcMod, cModule *dstMod) {
     /**
      * useful for checking correctness of my BFS function

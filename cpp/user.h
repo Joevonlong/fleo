@@ -44,5 +44,6 @@ protected:
     
     // for flow-based
     std::map<cMessage*, Flow*> flowMap;
+    std::set<cMessage*> endMsgs;
 };
 

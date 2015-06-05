@@ -13,53 +13,75 @@ void Controller::initialize(int stage) {
 }
 
 void Controller::handleMessage(cMessage *msg) {
-    if (flowEnds.count(msg) == 1) {
-        // remove flow from all channels
-        // record statistics
-        // inform user of completion?
-        // delete flow
-        return;
+    EV << "euroieuroiu";
+    if (endFlows.count(msg) == 1) {
+        end(msg);
     }
     else {
-        error("Controller::handleMessage: unknown message");
+        error("Controller::handleMessage: unhandled message");
     }
 }
 
 void Controller::finish() {
 }
 
-void Controller::userCallsThis(Path path, int vID) {
+cMessage* Controller::userCallsThis(Path path, int vID) {
+    Enter_Method("userCallsThis()");
     // initialise flow properties
     Flow* f = new Flow;
     f->path = path;
+    f->channels = getChannels(f->path);
     f->lag = pathLag(path);
     f->bps = 0; // pending
-    f->bpsMin = 0;
+    f->bpsMin = 0; // not currently used; for QoS?
     f->bits_left = getVideoBitSize(vID);
-    f->priority = 1;
+    EV << "bitsize: " << f->bits_left << endl;
+    f->lastUpdate = simTime();
+    f->priority = 0;
 
     // attach timer to flow
-    cMessage* flowEndMsg = new cMessage("flow ends");
-    flowEnds[flowEndMsg] = f;
+    cMessage* endMsg = new cMessage("flow ends");
+    flowEnds[f] = endMsg;
+    endFlows[endMsg] = f;
 
-    // since we assume shortest path only, we need only look at first channel
-    std::set<Flow*> firstHopFlows;
-    FlowChannel *ch;
-    Path::iterator it = path.begin();
-    for (int i = (*it)->getNumOutLinks()-1; i>=0; --i) {
-        if ((*it)->getLinkOut(i)->getRemoteNode() == *(it+1)) {
-            ch = (FlowChannel*)(*it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel();
-            firstHopFlows = ch->getFlows();
-            break;
-        }
+    // add new flow to its channels
+    for (std::vector<cChannel*>::iterator c_it = f->channels.begin(); c_it != f->channels.end(); ++c_it) {
+        ((FlowChannel*)(*c_it))->addFlowV2(f);
     }
-    // add new flow to this
-    firstHopFlows.insert(f);
+    // since we assume shortest path only, we need only look at first channel
+    FlowChannel *fc1 = (FlowChannel*)f->channels.front();
+    fc1->shareBW(flowEnds);
+    rescheduleEnds();
 
-    // (re)calculate bandwidth-share of all flows
-    // for test assume equal:
-    for (std::set<Flow*>::iterator it = firstHopFlows.begin(); it != firstHopFlows.end(); ++it) {
-        (*it)->bps = ch->getAvailableBps(INT_MAX) / firstHopFlows.size();
+    return endMsg;
+}
+
+void Controller::end(cMessage* endMsg) {
+    //Enter_Method("end()");
+    Flow *f = endFlows[endMsg];
+    // remove flow from all channels
+    for (std::vector<cChannel*>::iterator c_it = f->channels.begin(); c_it != f->channels.end(); ++c_it) {
+        ((FlowChannel*)(*c_it))->removeFlowV2(f);
+    }
+    // since we assume shortest path only, we need only look at first channel
+    FlowChannel *fc1 = (FlowChannel*)f->channels.front();
+    fc1->shareBW(flowEnds);
+    // delete flow and associated self-timer
+    flowEnds.erase(f);
+    endFlows.erase(endMsg);
+    delete f;
+    delete endMsg;
+    //
+    rescheduleEnds();
+    // record statistics
+    // inform user of completion? already called from user
+}
+
+void Controller::rescheduleEnds() {
+    //Enter_Method("rescheduleEnds()");
+    for (std::map<cMessage*, Flow*>::iterator m_it = endFlows.begin(); m_it != endFlows.end(); ++m_it) {
+        cancelEvent(m_it->first);
+        scheduleAt(m_it->first->getTimestamp(), m_it->first);
     }
 }
 
