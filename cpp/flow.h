@@ -1,4 +1,5 @@
 #pragma once
+//#include "flowchannel.h"
 
 typedef std::vector<cTopology::Node*> Path;
 typedef std::vector<Path> PathList;
@@ -6,11 +7,12 @@ typedef int Priority;
 
 struct Flow {
     Path path;
-    // remember gates too?
+    std::vector<cChannel*> channels;
     simtime_t lag; // round-trip time / latency / lag / delay
     uint64_t bps;
     uint64_t bpsMin;
     uint64_t bits_left;
+    simtime_t lastUpdate;
     Priority priority; // larger number signifies higher priority eg. 5 overrides 3
     // MAYBE cMessage* completionTimer;
     // MAYBE uint64_t videoSize/videoLength;
