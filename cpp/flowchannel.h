@@ -14,6 +14,8 @@ class FlowChannel : public cDatarateChannel {
         void addFlow(Flow* f);
         void addFlowV2(Flow* f);
         void shareBW(std::map<Flow*, cMessage*> flowEnds);
+        void shareBWexcept(std::map<Flow*, cMessage*> flowEnds, Flow* except);
+        void spreadUpdates();
         std::set<Flow*> getFlows();
         void removeFlow(Flow* f);
         void removeFlowV2(Flow* f);

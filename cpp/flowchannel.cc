@@ -113,7 +113,6 @@ void FlowChannel::addFlowV2(Flow* f) {
 }
 
 void FlowChannel::shareBW(std::map<Flow*, cMessage*> flowEnds) {
-    // done in last loop bpsLeftAtPriority[0] = bpsLeftAtPriority[INT_MAX];
     // (re)calculate bandwidth-share of all flows
     for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
         // update bits left
@@ -124,7 +123,6 @@ void FlowChannel::shareBW(std::map<Flow*, cMessage*> flowEnds) {
         (*it)->lastUpdate = simTime();
         // assign new BW (assume equal split for now)
         (*it)->bps = bpsLeftAtPriority[INT_MAX] / currentFlows.size();
-        // done in last loop bpsLeftAtPriority[0] -= (*it)->bps; // update this channel too
         // update end-timer
         flowEnds[*it]->setTimestamp(simTime() + (double)(*it)->bits_left / (double)(*it)->bps);
         EV << "timestamp: " << flowEnds[*it]->getTimestamp()
@@ -132,8 +130,35 @@ void FlowChannel::shareBW(std::map<Flow*, cMessage*> flowEnds) {
                 << ", bits left: "<< (*it)->bits_left
                 << ", bps: "<< (*it)->bps << endl;
     }
+}
+void FlowChannel::shareBWexcept(std::map<Flow*, cMessage*> flowEnds, Flow* except) {
+    // (re)calculate bandwidth-share of all flows
+    for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
+        // update bits left
+        EV << (*it)->bits_left << endl;
+        (*it)->bits_left -= (*it)->bps * (simTime() - (*it)->lastUpdate).dbl();
+        EV << (*it)->bits_left << endl;
+        if ((*it)->bits_left < 0) {throw cRuntimeError("FlowChannel::shareBW: flow has negative bits remaining");}
+        (*it)->lastUpdate = simTime();
+        // assign new BW (assume equal split for now)
+        if (*it == except) {
+            (*it)->bps = 0;
+        }
+        else {
+            (*it)->bps = bpsLeftAtPriority[INT_MAX] / (currentFlows.size()-1);
+        }
+        // update end-timer
+        flowEnds[*it]->setTimestamp(simTime() + (double)(*it)->bits_left / (double)(*it)->bps);
+        EV << "timestamp: " << flowEnds[*it]->getTimestamp()
+                << ", simtime: " << simTime()
+                << ", bits left: "<< (*it)->bits_left
+                << ", bps: "<< (*it)->bps << endl;
+    }
+}
+
+void FlowChannel::spreadUpdates() {
     // update utilisations of all affected channels:
-    // all channels traversed by each flow in the first hop.
+    // all channels traversed by each flow in this (first) hop.
     std::set<cChannel*> affectedChs; // to update each channel only once
     for (std::set<Flow*>::iterator f_it = currentFlows.begin(); f_it != currentFlows.end(); ++f_it) {
         affectedChs.insert((*f_it)->channels.begin(), (*f_it)->channels.end());
