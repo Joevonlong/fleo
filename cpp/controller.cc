@@ -13,7 +13,7 @@ void Controller::initialize(int stage) {
 }
 
 void Controller::handleMessage(cMessage *msg) {
-    EV << "euroieuroiu";
+    EV << "Controller::handleMessage\n";
     if (endFlows.count(msg) == 1) {
         end(msg);
     }
@@ -25,7 +25,7 @@ void Controller::handleMessage(cMessage *msg) {
 void Controller::finish() {
 }
 
-cMessage* Controller::userCallsThis(Path path, int vID) {
+cMessage* Controller::userCallsThis(Path path, uint64_t bits) {
     Enter_Method("userCallsThis()");
     // initialise flow properties
     Flow* f = new Flow;
@@ -34,7 +34,7 @@ cMessage* Controller::userCallsThis(Path path, int vID) {
     f->lag = pathLag(path);
     f->bps = 0; // pending
     f->bpsMin = 0; // not currently used; for QoS?
-    f->bits_left = getVideoBitSize(vID);
+    f->bits_left = bits;
     EV << "bitsize: " << f->bits_left << endl;
     f->lastUpdate = simTime();
     f->priority = 0;
@@ -51,6 +51,7 @@ cMessage* Controller::userCallsThis(Path path, int vID) {
     // since we assume shortest path only, we need only look at first channel
     FlowChannel *fc1 = (FlowChannel*)f->channels.front();
     fc1->shareBW(flowEnds);
+    fc1->spreadUpdates();
     rescheduleEnds();
 
     return endMsg;
@@ -59,18 +60,21 @@ cMessage* Controller::userCallsThis(Path path, int vID) {
 void Controller::end(cMessage* endMsg) {
     //Enter_Method("end()");
     Flow *f = endFlows[endMsg];
-    // remove flow from all channels
+    // since we assume shortest path only, we need only look at first channel
+    FlowChannel *fc1 = (FlowChannel*)f->channels.front();
+    fc1->shareBWexcept(flowEnds, f);
+    fc1->spreadUpdates();
+    // remove flow from its channels
     for (std::vector<cChannel*>::iterator c_it = f->channels.begin(); c_it != f->channels.end(); ++c_it) {
         ((FlowChannel*)(*c_it))->removeFlowV2(f);
     }
-    // since we assume shortest path only, we need only look at first channel
-    FlowChannel *fc1 = (FlowChannel*)f->channels.front();
-    fc1->shareBW(flowEnds);
     // delete flow and associated self-timer
-    flowEnds.erase(f);
     endFlows.erase(endMsg);
+    flowEnds.erase(f);
+    // pass msg to user (last module in path) to record transfer time
+    sendDirect(endMsg, (*(f->path.end()-1))->getModule(), "directInput", -1);
+    // delete endMsg;
     delete f;
-    delete endMsg;
     //
     rescheduleEnds();
     // record statistics
