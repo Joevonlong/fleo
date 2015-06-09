@@ -90,10 +90,18 @@ void viewVideo(int customID, int cacheID) {
 void User::sendRequestSPO() {
     // using controller; implementing bandwidth sharing based on TCP behaviour
     int vID = getRandCustomVideoID();
+    double requestBytes = par("requestSize").doubleValue();
+    uint64_t bits;
+    if (requestBytes < 0) {
+        bits = getVideoBitSize(vID);
+    }
+    else {
+        bits = requestBytes * 8;
+    }
     Path path = getShortestPathDijkstra((Logic*)simulation.getModule(nearestCache), this);
     // assume shortest path only
     //endMsgs.insert(controller->userCallsThis(path, vID));
-    controller->userCallsThis(path, vID);
+    controller->userCallsThis(path, bits);
     global->recordFlowSuccess(true); // pointless atm
     return;
 }
@@ -209,12 +217,10 @@ void User::handleMessage(cMessage *msg)
         sendRequestSPO();
         idle();
     }
-//    else if (endMsgs.count(msg) == 1) {
-//        EV << "jdklfajlskf";
-//        endMsgs.erase(msg);
-//        controller->end(msg);
-//        delete msg;
-//    }
+    else if (msg->getArrivalGate()->getId() == gate("directInput")->getId()) {
+        EV << "it worked" << endl;
+        delete msg;
+    }
     else if (flowMap.count(msg) == 1) {
         // flow has finished
         revokeFlow(flowMap[msg]);

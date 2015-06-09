@@ -178,6 +178,7 @@ simple User
         volatile double initIdleTime @unit(s);   // delay before first request
         volatile double idleTime @unit(s);   // delay before subsequent requests
         int cacheTries = default(2); // replicas to try before origin
+        double requestSize = default(-1B) @unit(B); // negative bits: use tubes data
         @signal[idle](type="simtime");
         @signal[videoLength](type="long");
         @display("i=block/user");
@@ -185,4 +186,5 @@ simple User
         inout testlink[];
         input in;
         output out;
+        input directInput;
 }
