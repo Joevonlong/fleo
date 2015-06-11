@@ -7,7 +7,7 @@ void FlowChannel::initialize() {
     EV << "flowchannel init: total available bps " << bpsLeftAtPriority[INT_MAX] << endl;
     utilVec.setName("Utilisation fraction of channel");
     prevRecAt = 0; prevBw = 0; cumBwT = 0;
-    //recordUtil();
+    utilVec.record(0);
 }
 
 bool FlowChannel::isTransmissionChannel() const {
@@ -112,18 +112,58 @@ void FlowChannel::addFlowV2(Flow* f) {
     currentFlows.insert(f);
 }
 
-void FlowChannel::shareBW(std::map<Flow*, cMessage*> flowEnds) {
-    // (re)calculate bandwidth-share of all flows
+// these 3 helpers could be merged into pow(-0/-1/-2)
+void FlowChannel::shareBwEqual(Flow* except) {
+    int numFlows = 0;
     for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
-        // update bits left
+        if (*it == except) {continue;}
+        ++numFlows;
+    }
+    for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
+        if (*it == except) {
+            (*it)->bps = 0;
+        }
+        else {
+            (*it)->bps = bpsLeftAtPriority[INT_MAX] / numFlows;
+        }
+    }
+}
+void FlowChannel::shareBwRttInverse(Flow* except) {
+    double totalSharePoints = 0;
+    for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
+        if (*it == except) {continue;}
+        totalSharePoints += 1/(*it)->lag.dbl();
+    }
+    for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
+        if (*it == except) {continue;}
+        (*it)->bps = bpsLeftAtPriority[INT_MAX] / totalSharePoints / (*it)->lag.dbl();
+    }
+}
+void FlowChannel::shareBwRtt2Inverse(Flow* except) {
+    double totalSharePoints = 0;
+    for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
+        if (*it == except) {continue;}
+        totalSharePoints += pow((*it)->lag.dbl(), -2);
+    }
+    for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
+        if (*it == except) {continue;}
+        (*it)->bps = bpsLeftAtPriority[INT_MAX] / totalSharePoints * pow((*it)->lag.dbl(), -2);
+    }
+}
+void FlowChannel::shareBW(std::map<Flow*, cMessage*> flowEnds) {
+    // update bits remaining for all flows
+    for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
         EV << (*it)->bits_left << endl;
         (*it)->bits_left -= (*it)->bps * (simTime() - (*it)->lastUpdate).dbl();
         EV << (*it)->bits_left << endl;
         if ((*it)->bits_left < 0) {throw cRuntimeError("FlowChannel::shareBW: flow has negative bits remaining");}
         (*it)->lastUpdate = simTime();
-        // assign new BW (assume equal split for now)
-        (*it)->bps = bpsLeftAtPriority[INT_MAX] / currentFlows.size();
-        // update end-timer
+    }
+    // assign new bandwidth-share (assume equal split for now)
+    shareBwEqual(NULL);
+    //(*it)->bps = bpsLeftAtPriority[INT_MAX] / currentFlows.size();
+    // update end-timers
+    for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
         flowEnds[*it]->setTimestamp(simTime() + (double)(*it)->bits_left / (double)(*it)->bps);
         EV << "timestamp: " << flowEnds[*it]->getTimestamp()
                 << ", simtime: " << simTime()
@@ -132,22 +172,26 @@ void FlowChannel::shareBW(std::map<Flow*, cMessage*> flowEnds) {
     }
 }
 void FlowChannel::shareBWexcept(std::map<Flow*, cMessage*> flowEnds, Flow* except) {
-    // (re)calculate bandwidth-share of all flows
+    // update bits remaining for all flows
     for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
-        // update bits left
         EV << (*it)->bits_left << endl;
         (*it)->bits_left -= (*it)->bps * (simTime() - (*it)->lastUpdate).dbl();
         EV << (*it)->bits_left << endl;
         if ((*it)->bits_left < 0) {throw cRuntimeError("FlowChannel::shareBW: flow has negative bits remaining");}
         (*it)->lastUpdate = simTime();
-        // assign new BW (assume equal split for now)
-        if (*it == except) {
-            (*it)->bps = 0;
-        }
-        else {
-            (*it)->bps = bpsLeftAtPriority[INT_MAX] / (currentFlows.size()-1);
-        }
-        // update end-timer
+    }
+    // assign new bandwidth-share (assume equal split for now)
+    shareBwEqual(except);
+/*
+    if (*it == except) {
+        (*it)->bps = 0;
+    }
+    else {
+        (*it)->bps = bpsLeftAtPriority[INT_MAX] / (currentFlows.size()-1);
+    }
+*/
+    // update end-timers
+    for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
         flowEnds[*it]->setTimestamp(simTime() + (double)(*it)->bits_left / (double)(*it)->bps);
         EV << "timestamp: " << flowEnds[*it]->getTimestamp()
                 << ", simtime: " << simTime()

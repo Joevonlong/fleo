@@ -32,6 +32,10 @@ class FlowChannel : public cDatarateChannel {
         // new to subclass:
         std::set<Flow*> currentFlows;
         std::map<Priority, uint64_t> bpsLeftAtPriority;
+        void shareBwEqual(Flow* except);
+        void shareBwRttInverse(Flow* except);
+        void shareBwRtt2Inverse(Flow* except);
+        // statistics
         void recordUtil(); // will self convert to fraction
         cOutVector utilVec; cDoubleHistogram utilHist;
         simtime_t prevRecAt; double prevBw; double cumBwT;
