@@ -33,8 +33,7 @@ protected:
     Global* global;
     Controller* controller;
     cDoubleHistogram requestHistogram;
-//    cOutVector completionVector;
-    cDoubleHistogram completionHistogram;
+    cOutVector completionVector; cDoubleHistogram completionHistogram;
     cOutVector lagVector;
     virtual int numInitStages() const;
     virtual void initialize(int stage);

@@ -31,9 +31,8 @@ void User::initialize(int stage) {
         requestHistogram.setRangeAutoUpper(0);
         requestHistogram.setNumCells(100);
     //  requestHistogram.setRange(0, UINT64_MAX);
-//        completionVector.setName("Time to complete request")
-//        completionVector.
         //
+        completionVector.setName("Time to complete request");
         completionHistogram.setName("Completion Time");
         completionHistogram.setRangeAutoUpper(0);
         completionHistogram.setNumCells(100);
@@ -218,6 +217,7 @@ void User::handleMessage(cMessage *msg)
         idle();
     }
     else if (msg->getArrivalGate()->getId() == gate("directInput")->getId()) {
+        completionVector.record(simTime() - msg->getCreationTime());
         EV << "it worked" << endl;
         delete msg;
     }
