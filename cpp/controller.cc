@@ -50,7 +50,7 @@ cMessage* Controller::userCallsThis(Path path, uint64_t bits) {
     }
     // since we assume shortest path only, we need only look at first channel
     FlowChannel *fc1 = (FlowChannel*)f->channels.front();
-    fc1->shareBW(flowEnds);
+    fc1->shareBWexcept(flowEnds, NULL);
     fc1->spreadUpdates();
     rescheduleEnds();
 

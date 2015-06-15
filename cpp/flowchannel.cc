@@ -135,8 +135,12 @@ void FlowChannel::shareBwRttInverse(Flow* except) {
         totalSharePoints += 1/(*it)->lag.dbl();
     }
     for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
-        if (*it == except) {continue;}
-        (*it)->bps = bpsLeftAtPriority[INT_MAX] / totalSharePoints / (*it)->lag.dbl();
+        if (*it == except) {
+            (*it)->bps = 0;
+        }
+        else {
+            (*it)->bps = bpsLeftAtPriority[INT_MAX] / totalSharePoints / (*it)->lag.dbl();
+        }
     }
 }
 void FlowChannel::shareBwRtt2Inverse(Flow* except) {
@@ -146,8 +150,12 @@ void FlowChannel::shareBwRtt2Inverse(Flow* except) {
         totalSharePoints += pow((*it)->lag.dbl(), -2);
     }
     for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
-        if (*it == except) {continue;}
-        (*it)->bps = bpsLeftAtPriority[INT_MAX] / totalSharePoints * pow((*it)->lag.dbl(), -2);
+        if (*it == except) {
+            (*it)->bps = 0;
+        }
+        else {
+            (*it)->bps = bpsLeftAtPriority[INT_MAX] / totalSharePoints * pow((*it)->lag.dbl(), -2);
+        }
     }
 }
 void FlowChannel::shareBW(std::map<Flow*, cMessage*> flowEnds) {
@@ -181,15 +189,7 @@ void FlowChannel::shareBWexcept(std::map<Flow*, cMessage*> flowEnds, Flow* excep
         (*it)->lastUpdate = simTime();
     }
     // assign new bandwidth-share (assume equal split for now)
-    shareBwEqual(except);
-/*
-    if (*it == except) {
-        (*it)->bps = 0;
-    }
-    else {
-        (*it)->bps = bpsLeftAtPriority[INT_MAX] / (currentFlows.size()-1);
-    }
-*/
+    shareBwRttInverse(except);
     // update end-timers
     for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
         flowEnds[*it]->setTimestamp(simTime() + (double)(*it)->bits_left / (double)(*it)->bps);
@@ -283,5 +283,6 @@ void FlowChannel::recordUtil() {
 }
 
 void FlowChannel::finish() {
+    recordUtil();
     recordScalar("Time-averaged utilisation", cumBwT/(getDatarate()*simTime().dbl()));
 }
