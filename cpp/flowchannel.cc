@@ -159,27 +159,6 @@ void FlowChannel::shareBwRtt2Inverse(Flow* except) {
         }
     }
 }
-void FlowChannel::shareBW(std::map<Flow*, cMessage*> flowEnds) {
-    // update bits remaining for all flows
-    for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
-        EV << (*it)->bits_left << endl;
-        (*it)->bits_left -= (*it)->bps * (simTime() - (*it)->lastUpdate).dbl();
-        EV << (*it)->bits_left << endl;
-        if ((*it)->bits_left < 0) {throw cRuntimeError("FlowChannel::shareBW: flow has negative bits remaining");}
-        (*it)->lastUpdate = simTime();
-    }
-    // assign new bandwidth-share (assume equal split for now)
-    shareBwEqual(NULL);
-    //(*it)->bps = bpsLeftAtPriority[INT_MAX] / currentFlows.size();
-    // update end-timers
-    for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
-        flowEnds[*it]->setTimestamp(simTime() + (double)(*it)->bits_left / (double)(*it)->bps);
-        EV << "timestamp: " << flowEnds[*it]->getTimestamp()
-                << ", simtime: " << simTime()
-                << ", bits left: "<< (*it)->bits_left
-                << ", bps: "<< (*it)->bps << endl;
-    }
-}
 void FlowChannel::shareBWexcept(std::map<Flow*, cMessage*> flowEnds, Flow* except) {
     // update bits remaining for all flows
     for (std::set<Flow*>::iterator it = currentFlows.begin(); it != currentFlows.end(); ++it) {
