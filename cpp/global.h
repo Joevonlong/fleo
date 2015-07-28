@@ -29,6 +29,7 @@ public:
     void recordRequestedLength(double len);
     void recordFlowSuccess(bool successful);
     void recordCacheHit(bool hit);
+    void recordNetLoad(double delta);
     void recordStartupDelay(simtime_t delay);
     void recordStartupDelayL20(simtime_t delay);
     void recordHops(short hops);
@@ -43,6 +44,7 @@ protected:
     cOutVector requestedLengthVec; cDoubleHistogram requestedLengthHist;
     cOutVector flowSuccessVec;
     cOutVector cacheHitVec;
+    cOutVector netLoadVec; double currentNetLoad;
     cOutVector startupDelayVec; cDoubleHistogram startupDelayHist;
     cOutVector startupDelayL20Vec; cDoubleHistogram startupDelayL20Hist;
     cOutVector hopsVec; cDoubleHistogram hopsHist;
@@ -54,5 +56,4 @@ private:
     void buildCacheVector();
     long bufferBlock;
     long bufferMin;
-    int numRequests;
 };

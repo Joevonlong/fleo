@@ -1,4 +1,5 @@
 #include "flowchannel.h"
+#include "global.h"
 
 Define_Channel(FlowChannel);
 
@@ -275,6 +276,8 @@ bool FlowChannel::isFlowPossible(Flow* f) {
 void FlowChannel::recordUtil() {
     // accumulate just-finished rectangle of bandwidth-time product
     cumBwT += prevBw * (simTime()-prevRecAt).dbl();
+    // update global network load stats
+    ((Global*)getParentModule()->getSubmodule("global"))->recordNetLoad(getAvailableBps(INT_MIN)-prevBw);
     // update data for new rectangle
     prevBw = getDatarate() - getAvailableBps(INT_MIN);
     prevRecAt = simTime();

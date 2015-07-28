@@ -34,7 +34,6 @@ int Global::numInitStages () const {return 3;}
 void Global::initialize(int stage)
 {
     if (stage == 0) {
-        numRequests = 0;
         idleSignal = registerSignal("idle"); // name assigned to signal ID
         requestSignal = registerSignal("request"); // name assigned to signal ID
         videoLengthSignal = registerSignal("videoLength");
@@ -62,6 +61,10 @@ void Global::initialize(int stage)
 
         // whether content was already cached at replica when requested
         cacheHitVec.setName("cache hit vector");
+
+        // whether content was already cached at replica when requested
+        netLoadVec.setName("total bps in use throughout network");
+        currentNetLoad = 0;
 
         // startup delays
         //startupDelaySignal = registerSignal("startup delay");
@@ -152,13 +155,15 @@ void Global::recordRequestedLength(double len) {
 
 void Global::recordFlowSuccess(bool successful) {
     flowSuccessVec.record(successful);
-    if (++numRequests > 1e6) {
-        endSimulation();
-    }
 }
 
 void Global::recordCacheHit(bool hit) {
     cacheHitVec.record(hit);
+}
+
+void Global::recordNetLoad(double delta) {
+    currentNetLoad += delta;
+    netLoadVec.record(currentNetLoad);
 }
 
 void Global::recordStartupDelay(simtime_t delay) {
