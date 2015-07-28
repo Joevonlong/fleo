@@ -51,11 +51,11 @@ channel Cat5 extends FlowChannel {
 }
 channel T3 extends FlowChannel {
     datarate = 45Mbps;
-    delay = 5ms;
+    delay = default(5ms) @unit(s);
 }
 channel Cat3 extends FlowChannel {
     datarate = 10Mbps;
-    delay = default(0ms) @unit(s);
+    delay = default(1ms) @unit(s);
 }
 
 simple Buffer
