@@ -141,7 +141,7 @@ void User::sendRequest()
     else {
         for (PathList::iterator setup_it = setMeUp.begin(); setup_it != setMeUp.end(); ++setup_it) {
             cMessage *vidComplete = new cMessage("video transfer complete"); // one self timer for each expiry (no need to link all flows together?)
-            scheduleAt(simTime()+/*getVideoSeconds(vID)*/192, vidComplete);
+            scheduleAt(simTime()+getVideoSeconds(vID), vidComplete);
             Flow* f = createFlow(*setup_it, getBitRate(vID, 1), 1);
             printPath(f->path);
             flowMap[vidComplete] = f;
@@ -153,67 +153,12 @@ void User::sendRequest()
         global->recordFlowSuccess(true);
     }
     return;
-    /**
-     * Problem with immediately setting up flows and tearing the first ones down
-     * if they cannot all be set up:
-     * - messy statistics (usage goes up/down at the same timestamp, affecting count, average, etc.)
-     * - still have to wait for all flows to setup before setting cache states
-     */
-    std::deque<cMessage*> couldBeCancelled;
-    bool cancel = false;
-    // method: immediately set up flows, tracking what has just been added so that they can be revoked if any fail.
-    for (Path::iterator path_it = waypointNodes.begin(); path_it != waypointNodes.end()-1; ++path_it) {
-        PathList candidatePaths = getPathsAroundShortest(*path_it, *(path_it+1));
-        candidatePaths = getAvailablePaths(candidatePaths, getBitRate(vID, 1), 1);
-        if (candidatePaths.size() != 0) {
-            cMessage *vidComplete = new cMessage("video transfer complete"); // one self timer for each expiry (no need to link all flows together?)
-            scheduleAt(simTime()+getVideoSeconds(vID), vidComplete);
-            Flow* f = createFlow(candidatePaths.front(), getBitRate(vID, 1), 1);
-            printPath(f->path);
-            flowMap[vidComplete] = f;
-            couldBeCancelled.push_back(vidComplete);
-        }
-        else {
-            // unable to link 2 waypoints: revoke all flows made thus far
-            cancel = true;
-            break;
-        }
-    }
-    if (cancel) {
-        for (std::deque<cMessage*>::iterator cancel_it = couldBeCancelled.begin(); cancel_it != couldBeCancelled.end(); ++cancel_it) {
-            revokeFlow(flowMap[*cancel_it]);
-            flowMap.erase(*cancel_it);
-            cancelAndDelete(*cancel_it);
-        }
-        global->recordFlowSuccess(false);
-    }
-    else {
-        global->recordFlowSuccess(true);
-    }
-    return;
-
-    EV << "Sending request for Custom ID " << vID << endl;
-    emit(requestSignal, vID);
-    requestStartTime = simTime();
-    playingBack = false;
-    playbackTimeDownloaded = 0;
 }
-
-/*
-void User::endRequest(MyPacket *pkt) {
-    simtime_t completionTime = simTime() - pkt->getCreationTime();
-    EV << "Transfer of item #" << pkt->getCustomID() << " complete. "
-       << "Total time to serve request was " << completionTime << endl;
-    // video length
-    emit(videoLengthSignal, pkt->getVideoLength());
-    delete pkt;
-}
-*/
 
 void User::handleMessage(cMessage *msg)
 {
     if (msg == idleTimer) { // if idle timer is back
-        sendRequestSPO();
+        sendRequest();
         idle();
     }
     else if (msg->getArrivalGate()->getId() == gate("directInput")->getId()) {
