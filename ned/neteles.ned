@@ -5,6 +5,8 @@ simple Global {
 }
 
 simple Controller {
+	parameters:
+		string routingAlgo = default("Dijkstra"); // or "heuristic"
 }
 
 channel FlowChannel extends ned.DatarateChannel
