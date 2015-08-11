@@ -11,7 +11,8 @@ enum FlowPriority{low, medium, high};
 // finds, assigns, tracks, and revokes flows
 class Controller : public cSimpleModule {
     public:
-        cMessage* userCallsThis(Path path, uint64_t bits);
+        bool userCallsThisFixedBw(Path waypoints, uint64_t bps, Priority p);
+        bool userCallsThis(Path path, uint64_t bits);
         void end(cMessage* endMsg);
         Flow* createFlow(Path path, uint64_t bps, Priority p);
         Flow* createFlow(Flow* f);

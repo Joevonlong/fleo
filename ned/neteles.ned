@@ -6,7 +6,7 @@ simple Global {
 
 simple Controller {
 	parameters:
-		string routingAlgo = default("Dijkstra"); // or "heuristic"
+		int detourAttempts = default(1); // first is shortest (Dijkstra's)
 }
 
 channel FlowChannel extends ned.DatarateChannel

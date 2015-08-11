@@ -107,6 +107,7 @@ void User::sendRequestSPO() {
 void User::sendRequest()
 {
     // temp
+    /*
     Path ret; int i=0;
     do {
         ret = getDetour(this, simulation.getModule(nearestCache), i++);
@@ -114,6 +115,7 @@ void User::sendRequest()
     } while (i < 1000);
     error("stopping here");
     return;
+    */
     // end temp
     // new flow based...
     /**
