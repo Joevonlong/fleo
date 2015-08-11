@@ -100,13 +100,21 @@ void User::sendRequestSPO() {
     Path path = getShortestPathDijkstra((Logic*)simulation.getModule(nearestCache), this);
     // assume shortest path only
     //endMsgs.insert(controller->userCallsThis(path, vID));
-    controller->userCallsThis(path, bits);
-    global->recordFlowSuccess(true); // pointless atm
+    global->recordFlowSuccess(controller->userCallsThis(path, bits)); // pointless atm
     return;
 }
 
 void User::sendRequest()
 {
+    // temp
+    Path ret; int i=0;
+    do {
+        ret = getDetour(this, simulation.getModule(nearestCache), i++);
+        EV << i << ": "; printPath(ret);
+    } while (i < 1000);
+    error("stopping here");
+    return;
+    // end temp
     // new flow based...
     /**
      * TODO trigger connection from replica to replica/origin if content not in cache
