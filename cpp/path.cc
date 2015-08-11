@@ -110,7 +110,46 @@ std::map<std::pair<Node*, Node*>, PathList> pathsAroundShortestCache; // TODO fi
 // to search-state (searching queue+set; searched vector+set)
 std::map<std::pair<Node*, Node*>, searchState> searchStates;
 
-Path getNextDetour(Node *srcNode, Node *dstNode) {
+void dequeueAndSearch(searchState *state) {
+    Path path = state->searchingQ.front();
+    // algorithm begins here:
+    for (Path::iterator branch_it = path.begin(); branch_it != path.end()-1; ++branch_it) { // for each of its nodes except the last (destinataion),
+        for (int i=0; i<(*branch_it)->getNumOutLinks(); ++i) { // for each neighbour...
+            Node* detour = (*branch_it)->getLinkOut(i)->getRemoteNode();
+            if (std::find(path.begin(), path.end(), detour) == path.end()) { // ... that is not in the path,
+                for (int j=0; j<detour->getNumOutLinks(); ++j) { // for each of that neighbour's neighbours
+                    Path::iterator merge_it = std::find(path.begin(), path.end(), detour->getLinkOut(j)->getRemoteNode()); // see if it is in the path
+                    if (merge_it == path.end()) {continue;} // (must rejoin path)
+                    if (std::find(path.begin(), branch_it+1, detour->getLinkOut(j)->getRemoteNode()) != branch_it+1) {continue;} // (must be after branching point)
+                    else { // if so, a new path is found
+                        // v: use new? will tmp go out of scope?
+                        Path tmp(path.begin(), branch_it); // note: does not include branch node itself
+                        tmp.push_back(*branch_it); // so we add branch node
+                        tmp.push_back(detour); // add detour node
+                        tmp.insert(tmp.end(), merge_it, path.end()); // add node where detour rejoins path, and the remainder.
+                        // check for loops (using size of set)
+                        if (std::set<Node*>(tmp.begin(), tmp.end()).size() != tmp.size()){
+                            EV << "loop found. starting from "; printPath(path);
+                            EV << "we get "; printPath(tmp);
+                            cRuntimeError("loop found");
+                        } // end check for loops
+                        if (state->searchedSet.count(tmp)) {continue;} // check that new path has not been searched before...
+                        if (state->searchingSet.insert(tmp).second) { // ... nor has it already been queued for searching
+                            state->searchingQ.push_back(tmp);
+                        }
+                        //if (searchingQ.size() + searched.size()> 1000) {goto end;}
+                    }
+                }
+            }
+        }
+    }
+    // lastly, move queue-head into set of searched paths
+    state->searched.push_back(path); state->searchedSet.insert(path);
+    state->searchingQ.pop_front(); state->searchingSet.erase(path);
+    return;
+}
+
+Path getDetour(Node *srcNode, Node *dstNode, size_t index) {
     /**
      * Begins or resumes a search, returning only the first path in the detour
      * queue, but after queueing all its detours.
@@ -119,54 +158,36 @@ Path getNextDetour(Node *srcNode, Node *dstNode) {
     if (!searchStates.count(std::make_pair(srcNode, dstNode))) {
         searchState newState;
         // starting with the shortest path
-        newState.searchingQ.push(getShortestPathBfs(srcNode, dstNode));
+        newState.searchingQ.push_back(getShortestPathBfs(srcNode, dstNode));
         newState.searchingSet.insert(newState.searchingQ.front());
         searchStates[std::make_pair(srcNode, dstNode)] = newState;
     }
-    // find detours of the queue head
-    searchState currentState = searchStates[std::make_pair(srcNode, dstNode)];
-    if (currentState.searchingQ.empty()) { // no more detours
-        return Path();
-    }
-    Path path = currentState.searchingQ.front();
-    // algorithm begins here:
-    for (Path::iterator branch_it = path.begin(); branch_it != path.end()-1; ++branch_it) { // for each of its nodes except the last (destinataion),
-        for (int i = (*branch_it)->getNumOutLinks()-1; i>=0; --i) { // for each neighbour...
-            Node* detour = (*branch_it)->getLinkOut(i)->getRemoteNode();
-            if (std::find(path.begin(), path.end(), detour) == path.end()) { // ... that is not also in the path,
-                for (int j = detour->getNumOutLinks()-1; j>=0; --j) { // for each of that neighbour's neighbours
-                    Path::iterator merge_it = std::find(path.begin(), path.end(), detour->getLinkOut(j)->getRemoteNode()); // look for a node in the aforementioned known path
-                    if (merge_it == path.end()) {continue;} // must rejoin path
-                    if (std::find(path.begin(), branch_it+1, detour->getLinkOut(j)->getRemoteNode()) != branch_it+1) {continue;} // and after branching point
-                    else { // if so, that forms a new path
-                        Path tmp(path.begin(), branch_it); // note: does not include branch node itself
-                        tmp.push_back(*branch_it); // so we add branch node
-                        tmp.push_back(detour); // add detour node
-                        tmp.insert(tmp.end(), merge_it, path.end()); // add node where detour rejoins path and remainder
-                        if (currentState.searchedSet.count(tmp)) {continue;} // check that new path has not been searched before...
-                        if (currentState.searchingSet.insert(tmp).second) { // ... nor has it already been queued for searching
-                            if (std::set<Node*>(tmp.begin(), tmp.end()).size() != tmp.size()){ // if non-unique node --> loop exists
-                                EV << "loop found. based on "; printPath(path);
-                                EV << "we get "; printPath(tmp);
-                                cRuntimeError("");
-                            }
-                            currentState.searchingQ.push(tmp);
-                        }
-                        //if (searchingQ.size() + searched.size()> 1000) {goto end;}
-                    }
-                }
+    // fetch current search-state
+    searchState* currentState = &searchStates[std::make_pair(srcNode, dstNode)];
+    while (!currentState->searchingQ.empty()) {
+        if (index < currentState->searchingQ.size() + currentState->searched.size()) {
+            // start counting from searched...
+            if (index < currentState->searched.size()) {
+                return currentState->searched[index];
+            }
+            // ... before searchingQ
+            else {
+                return currentState->searchingQ[index - currentState->searched.size()];
             }
         }
+        else { // find detours until total (searched+queue) adds up to requested index
+            EV << currentState->searchingSet.size() << ", " << currentState->searchedSet.size() << "\t";
+            dequeueAndSearch(currentState);
+            EV << currentState->searchingSet.size() << ", " << currentState->searchedSet.size() << endl;
+        }
     }
-    // then move queue head into set before returning it
-    currentState.searched.push_back(path); currentState.searchedSet.insert(path);
-    currentState.searchingQ.pop(); currentState.searchingSet.erase(path);
-    return path;
+    // out of detours to search and index not reached: terminate search
+    return Path();
 }
-Path getNextDetour(cModule *srcMod, cModule *dstMod) {
+Path getDetour(cModule *srcMod, cModule *dstMod, size_t index) {
     Node* srcNode = topo.getNodeFor(srcMod);
     Node* dstNode = topo.getNodeFor(dstMod);
-    return getNextDetour(srcNode, dstNode);
+    return getDetour(srcNode, dstNode, index);
 }
 
 PathList getPathsAroundShortest(Node *srcNode, Node *dstNode) {
