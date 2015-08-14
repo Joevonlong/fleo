@@ -91,7 +91,7 @@ void User::sendRequestSPO() {
     int vID = getRandCustomVideoID();
     double requestBytes = par("requestSize").doubleValue();
     uint64_t bits;
-    if (requestBytes < 0) {
+    if (requestBytes <= 0) {
         bits = getVideoBitSize(vID);
     }
     else {
@@ -167,7 +167,7 @@ void User::sendRequest()
 void User::handleMessage(cMessage *msg)
 {
     if (msg == idleTimer) { // if idle timer is back
-        sendRequest();
+        sendRequestSPO();
         idle();
     }
     else if (msg->getArrivalGate()->getId() == gate("directInput")->getId()) {
