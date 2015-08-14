@@ -25,55 +25,39 @@ void Controller::handleMessage(cMessage *msg) {
 void Controller::finish() {
 }
 
+// helper function
+bool pathAvailable(Path path, uint64_t bps, Priority p) {
+    for (Path::iterator node = path.begin(); node != path.end()-1; ++node) {
+        if (!availableNodePair(*node, *(node+1), bps, p)) {
+            return false;
+        }
+    }
+    // no node pairs returned false, thus the path is available
+    return true;
+}
 bool Controller::userCallsThisFixedBw(Path waypoints, uint64_t bps, Priority p) {
     Enter_Method("userCallsThisFixedBw()");
-    // check each consecutive wp pair has available bw
+    // check each consecutive waypoint pair has available bw
         // number of attempts is from cpar
+    Path fullPath;
     for (Path::iterator wp_it = waypoints.begin(); wp_it != waypoints.end()-1; ++wp_it) { // for each waypoint up till 2nd last
         bool waypointsLinked = false;
         for (int i=0; i<par("detourAttempts").longValue(); ++i) { // for some number of attempts
             Path det = getDetour(*wp_it, *(wp_it+1), i); // get next detour
             // and check for BW availability
-            bool detPossible = true;
-            for (Path::iterator det_it = det.begin(); det_it != det.end()-1; ++det_it) {
-                if (!availableNodePair(*det_it, *(det_it+1), bps, p)) {
-                    detPossible = false; break;
-                }
-            }
-            if (detPossible) {
-                ;//save this path and set them all up if other WPs can also be linked
+            if (pathAvailable(det, bps, p)) {
+                //save this path and set them all up if other WPs can also be linked
+                fullPath.insert(fullPath.end(), det.begin(), det.end()-1); // remember to add last node after all waypoints
+                waypointsLinked = true; break;
             }
         }
         if (!waypointsLinked) {return false;} // did not find BW in given attempts
-        break;
-
-        //template start: this code is to be adapted
-        PathList tryPaths = getPathsAroundShortest(*wp_it, *(wp_it+1));
-        for (PathList::iterator try_it = tryPaths.begin(); try_it != tryPaths.end(); ++try_it) { // for each path towards its next waypoint
-            bool pathPossible = true;
-            for (Path::iterator p_it = try_it->begin(); p_it != try_it->end()-1; ++p_it) { // for each node up till 2nd last
-                // check node has bandwidth available to next one, including reservations
-                if (!availableNodePair(*p_it, *(p_it+1),
-                    bps + reservedBWs[std::make_pair(*p_it, *(p_it+1))], p)) {
-                    pathPossible = false;
-                    break;
-                }
-            }
-            if (pathPossible) { // if all node pairs available
-                // reserve bandwidth along this path
-                for (Path::iterator p_it = try_it->begin(); p_it != try_it->end()-1; ++p_it) {
-                    reservedBWs[std::make_pair(*p_it, *(p_it+1))] += bps;
-                }
-                ret.push_back(*try_it);
-                waypointsLinked = true;
-                break;
-            }
-        }
-        // template end
     }
-    // if available, set flows up
-    // else
-    return false;
+    fullPath.push_back(waypoints.back()); // add last node
+    // set up fullPath
+    ;// not yet implemented
+    //
+    return true;
 }
 
 bool Controller::userCallsThis(Path path, uint64_t bits) {
