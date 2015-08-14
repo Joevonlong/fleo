@@ -286,6 +286,9 @@ def write_to_ned():
     # connection section
     f.write(' '*4+'connections:\n')
     for (n1,n2) in asys.links:
+        # ignore if n1==n2 (not sure why rocketfuel data has these)
+        if n1 == n2:
+            continue
         # look up latency
         loc1 = asys.uids[n1].loc
         loc2 = asys.uids[n2].loc
