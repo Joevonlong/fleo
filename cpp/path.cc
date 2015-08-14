@@ -367,7 +367,7 @@ bool availableNodePair(Node *from, Node *to, uint64_t bps, Priority p) {
     /**
      * Checks if datarate is available between two adjacent nodes
      */
-    for (int i = from->getNumOutLinks()-1; i>=0; --i) { // try each link
+    for (int i=0; i<from->getNumOutLinks(); ++i) { // try each link
         if (from->getLinkOut(i)->getRemoteNode() == to) { // until the other node is found
             if (((FlowChannel*)from->getLinkOut(i)->getLocalGate()->getTransmissionChannel())->isFlowPossible(bps, p)) {
                 return true;

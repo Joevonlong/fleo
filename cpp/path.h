@@ -28,6 +28,7 @@ extern PathList getPathsAroundShortest(cModule *srcMod, cModule *dstMod);
 extern PathList calculatePathsBetween(cModule *srcMod, cModule *dstMod); // DFS
 
 extern PathList getShortestPaths(PathList paths);
+extern bool availableNodePair(Node *from, Node *to, uint64_t bps, Priority p);
 extern PathList getAvailablePaths(PathList paths, uint64_t bps, Priority p);
 extern PathList waypointsToAvailablePaths(Path waypoints, uint64_t bps, Priority p);
 
