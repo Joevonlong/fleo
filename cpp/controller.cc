@@ -35,7 +35,7 @@ bool pathAvailable(Path path, uint64_t bps, Priority p) {
     // no node pairs returned false, thus the path is available
     return true;
 }
-bool Controller::userCallsThisFixedBw(Path waypoints, uint64_t bps, Priority p) {
+bool Controller::userCallsThisFixedBw(Path waypoints, uint64_t bits, uint64_t bps, Priority p) {
     Enter_Method("userCallsThisFixedBw()");
     // check each consecutive waypoint pair has available bw
         // number of attempts is from cpar
@@ -46,7 +46,7 @@ bool Controller::userCallsThisFixedBw(Path waypoints, uint64_t bps, Priority p) 
             Path det = getDetour(*wp_it, *(wp_it+1), i); // get next detour
             // and check for BW availability
             if (pathAvailable(det, bps, p)) {
-                //save this path and set them all up if other WPs can also be linked
+                // save this sub-path and set up full path if other WPs can also be linked
                 fullPath.insert(fullPath.end(), det.begin(), det.end()-1); // remember to add last node after all waypoints
                 waypointsLinked = true; break;
             }
@@ -54,10 +54,26 @@ bool Controller::userCallsThisFixedBw(Path waypoints, uint64_t bps, Priority p) 
         if (!waypointsLinked) {return false;} // did not find BW in given attempts
     }
     fullPath.push_back(waypoints.back()); // add last node
-    // set up fullPath
-    ;// not yet implemented
-    //
-    return true;
+    // Valid fullPath found. Set it up:
+    // initialise flow
+    Flow* f = new Flow;
+    f->path = fullPath;
+    f->channels = getChannels(f->path);
+    f->lag = pathLag(f->path);
+    f->bps = bps;
+    f->bpsMin = bps; // not currently used; for QoS?
+    f->bits_left = bits;
+    f->lastUpdate = simTime();
+    f->priority = p;
+    // attach timer to flow
+    cMessage* endMsg = new cMessage("flow ends");
+    flowEnds[f] = endMsg;
+    endFlows[endMsg] = f;
+    // add flow ref to its channels
+    for (std::vector<cChannel*>::iterator c_it = f->channels.begin(); c_it != f->channels.end(); ++c_it) {
+        ((FlowChannel*)(*c_it))->addFlow(f);
+    }
+    return true; // signifies successful setup
 }
 
 bool Controller::userCallsThis(Path path, uint64_t bits) {
