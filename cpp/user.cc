@@ -88,15 +88,16 @@ void viewVideo(int customID, int cacheID) {
 
 void User::sendRequestSPO() {
     // using controller; implementing bandwidth sharing based on TCP behaviour
-    int vID = getRandCustomVideoID();
     double requestBytes = par("requestSize").doubleValue();
     uint64_t bits;
     if (requestBytes <= 0) {
-        bits = getVideoBitSize(vID);
+        //int vID = getRandCustomVideoID();
+        bits = getVideoBitSize(getRandCustomVideoID());
     }
     else {
         bits = requestBytes * 8;
     }
+    global->recordRequestedLength(bits/800000); // magic bitrate
     Path path = getShortestPathDijkstra((Logic*)simulation.getModule(nearestCache), this);
     // assume shortest path only
     //endMsgs.insert(controller->userCallsThis(path, vID));
