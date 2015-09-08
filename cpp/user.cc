@@ -88,6 +88,29 @@ void viewVideo(int customID, int cacheID) {
 
 void User::sendRequestSPO() {
     // using controller; implementing bandwidth sharing based on TCP behaviour
+    int vID = getRandCustomVideoID();
+    std::deque<Logic*> waypoints = ((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID, cacheTries); // note: doesn't include User itself
+    // output for debugging
+    EV << "waypoints: ";
+    for (std::deque<Logic*>::iterator it = waypoints.begin(); it != waypoints.end(); ++it) {
+        EV << (*it)->getFullPath() << " > ";
+    }
+    EV << endl;
+    // end output
+    // Add user node to head...
+    Path waypointNodes;
+    waypointNodes.push_back(topo.getNodeFor(this));
+    // ... and convert the rest to nodes.
+    for (std::deque<Logic*>::iterator logic_it = waypoints.begin(); logic_it != waypoints.end(); ++logic_it) {
+        waypointNodes.push_back(topo.getNodeFor(*logic_it));
+    }
+    // reverse since data flow moves from server/replica to user
+    std::reverse(waypointNodes.begin(), waypointNodes.end());
+    global->recordFlowSuccess(controller->requestVID(waypointNodes, vID));
+    return;
+    //
+    // old SPO
+    //
     double requestBytes = par("requestSize").doubleValue();
     uint64_t bits;
     if (requestBytes <= 0) {
@@ -101,7 +124,7 @@ void User::sendRequestSPO() {
     Path path = getShortestPathDijkstra((Logic*)simulation.getModule(nearestCache), this);
     // assume shortest path only
     //endMsgs.insert(controller->userCallsThis(path, vID));
-    global->recordFlowSuccess(controller->userCallsThis(path, bits)); // pointless atm
+    //global->recordFlowSuccess(controller->userCallsThis(path, bits));
     return;
 }
 

@@ -106,7 +106,34 @@ void FlowChannel::addFlow(Flow* f) {
     for (; subtractBpsUpTo != bpsLeftAtPriority.begin(); --subtractBpsUpTo) {
         subtractBpsUpTo->second -= f->bps;
     } subtractBpsUpTo->second -= f->bps; // because loop doesnt act on first element.
+    // now check if lower priority flow was displaced
+    std::set<Flow*> flowsToDisplace;
+    uint64_t bpsDeficit = -getAvailableBps();
+    while (bpsDeficit > 0) {
+        bool flowMarked = false;
+        // get lowest priority
+        Priority p = bpsLeftAtPriority.lower_bound(p)->first;
+        // remove a flow at this priority
+        // TODO add first-come-first-served priority
+        // TODO search more efficiently
+        for (std::set<Flow*>::iterator f_it = currentFlows.begin(); f_it != currentFlows.end(); ++f_it) {
+            if (flowsToDisplace.count(*f_it)) {
+                continue; // skip flows already to be displaced
+            }
+            if ((*f_it)->priority == p) { // need to check higher priorities that are still lower than new one!
+                // add removed flow to return value
+                flowsToDisplace.insert(*f_it);
+                bpsDeficit -= (*f_it)->bps;
+                flowMarked = true; break;
+            }
+        }
+        if (!flowMarked) {
+            throw cRuntimeError("FlowChannel::addFlow: no flows to displace");
+        }
+    }
+    //
     recordUtil();
+    return flowsToDisplace;
 }
 
 void FlowChannel::addFlowV2(Flow* f) {

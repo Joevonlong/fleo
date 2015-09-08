@@ -17,6 +17,9 @@ void Controller::handleMessage(cMessage *msg) {
     if (endFlows.count(msg) == 1) {
         end(msg);
     }
+    else if (endReqs.count(msg) == 1) {
+        endReq(msg);
+    }
     else {
         error("Controller::handleMessage: unhandled message");
     }
@@ -35,10 +38,8 @@ bool pathAvailable(Path path, uint64_t bps, Priority p) {
     // no node pairs returned false, thus the path is available
     return true;
 }
-bool Controller::userCallsThisFixedBw(Path waypoints, uint64_t bits, uint64_t bps, Priority p) {
-    Enter_Method("userCallsThisFixedBw()");
-    // check each consecutive waypoint pair has available bw
-        // number of attempts is from cpar
+// helper function
+std::pair<bool, Path> Controller::waypointsAvailable(Path waypoints, uint64_t bps, Priority p) {
     Path fullPath;
     for (Path::iterator wp_it = waypoints.begin(); wp_it != waypoints.end()-1; ++wp_it) { // for each waypoint up till 2nd last
         bool waypointsLinked = false;
@@ -51,20 +52,91 @@ bool Controller::userCallsThisFixedBw(Path waypoints, uint64_t bits, uint64_t bp
                 waypointsLinked = true; break;
             }
         }
-        if (!waypointsLinked) {return false;} // did not find BW in given attempts
+        if (!waypointsLinked) { // did not find BW in given attempts
+            return std::make_pair(false, fullPath);
+        }
     }
     fullPath.push_back(waypoints.back()); // add last node
-    // Valid fullPath found. Set it up:
+    return std::make_pair(true, fullPath);
+}
+
+bool Controller::requestVID(Path waypoints, int vID) {
+    Enter_Method("requestVID()");
+    // initialise request
+    RequestData* req = new RequestData;
+    req->viewtime = getVideoSeconds(vID);
+    req->elapsed = 0;
+    req->remaining = req->viewtime;
+    req->last_updated = simTime();
+    // get priority levels to assign to subflows
+    std::vector<uint64_t> bitrates = getBitRates(vID);
+    Priority baseFlowPriority = bitrates.size(); // magic-y number
+    // check which subflows can be established
+    for (size_t i=0; i<bitrates.size(); ++i) {
+        std::pair<bool, Path> res = waypointsAvailable(waypoints, bitrates[i], baseFlowPriority-i);
+        Flow* subflow = new Flow;
+        subflow->bps = bitrates[i];
+        subflow->priority = baseFlowPriority-i;
+        if (res.first) {
+            subflow->active = true;
+        }
+        else {
+            if (i==0) { // not even lowest quality subflow
+                delete subflow;
+                delete req;
+                return false;
+            }
+            subflow->active = false;
+        }
+        subflow->path = res.second;
+        subflow->lastUpdate = simTime();
+        req->subflows.push_back(subflow);
+        fillChannels(req->subflows.back());
+    }
+    // set up active subflows (bit contradictory to call them active already)
+    for (std::list<Flow*>::iterator sf_it = req->subflows.begin(); sf_it != req->subflows.end(); ++sf_it) {
+        // go through each active channel in *sf_it
+        if (!(*sf_it)->active) {continue;}
+        for (std::vector<cChannel*>::iterator ch_it  = (*sf_it)->channels.begin();
+                                              ch_it != (*sf_it)->channels.end();
+                                            ++ch_it) {
+            // reserve/add flow
+            check_and_cast<FlowChannel*>(*ch_it)->addFlow(*sf_it);
+        }
+    }
+    // add event to queue
+    cMessage* endMsg = new cMessage("end-of-request");
+    scheduleAt(simTime()+req->remaining, endMsg);
+    // and point it back to the request
+    endReqs[endMsg] = req;
+    // success
+    return true;
+}
+
+bool Controller::userCallsThis_FixedBw(Path waypoints, uint64_t bits, uint64_t bps) {
+    Enter_Method("userCallsThis_FixedBw()");
+    // check each consecutive waypoint pair has available bw
+        // number of attempts is from cpar
+    Priority baseFlowPriority = 3; // magic number
+    std::pair<bool, Path> res = waypointsAvailable(waypoints, bps, baseFlowPriority);
+    if (!res.first) {
+        return false; // waypoints could not be linked
+    }
+    // else valid fullPath found. Initialise 3 subflows:
+    for (int i=0; i<3; ++i) {
+
+    }
+
     // initialise flow
     Flow* f = new Flow;
-    f->path = fullPath;
-    f->channels = getChannels(f->path);
+    f->path = res.second;
+    fillChannels(f);
     f->lag = pathLag(f->path);
     f->bps = bps;
     f->bpsMin = bps; // not currently used; for QoS?
     f->bits_left = bits;
     f->lastUpdate = simTime();
-    f->priority = p;
+    f->priority = baseFlowPriority;
     // attach timer to flow
     cMessage* endMsg = new cMessage("flow ends");
     flowEnds[f] = endMsg;
@@ -81,7 +153,7 @@ bool Controller::userCallsThis(Path path, uint64_t bits) {
     // initialise flow properties
     Flow* f = new Flow;
     f->path = path;
-    f->channels = getChannels(f->path);
+    fillChannels(f);
     f->lag = pathLag(path);
     f->bps = 0; // pending
     f->bpsMin = 0; // not currently used; for QoS?
@@ -132,6 +204,26 @@ void Controller::end(cMessage* endMsg) {
     // inform user of completion? already called from user
 }
 
+void Controller::endReq(cMessage* endMsg) {
+    RequestData *req = endReqs[endMsg];
+    // remove active subflows from each of their channels
+    for (std::list<Flow*>::iterator sf_it = req->subflows.begin(); sf_it != req->subflows.end(); ++sf_it) {
+        // go through each active channel in *sf_it
+        if (!(*sf_it)->active) {continue;}
+        for (std::vector<cChannel*>::iterator ch_it  = (*sf_it)->channels.begin();
+                                              ch_it != (*sf_it)->channels.end();
+                                            ++ch_it) {
+            // reserve/add flow
+            check_and_cast<FlowChannel*>(*ch_it)->removeFlow(*sf_it);
+        }
+        delete *sf_it;
+    }
+    delete req;
+    // sendDirect to user?
+    sendDirect(endMsg, (*(req->subflows.front()->path.end()-1))->getModule(), "directInput", -1);
+    // call separate function? look through current req list and see which can be upgraded
+}
+
 void Controller::rescheduleEnds() {
     //Enter_Method("rescheduleEnds()");
     for (std::map<cMessage*, Flow*>::iterator m_it = endFlows.begin(); m_it != endFlows.end(); ++m_it) {
@@ -142,15 +234,4 @@ void Controller::rescheduleEnds() {
 
 void Controller::shareBandwidth(std::set<Flow*> flows) {
     // should be a public method of flowchannel probably
-}
-
-Flow* Controller::createFlow(Path path, uint64_t bps, Priority p) {
-    return new Flow;
-}
-Flow* Controller::createFlow(Flow* f) {
-    return new Flow;
-}
-
-bool Controller::revokeFlow(Flow* f) {
-    return false;
 }

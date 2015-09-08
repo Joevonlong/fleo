@@ -4,7 +4,7 @@
 
 // TODO typedef std::pair<std::queue<Path>, PathList> DetourSearchState;
 typedef cTopology::Node Node;
-typedef struct{
+typedef struct {
     std::deque<Path> searchingQ;
     std::set<Path> searchingSet;
     PathList searched;
@@ -14,8 +14,8 @@ typedef struct{
 extern cModule* getSourceModule(Flow *flow);
 extern void printPath(Path path);
 extern void printPaths(PathList paths);
+extern bool fillChannels(Flow* f);
 extern simtime_t pathLag(Path path);
-extern std::vector<cChannel*> getChannels(Path path);
 
 extern Path getShortestPathDijkstra(cModule *srcMod, cModule *dstMod);
 extern Path getShortestPathBfs(Node *srcNode, Node *dstNode);

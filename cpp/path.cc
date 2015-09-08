@@ -32,16 +32,27 @@ simtime_t pathLag(Path path) {
     return lag;
 }
 
-std::vector<cChannel*> getChannels(Path path) {
+/**
+ * Replace flow's channels with those linking its current path.
+ * Returns true if all such links are found.
+ */
+bool fillChannels(Flow* f) {
+    f->channels.clear();
     std::vector<cChannel*> channels;
-    for (Path::iterator p_it = path.begin(); p_it != path.end()-1; ++p_it) {
+    for (Path::iterator p_it = f->path.begin(); p_it != f->path.end()-1; ++p_it) {
         for (int i = (*p_it)->getNumOutLinks()-1; i>=0; --i) {
             if ((*p_it)->getLinkOut(i)->getRemoteNode() == *(p_it+1)) {
-                channels.push_back((*p_it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel());
+                f->channels.push_back((*p_it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel());
+                break;
             }
         }
     }
-    return channels;
+    if (f->channels.size() == f->path.size()-1) {
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 Path getShortestPathDijkstra(cModule *srcMod, cModule *dstMod) {

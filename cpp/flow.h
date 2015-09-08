@@ -6,14 +6,16 @@ typedef std::vector<Path> PathList;
 typedef int Priority;
 
 struct Flow {
+    bool active; // whether flow is actually moving
     Path path;
     std::vector<cChannel*> channels;
-    simtime_t lag; // round-trip time / latency / lag / delay
+    simtime_t lag; // round-trip-time / latency / lag / delay
     uint64_t bps;
     uint64_t bpsMin;
     uint64_t bits_left;
     simtime_t lastUpdate;
     Priority priority; // larger number signifies higher priority eg. 5 overrides 3
+    Flow* linkedFlow; // eg. next higher quality / lower priority of the same stream
     // MAYBE cMessage* completionTimer;
     // MAYBE uint64_t videoSize/videoLength;
     // MAYBE uint64_t transferred/completed;

@@ -6,7 +6,7 @@ simple Global {
 
 simple Controller {
 	parameters:
-		int detourAttempts = default(1); // first is shortest (Dijkstra's)
+		int detourAttempts = default(1); // 1 means shortest (Dijkstra's) only
 }
 
 channel FlowChannel extends ned.DatarateChannel

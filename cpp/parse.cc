@@ -89,6 +89,17 @@ uint64_t getBitRate(int customID, int quality) {
     return bitRate;
 }
 
+std::vector<uint64_t> getBitRates(int customID) {
+    // Each bitrate past the first is the additional, not cumulative,
+    // bitrate nequired for the next quality.
+    // Using magic numbers taken from YouTube for now...
+    std::vector<uint64_t> bitRates;
+    bitRates.push_back(800000); // ~360p
+    bitRates.push_back(800000); // ~480p-360p
+    bitRates.push_back(1600000); // ~720p-480p
+    return bitRates;
+}
+
 int getQualities(int customID) {
     // number of quality levels
     return 3;
