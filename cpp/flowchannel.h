@@ -1,6 +1,6 @@
 #pragma once
 #include <omnetpp.h>
-#include "flow.h"
+#include "Flow.h"
 
 class FlowChannel : public cDatarateChannel {
     public:

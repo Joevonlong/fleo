@@ -4,9 +4,11 @@
 #include "routing.h"
 #include "flowchannel.h"
 
+/*
 cModule* getSourceModule(Flow *flow) {
     return flow->path[0]->getModule();
 }
+*/
 
 void printPath(Path path) {
     for (Path::iterator it = path.begin(); it != path.end(); ++it) {
@@ -20,6 +22,7 @@ void printPaths(PathList paths) {
     }
 }
 
+/*
 simtime_t pathLag(Path path) {
     simtime_t lag = 0;
     for (Path::iterator p_it = path.begin(); p_it != path.end()-1; ++p_it) {
@@ -31,11 +34,13 @@ simtime_t pathLag(Path path) {
     }
     return lag;
 }
+*/
 
 /**
  * Replace flow's channels with those linking its current path.
  * Returns true if all such links are found.
  */
+/*
 bool fillChannels(Flow* f) {
     f->channels.clear();
     std::vector<cChannel*> channels;
@@ -54,6 +59,7 @@ bool fillChannels(Flow* f) {
         return false;
     }
 }
+*/
 
 Path getShortestPathDijkstra(cModule *srcMod, cModule *dstMod) {
     /**
@@ -456,10 +462,11 @@ PathList waypointsToAvailablePaths(Path waypoints, uint64_t bps, Priority p) {
     return ret;
 }
 
+/**
+ * Increments used bandwidth for all gates along path.
+ */
+/*
 Flow* createFlow(Path path, uint64_t bps, Priority p) {
-    /**
-     * Increments used bandwidth for all gates along path.
-     */
     Flow* f = new Flow;
     f->path = path;
     f->bps = bps;
@@ -473,27 +480,19 @@ Flow* createFlow(Path path, uint64_t bps, Priority p) {
             }
         }
         // should break before this else nodes were not adjacent
-        /* removed: adding flow in reverse direction: video xfers are 99/1, not 50/50
-        for (int i = (*it)->getNumInLinks()-1; i>=0; --i) { // try each incoming link
-            if ((*it)->getLinkIn(i)->getRemoteNode() == *(it+1)) { // until the other node is found
-                cChannel *ch = (*it)->getLinkIn(i)->getRemoteGate()->getTransmissionChannel();
-                ((FlowChannel*)ch)->addFlow(f);
-                break;
-            }
-        }
-        */
     }
     return f;
 }
 Flow* createFlow(Flow* f) {
     return createFlow(f->path, f->bps, f->priority);
 }
+*/
 
 bool revokeFlow(Flow* f) {
     /**
      * Decrements used bandwidth for all gates along path.
      */
-    for (Path::iterator it = f->path.begin(); it != f->path.end()-1; ++it) {
+    for (Path::const_iterator it = f->getPath().begin(); it != f->getPath().end()-1; ++it) {
         for (int i = (*it)->getNumOutLinks()-1; i>=0; --i) { // try each outgoing link
             if ((*it)->getLinkOut(i)->getRemoteNode() == *(it+1)) { // until the other node is found
                 cChannel *ch = (*it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel();

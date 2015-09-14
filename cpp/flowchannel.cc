@@ -89,26 +89,26 @@ void FlowChannel::addUsedBps(int64_t bps) {
 void FlowChannel::addFlow(Flow* f) {
     // check input
     std::map<Priority, uint64_t>::iterator it =
-        bpsLeftAtPriority.lower_bound(f->priority);
-    if (f->bps > it->second) {
+        bpsLeftAtPriority.lower_bound(f->getPriority());
+    if (f->getBps() > it->second) {
         throw cRuntimeError("Insufficient bandwidth to add flow at given priority");
     }
     // add to list of tracked flows
     currentFlows.insert(f);
     // reserve bandwidth for the flow (to deprecate?)
-    addUsedBps(f->bps);
+    addUsedBps(f->getBps()); // checks capacity so need to displace flows first
     // update table of available bandwidths:
     std::map<Priority, uint64_t>::iterator subtractBpsUpTo =
         bpsLeftAtPriority.insert(
-            std::pair<Priority, uint64_t>(f->priority, bpsLeftAtPriority[it->first])
+            std::pair<Priority, uint64_t>(f->getPriority(), bpsLeftAtPriority[it->first])
         ).first; // insert priority key (if needed) and get iterator to that mapping
     // then subtract available bandwidth from all priorities up to and including itself
     for (; subtractBpsUpTo != bpsLeftAtPriority.begin(); --subtractBpsUpTo) {
-        subtractBpsUpTo->second -= f->bps;
-    } subtractBpsUpTo->second -= f->bps; // because loop doesnt act on first element.
+        subtractBpsUpTo->second -= f->getBps();
+    } subtractBpsUpTo->second -= f->getBps(); // because loop doesnt act on first element.
     // now check if lower priority flow was displaced
     std::set<Flow*> flowsToDisplace;
-    uint64_t bpsDeficit = -getAvailableBps();
+    int64_t bpsDeficit = getUsedBps() - getDatarate();
     while (bpsDeficit > 0) {
         bool flowMarked = false;
         // get lowest priority
@@ -120,10 +120,10 @@ void FlowChannel::addFlow(Flow* f) {
             if (flowsToDisplace.count(*f_it)) {
                 continue; // skip flows already to be displaced
             }
-            if ((*f_it)->priority == p) { // need to check higher priorities that are still lower than new one!
+            if ((*f_it)->getPriority() == p) { // need to check higher priorities that are still lower than new one!
                 // add removed flow to return value
                 flowsToDisplace.insert(*f_it);
-                bpsDeficit -= (*f_it)->bps;
+                bpsDeficit -= (*f_it)->getBps();
                 flowMarked = true; break;
             }
         }
@@ -133,13 +133,14 @@ void FlowChannel::addFlow(Flow* f) {
     }
     //
     recordUtil();
-    return flowsToDisplace;
+    //return flowsToDisplace;
 }
 
 void FlowChannel::addFlowV2(Flow* f) {
     currentFlows.insert(f);
 }
 
+/*
 // these 3 helpers could be merged into pow(-0/-1/-2)
 void FlowChannel::shareBwEqual(Flow* except) {
     int numFlows = 0;
@@ -222,15 +223,16 @@ void FlowChannel::spreadUpdates() {
         fc->recordUtil();
     }
 }
+*/
 
 void FlowChannel::removeFlow(Flow* f) {
     // check input
     std::map<Priority, uint64_t>::iterator it =
-        bpsLeftAtPriority.find(f->priority);
+        bpsLeftAtPriority.find(f->getPriority());
     if (it == bpsLeftAtPriority.end()) {
         throw cRuntimeError("Priority of flow to remove not found");
     }
-    if (f->bps + it->second > getDatarate()) {
+    if (f->getBps() + it->second > getDatarate()) {
         throw cRuntimeError("Resultant available bandwidth exceeds original capacity");
     }
     // remove from list of tracked flows
@@ -238,22 +240,22 @@ void FlowChannel::removeFlow(Flow* f) {
         throw cRuntimeError("Flow to remove not found");
     }
     // release bandwidth for the flow (to deprecate?)
-    addUsedBps(-f->bps);
+    addUsedBps(-f->getBps());
     // update table of available bandwidths:
-    uint64_t bpsAfterRemoval = bpsLeftAtPriority[f->priority] +f->bps;
+    uint64_t bpsAfterRemoval = bpsLeftAtPriority[f->getPriority()] +f->getBps();
     if (++it != bpsLeftAtPriority.end()) {
         if (bpsAfterRemoval > it->second) {
             throw cRuntimeError("More bandwidth will be available at lower priority");
         }
         else if (bpsAfterRemoval == it->second) {
             // key no longer necessary if value is equal to the next one
-            bpsLeftAtPriority.erase(f->priority);
+            bpsLeftAtPriority.erase(f->getPriority());
         }
     }
     std::map<Priority, uint64_t>::iterator addBpsBefore = it;
     // now add available bandwidth to all lower priorities
     for (it = bpsLeftAtPriority.begin(); it != addBpsBefore; ++it) {
-        it->second += f->bps;
+        it->second += f->getBps();
     }
     recordUtil();
 }
@@ -275,7 +277,7 @@ bool FlowChannel::isFlowPossible(uint64_t bps, Priority p) {
     return bps <= getAvailableBps(p);
 }
 bool FlowChannel::isFlowPossible(Flow* f) {
-    return f->bps <= getAvailableBps(f->priority);
+    return f->getBps() <= getAvailableBps(f->getPriority());
 }
 
 void FlowChannel::recordUtil() {

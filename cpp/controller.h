@@ -1,10 +1,6 @@
 #include <omnetpp.h>
-#include "flow.h"
-
-/*struct path {
-    std::vector<cDatarateChannel*> links;
-    double bps;
-};*/
+#include "Flow.h"
+#include "Stream.h"
 
 struct RequestData {
     std::list<Flow*> subflows;
@@ -21,7 +17,7 @@ class Controller : public cSimpleModule {
         bool userCallsThis(Path path, uint64_t bits);
         bool requestVID(Path waypoints, int vID);
         void end(cMessage* endMsg);
-        void endReq(cMessage* endMsg);
+        void endStream(cMessage* endMsg);
     protected:
         virtual int numInitStages() const;
         virtual void initialize(int stage);
@@ -34,7 +30,7 @@ class Controller : public cSimpleModule {
         std::map<Priority, int> nreqsAtPriority;
         std::map<cMessage*, Flow*> endFlows;
         std::map<Flow*, cMessage*> flowEnds;
-        std::map<cMessage*, RequestData*> endReqs;
+        std::map<cMessage*, Stream*> endStreams;
         //std::map<FlowChannel*, std::vector<Flow*> > channelFlows;
         std::pair<bool, Path> waypointsAvailable(Path waypoints, uint64_t bps, Priority p);
 };

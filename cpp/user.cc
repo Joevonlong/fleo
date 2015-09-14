@@ -176,9 +176,9 @@ void User::sendRequest()
         PathList::iterator setup_it = setMeUp.begin();
         cMessage *vidComplete = new cMessage("video transfer complete"); // one self timer for each expiry (no need to link all flows together?)
         scheduleAt(simTime()+getVideoSeconds(vID), vidComplete);
-        Flow* f = createFlow(*setup_it, getBitRate(vID, 1), 1);
-        printPath(f->path);
-        flowMap[vidComplete] = f;
+        // [buggy] Flow* f = createFlow(*setup_it, getBitRate(vID, 1), 1);
+        //printPath(f->getPath());
+        //flowMap[vidComplete] = f;
         // cache at replicas too
         for (std::deque<Logic*>::iterator it = waypoints.begin(); it != waypoints.end(); ++it) {
             (*it)->setCached(vID, true);

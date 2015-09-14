@@ -15,10 +15,11 @@ void Controller::initialize(int stage) {
 void Controller::handleMessage(cMessage *msg) {
     EV << "Controller::handleMessage\n";
     if (endFlows.count(msg) == 1) {
+        return; // deprecate
         end(msg);
     }
-    else if (endReqs.count(msg) == 1) {
-        endReq(msg);
+    else if (endStreams.count(msg) == 1) {
+        endStream(msg);
     }
     else {
         error("Controller::handleMessage: unhandled message");
@@ -60,14 +61,20 @@ std::pair<bool, Path> Controller::waypointsAvailable(Path waypoints, uint64_t bp
     return std::make_pair(true, fullPath);
 }
 
+Flow* findSingleDisplaceable(Priority p) {
+    return NULL;
+}
+std::pair<bool, std::list<Flow*> > findDisplaceList(uint64_t bps, Priority p) {
+    return std::make_pair(false, std::list<Flow*>());
+}
+void combineDisplaceLists(uint64_t bps, Priority p) {
+    return;
+}
 bool Controller::requestVID(Path waypoints, int vID) {
     Enter_Method("requestVID()");
-    // initialise request
-    RequestData* req = new RequestData;
-    req->viewtime = getVideoSeconds(vID);
-    req->elapsed = 0;
-    req->remaining = req->viewtime;
-    req->last_updated = simTime();
+    // initialise stream
+    Stream* vdl = new Stream;
+    vdl->setViewtime(getVideoSeconds(vID));
     // get priority levels to assign to subflows
     std::vector<uint64_t> bitrates = getBitRates(vID);
     Priority baseFlowPriority = bitrates.size(); // magic-y number
@@ -75,44 +82,45 @@ bool Controller::requestVID(Path waypoints, int vID) {
     for (size_t i=0; i<bitrates.size(); ++i) {
         std::pair<bool, Path> res = waypointsAvailable(waypoints, bitrates[i], baseFlowPriority-i);
         Flow* subflow = new Flow;
-        subflow->bps = bitrates[i];
-        subflow->priority = baseFlowPriority-i;
+        subflow->setBps(bitrates[i]);
+        subflow->setPriority(baseFlowPriority-i);
         if (res.first) {
-            subflow->active = true;
+            subflow->setActive(true);
         }
         else {
             if (i==0) { // not even lowest quality subflow
                 delete subflow;
-                delete req;
+                delete vdl;
                 return false;
             }
-            subflow->active = false;
+            subflow->setActive(false);
         }
-        subflow->path = res.second;
-        subflow->lastUpdate = simTime();
-        req->subflows.push_back(subflow);
-        fillChannels(req->subflows.back());
+        subflow->setPath(res.second);
+        vdl->addSubflow(*subflow);
     }
     // set up active subflows (bit contradictory to call them active already)
-    for (std::list<Flow*>::iterator sf_it = req->subflows.begin(); sf_it != req->subflows.end(); ++sf_it) {
+    for (std::list<Flow*>::const_iterator sf_it  = vdl->getSubflows().begin();
+                                          sf_it != vdl->getSubflows().end();
+                                        ++sf_it) {
         // go through each active channel in *sf_it
-        if (!(*sf_it)->active) {continue;}
-        for (std::vector<cChannel*>::iterator ch_it  = (*sf_it)->channels.begin();
-                                              ch_it != (*sf_it)->channels.end();
-                                            ++ch_it) {
+        if (!(*sf_it)->isActive()) {continue;}
+        for (std::vector<cChannel*>::const_iterator ch_it  = (*sf_it)->getChannels().begin();
+                                                    ch_it != (*sf_it)->getChannels().end();
+                                                  ++ch_it) {
             // reserve/add flow
             check_and_cast<FlowChannel*>(*ch_it)->addFlow(*sf_it);
         }
     }
     // add event to queue
-    cMessage* endMsg = new cMessage("end-of-request");
-    scheduleAt(simTime()+req->remaining, endMsg);
+    cMessage* endMsg = new cMessage("end-of-stream");
+    scheduleAt(simTime()+vdl->getViewtime(), endMsg);
     // and point it back to the request
-    endReqs[endMsg] = req;
+    endStreams[endMsg] = vdl;
     // success
     return true;
 }
 
+/*
 bool Controller::userCallsThis_FixedBw(Path waypoints, uint64_t bits, uint64_t bps) {
     Enter_Method("userCallsThis_FixedBw()");
     // check each consecutive waypoint pair has available bw
@@ -147,7 +155,9 @@ bool Controller::userCallsThis_FixedBw(Path waypoints, uint64_t bits, uint64_t b
     }
     return true; // signifies successful setup
 }
+*/
 
+/*
 bool Controller::userCallsThis(Path path, uint64_t bits) {
     Enter_Method("userCallsThis()");
     // initialise flow properties
@@ -179,7 +189,9 @@ bool Controller::userCallsThis(Path path, uint64_t bits) {
 
     return true;
 }
+*/
 
+/*
 void Controller::end(cMessage* endMsg) {
     //Enter_Method("end()");
     Flow *f = endFlows[endMsg];
@@ -203,24 +215,29 @@ void Controller::end(cMessage* endMsg) {
     // record statistics
     // inform user of completion? already called from user
 }
+*/
 
-void Controller::endReq(cMessage* endMsg) {
-    RequestData *req = endReqs[endMsg];
+void Controller::endStream(cMessage* endMsg) {
+    Stream *stream = endStreams[endMsg];
     // remove active subflows from each of their channels
-    for (std::list<Flow*>::iterator sf_it = req->subflows.begin(); sf_it != req->subflows.end(); ++sf_it) {
+    for (std::list<Flow*>::const_iterator sf_it  = stream->getSubflows().begin();
+                                          sf_it != stream->getSubflows().end();
+                                        ++sf_it) {
         // go through each active channel in *sf_it
-        if (!(*sf_it)->active) {continue;}
-        for (std::vector<cChannel*>::iterator ch_it  = (*sf_it)->channels.begin();
-                                              ch_it != (*sf_it)->channels.end();
-                                            ++ch_it) {
+        if (!(*sf_it)->isActive()) {continue;}
+        for (std::vector<cChannel*>::const_iterator ch_it  = (*sf_it)->getChannels().begin();
+                                                    ch_it != (*sf_it)->getChannels().end();
+                                                  ++ch_it) {
             // reserve/add flow
             check_and_cast<FlowChannel*>(*ch_it)->removeFlow(*sf_it);
         }
         delete *sf_it;
     }
-    delete req;
-    // sendDirect to user?
-    sendDirect(endMsg, (*(req->subflows.front()->path.end()-1))->getModule(), "directInput", -1);
+    endStreams.erase(endMsg);
+    delete stream;
+    delete endMsg;
+    // or sendDirect to user?
+    // sendDirect(endMsg, (*(stream->getSubflows().front()->getPath().end()-1))->getModule(), "directInput", -1);
     // call separate function? look through current req list and see which can be upgraded
 }
 
