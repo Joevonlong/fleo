@@ -27,6 +27,7 @@ public:
     void recordUserD2C(double distToCache);
     void recordIdleTime(simtime_t t);
     void recordRequestedLength(double len);
+    void recordPriority(int p, bool add);
     void recordFlowSuccess(bool successful);
     void recordCacheHit(bool hit);
     void recordNetLoad(double delta);
@@ -42,6 +43,9 @@ protected:
     cOutVector userD2CVec; cDoubleHistogram userD2CHist;
     cOutVector idleTimeVec; cDoubleHistogram idleTimeHist;
     cOutVector requestedLengthVec; cDoubleHistogram requestedLengthHist;
+    cOutVector highPriorityVec; double highP;
+    cOutVector medPriorityVec; double medP;
+    cOutVector lowPriorityVec; double lowP;
     cOutVector flowSuccessVec;
     cOutVector cacheHitVec;
     cOutVector netLoadVec; double currentNetLoad;

@@ -18,12 +18,12 @@ network Dumbbell
         user[0].in <-- FlowChannel {  delay = 30ms; datarate = 100Mbps; } <-- pop.out++;
         user[1].out --> FlowChannel {  delay = 40ms; datarate = 100Mbps; } --> pop.in++;
         user[1].in <-- FlowChannel {  delay = 40ms; datarate = 100Mbps; } <-- pop.out++;
-        user[2].out --> FlowChannel {  delay = 50ms; datarate = 100Mbps; } --> pop.in++;
-        user[2].in <-- FlowChannel {  delay = 50ms; datarate = 100Mbps; } <-- pop.out++;
-        user[3].out --> FlowChannel {  delay = 60ms; datarate = 100Mbps; } --> pop.in++;
-        user[3].in <-- FlowChannel {  delay = 60ms; datarate = 100Mbps; } <-- pop.out++;
-        user[4].out --> FlowChannel {  delay = 70ms; datarate = 100Mbps; } --> pop.in++;
-        user[4].in <-- FlowChannel {  delay = 70ms; datarate = 100Mbps; } <-- pop.out++;
+//        user[2].out --> FlowChannel {  delay = 50ms; datarate = 100Mbps; } --> pop.in++;
+//        user[2].in <-- FlowChannel {  delay = 50ms; datarate = 100Mbps; } <-- pop.out++;
+//        user[3].out --> FlowChannel {  delay = 60ms; datarate = 100Mbps; } --> pop.in++;
+//        user[3].in <-- FlowChannel {  delay = 60ms; datarate = 100Mbps; } <-- pop.out++;
+//        user[4].out --> FlowChannel {  delay = 70ms; datarate = 100Mbps; } --> pop.in++;
+//        user[4].in <-- FlowChannel {  delay = 70ms; datarate = 100Mbps; } <-- pop.out++;
 //        user[5].out --> FlowChannel {  delay = 51ms; datarate = 100Mbps; } --> pop.in++;
 //        user[5].in <-- FlowChannel {  delay = 51ms; datarate = 100Mbps; } <-- pop.out++;
 //        user[6].out --> FlowChannel {  delay = 61ms; datarate = 100Mbps; } --> pop.in++;
@@ -34,6 +34,6 @@ network Dumbbell
 //        user[8].in <-- FlowChannel {  delay = 81ms; datarate = 100Mbps; } <-- pop.out++;
 //        user[9].out --> FlowChannel {  delay = 91ms; datarate = 100Mbps; } --> pop.in++;
 //        user[9].in <-- FlowChannel {  delay = 91ms; datarate = 100Mbps; } <-- pop.out++;
-        pop.out++ --> FlowChannel {  delay = 0ms; datarate = 100Mbps; } --> beyond.in++;
-        pop.in++ <-- FlowChannel {  delay = 0ms; datarate = 100Mbps; } <-- beyond.out++;
+        pop.out++ --> FlowChannel {  delay = 0ms; datarate = 10Mbps; } --> beyond.in++;
+        pop.in++ <-- FlowChannel {  delay = 0ms; datarate = 10Mbps; } <-- beyond.out++;
 }

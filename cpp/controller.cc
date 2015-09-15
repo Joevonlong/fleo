@@ -10,6 +10,7 @@ int Controller::numInitStages() const {
 }
 
 void Controller::initialize(int stage) {
+    g = (Global*)getParentModule()->getSubmodule("global");;
 }
 
 void Controller::handleMessage(cMessage *msg) {
@@ -65,14 +66,16 @@ std::pair<bool, Path> Controller::waypointsAvailable(Path waypoints, uint64_t bp
 void Controller::deactivateSubflow(Flow* f) {
     //Stream* s = SubflowStreams[f]; // TODO change to DL
     f->setActive(false);
+    g->recordPriority(f->getPriority(), false);
     for (std::vector<cChannel*>::const_iterator c_it  = f->getChannels().begin();
                                                 c_it != f->getChannels().end();
                                               ++c_it) {
-        ((FlowChannel*)*c_it)->removeFlow(f);
+        check_and_cast<FlowChannel*>(*c_it)->removeFlow(f);
     }
 }
 // helper
 void Controller::setupSubflow(Flow* f) {
+    g->recordPriority(f->getPriority(), true);
     for (std::vector<cChannel*>::const_iterator ch_it  = f->getChannels().begin();
                                                 ch_it != f->getChannels().end();
                                               ++ch_it) {
@@ -234,12 +237,7 @@ void Controller::endStream(cMessage* endMsg) {
         // go through each active channel in *sf_it
         SubflowStreams.erase(*sf_it);
         if ((*sf_it)->isActive()) {
-            for (std::vector<cChannel*>::const_iterator ch_it  = (*sf_it)->getChannels().begin();
-                                                        ch_it != (*sf_it)->getChannels().end();
-                                                      ++ch_it) {
-                // reserve/add flow
-                check_and_cast<FlowChannel*>(*ch_it)->removeFlow(*sf_it);
-            }
+            deactivateSubflow(*sf_it);
             delete *sf_it;
         }
     }

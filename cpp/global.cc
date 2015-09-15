@@ -56,6 +56,14 @@ void Global::initialize(int stage)
         requestedLengthHist.setRangeAutoUpper(0, 1000);
         requestedLengthHist.setNumCells(1000);
 
+        // flow priorities
+        highPriorityVec.setName("high priority flow vector");
+        highP = 0;
+        medPriorityVec.setName("med priority flow vector");
+        medP = 0;
+        lowPriorityVec.setName("low priority flow vector");
+        lowP = 0;
+
         // whether at least one candidate path had bandwidth available for a flow
         flowSuccessVec.setName("flow setup success vector");
 
@@ -151,6 +159,24 @@ void Global::recordIdleTime(simtime_t t) {
 void Global::recordRequestedLength(double len) {
     requestedLengthVec.record(len);
     requestedLengthHist.collect(len);
+}
+
+void Global::recordPriority(int p, bool add) {
+    if (p==3) {
+        if (add) {highPriorityVec.record(++highP);}
+        else {highPriorityVec.record(--highP);}
+    }
+    else if (p==2) {
+        if (add) {medPriorityVec.record(++medP);}
+        else {medPriorityVec.record(--medP);}
+    }
+    else if (p==1) {
+        if (add) {lowPriorityVec.record(++lowP);}
+        else {lowPriorityVec.record(--lowP);}
+    }
+    else {
+        error("Global::recordPriority: unknown priority");
+    }
 }
 
 void Global::recordFlowSuccess(bool successful) {

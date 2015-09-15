@@ -1,4 +1,5 @@
 #include <omnetpp.h>
+#include "global.h"
 #include "Flow.h"
 #include "Stream.h"
 
@@ -24,6 +25,7 @@ class Controller : public cSimpleModule {
         virtual void handleMessage(cMessage *msg);
         virtual void finish();
     private:
+        Global* g;
         void rescheduleEnds();
         void shareBandwidth(std::set<Flow*> flows);
         std::map<Priority, std::list<Flow*> > flowsAtPriority;
