@@ -61,13 +61,32 @@ std::pair<bool, Path> Controller::waypointsAvailable(Path waypoints, uint64_t bp
     return std::make_pair(true, fullPath);
 }
 
-Flow* findSingleDisplaceable(Priority p) {
-    return NULL;
+// helperhelper
+void Controller::deactivateSubflow(Flow* f) {
+    //Stream* s = SubflowStreams[f]; // TODO change to DL
+    f->setActive(false);
+    for (std::vector<cChannel*>::const_iterator c_it  = f->getChannels().begin();
+                                                c_it != f->getChannels().end();
+                                              ++c_it) {
+        ((FlowChannel*)*c_it)->removeFlow(f);
+    }
 }
-std::pair<bool, std::list<Flow*> > findDisplaceList(uint64_t bps, Priority p) {
-    return std::make_pair(false, std::list<Flow*>());
-}
-void combineDisplaceLists(uint64_t bps, Priority p) {
+// helper
+void Controller::setupSubflow(Flow* f) {
+    for (std::vector<cChannel*>::const_iterator ch_it  = f->getChannels().begin();
+                                                ch_it != f->getChannels().end();
+                                              ++ch_it) {
+        FlowChannel *fc = check_and_cast<FlowChannel*>(*ch_it);
+        // cancel lower priority flows if necessary
+        while (fc->getAvailableBps() < f->getBps()) {
+            if (fc->getLowestPriorityFlow()->getPriority() >= f->getPriority()) {
+                throw cRuntimeError("revoked flow of higher priority than new flow");
+            }
+            deactivateSubflow(fc->getLowestPriorityFlow());
+        }
+        // add new flow
+        fc->addFlow(f);
+    }
     return;
 }
 bool Controller::requestVID(Path waypoints, int vID) {
@@ -84,8 +103,12 @@ bool Controller::requestVID(Path waypoints, int vID) {
         Flow* subflow = new Flow;
         subflow->setBps(bitrates[i]);
         subflow->setPriority(baseFlowPriority-i);
+        subflow->setPath(res.second);
+        vdl->addSubflow(*subflow);
         if (res.first) {
             subflow->setActive(true);
+            setupSubflow(subflow);
+            SubflowStreams[subflow] = vdl;
         }
         else {
             if (i==0) { // not even lowest quality subflow
@@ -94,21 +117,6 @@ bool Controller::requestVID(Path waypoints, int vID) {
                 return false;
             }
             subflow->setActive(false);
-        }
-        subflow->setPath(res.second);
-        vdl->addSubflow(*subflow);
-    }
-    // set up active subflows (bit contradictory to call them active already)
-    for (std::list<Flow*>::const_iterator sf_it  = vdl->getSubflows().begin();
-                                          sf_it != vdl->getSubflows().end();
-                                        ++sf_it) {
-        // go through each active channel in *sf_it
-        if (!(*sf_it)->isActive()) {continue;}
-        for (std::vector<cChannel*>::const_iterator ch_it  = (*sf_it)->getChannels().begin();
-                                                    ch_it != (*sf_it)->getChannels().end();
-                                                  ++ch_it) {
-            // reserve/add flow
-            check_and_cast<FlowChannel*>(*ch_it)->addFlow(*sf_it);
         }
     }
     // add event to queue
@@ -224,14 +232,16 @@ void Controller::endStream(cMessage* endMsg) {
                                           sf_it != stream->getSubflows().end();
                                         ++sf_it) {
         // go through each active channel in *sf_it
-        if (!(*sf_it)->isActive()) {continue;}
-        for (std::vector<cChannel*>::const_iterator ch_it  = (*sf_it)->getChannels().begin();
-                                                    ch_it != (*sf_it)->getChannels().end();
-                                                  ++ch_it) {
-            // reserve/add flow
-            check_and_cast<FlowChannel*>(*ch_it)->removeFlow(*sf_it);
+        SubflowStreams.erase(*sf_it);
+        if ((*sf_it)->isActive()) {
+            for (std::vector<cChannel*>::const_iterator ch_it  = (*sf_it)->getChannels().begin();
+                                                        ch_it != (*sf_it)->getChannels().end();
+                                                      ++ch_it) {
+                // reserve/add flow
+                check_and_cast<FlowChannel*>(*ch_it)->removeFlow(*sf_it);
+            }
+            delete *sf_it;
         }
-        delete *sf_it;
     }
     endStreams.erase(endMsg);
     delete stream;

@@ -23,6 +23,7 @@ class FlowChannel : public cDatarateChannel {
         //
         bool isFlowPossible(uint64_t bps, Priority p);
         bool isFlowPossible(Flow* f); // unused?
+        Flow* getLowestPriorityFlow();
     protected:
         virtual void initialize();
         virtual void finish();

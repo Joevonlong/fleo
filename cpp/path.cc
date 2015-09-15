@@ -380,10 +380,10 @@ PathList getShortestPaths(PathList paths) {
     return shortest;
 }
 
+/**
+ * Checks if datarate is available between two adjacent nodes
+ */
 bool availableNodePair(Node *from, Node *to, uint64_t bps, Priority p) {
-    /**
-     * Checks if datarate is available between two adjacent nodes
-     */
     for (int i=0; i<from->getNumOutLinks(); ++i) { // try each link
         if (from->getLinkOut(i)->getRemoteNode() == to) { // until the other node is found
             if (((FlowChannel*)from->getLinkOut(i)->getLocalGate()->getTransmissionChannel())->isFlowPossible(bps, p)) {
@@ -488,28 +488,14 @@ Flow* createFlow(Flow* f) {
 }
 */
 
+/**
+ * Detach flow from all its channels, then delete it.
+ */
 bool revokeFlow(Flow* f) {
-    /**
-     * Decrements used bandwidth for all gates along path.
-     */
-    for (Path::const_iterator it = f->getPath().begin(); it != f->getPath().end()-1; ++it) {
-        for (int i = (*it)->getNumOutLinks()-1; i>=0; --i) { // try each outgoing link
-            if ((*it)->getLinkOut(i)->getRemoteNode() == *(it+1)) { // until the other node is found
-                cChannel *ch = (*it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel();
-                ((FlowChannel*)ch)->removeFlow(f);
-                break;
-            }
-        }
-        // should break before this else nodes were not adjacent
-        /* removed: adding flow in reverse direction: video xfers are 99/1, not 50/50
-        for (int i = (*it)->getNumInLinks()-1; i>=0; --i) { // try each incoming link
-            if ((*it)->getLinkIn(i)->getRemoteNode() == *(it+1)) { // until the other node is found
-                cChannel *ch = (*it)->getLinkIn(i)->getRemoteGate()->getTransmissionChannel();
-                ((FlowChannel*)ch)->removeFlow(f);
-                break;
-            }
-        }
-        */
+    for (std::vector<cChannel*>::const_iterator c_it  = f->getChannels().begin();
+                                                c_it != f->getChannels().end();
+                                              ++c_it) {
+        ((FlowChannel*)*c_it)->removeFlow(f);
     }
     delete f;
     return true;
