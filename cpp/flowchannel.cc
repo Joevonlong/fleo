@@ -64,7 +64,7 @@ uint64_t FlowChannel::getAvailableBps(Priority p) {
 }
 
 uint64_t FlowChannel::getUsedBps() {
-    EV << "FlowChannel::getUsedBps " << par("used").doubleValue() << endl;
+    //EV << "FlowChannel::getUsedBps " << par("used").doubleValue() << endl;
     return par("used").doubleValue();
 }
 
@@ -271,12 +271,12 @@ void FlowChannel::recordUtil() {
     // accumulate just-finished rectangle of bandwidth-time product
     cumBwT += prevBw * (simTime()-prevRecAt).dbl();
     // update global network load stats
-    ((Global*)getParentModule()->getSubmodule("global"))->recordNetLoad(getAvailableBps(INT_MIN)-prevBw);
+    ((Global*)getParentModule()->getSubmodule("global"))->recordNetLoad(getUsedBps()-prevBw);
     // update data for new rectangle
-    prevBw = getDatarate() - getAvailableBps(INT_MIN);
+    prevBw = getUsedBps();
     prevRecAt = simTime();
     // record current bandwidth usage
-    utilVec.record(1 - getAvailableBps(INT_MIN)/getDatarate()); // new prevBw ie. current BW usage
+    utilVec.record(getUsedBps()/getDatarate()); // new prevBw ie. current BW usage
 }
 
 void FlowChannel::finish() {
