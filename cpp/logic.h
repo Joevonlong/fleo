@@ -11,6 +11,8 @@ public:
     //void setupFlowFrom(User *user);
     std::vector<int> findAvailablePathFrom(User *user, double bpsWanted);
     std::deque<Logic*> getRequestWaypoints(int vID, int tries);
+    bool hasCache();
+    bool isOrigin();
     void setCached(int customID, bool b);
 protected:
     Global *global;
@@ -24,8 +26,6 @@ protected:
     double distToCompleteCache;
     void registerSelfIfCache();
     int64_t checkCache(int customID);
-    bool hasCache();
-    bool isOrigin();
     void requestFromCache(int cacheID, int customID);
     //
 private:
