@@ -28,11 +28,11 @@ bool Cache::isOrigin() {
     return capacity == origin;
 }
 
+/**
+ * Assumes presence in mapping means cached.
+ * Does not affect LRU queue.
+ */
 bool Cache::isCached(int customID) {
-    /**
-     * Assumes presence in mapping means cached.
-     * Does not affect LRU queue.
-     */
     if (capacity == origin) {return true;}
     if (capacity == noCache) {error("checking content in node without cache");}
     if (idToIndex.count(customID)) {return true;}
