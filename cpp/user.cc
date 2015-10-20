@@ -97,7 +97,7 @@ void User::sendRequestSPO() {
     }
     EV << endl;
     // end output
-    // Add user node to head...
+    // Start with user node...
     Path waypointNodes;
     waypointNodes.push_back(topo.getNodeFor(this));
     // ... and convert the rest to nodes.
