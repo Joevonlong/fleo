@@ -2,6 +2,7 @@
 #include "parse.h"
 #include "path.h"
 #include "flowchannel.h"
+#include "logic.h"
 
 Define_Module(Controller);
 
@@ -47,6 +48,7 @@ std::pair<bool, Path> Controller::waypointsAvailable(Path waypoints, uint64_t bp
         bool waypointsLinked = false;
         for (int i=0; i<par("detourAttempts").longValue(); ++i) { // for some number of attempts
             Path det = getDetour(*wp_it, *(wp_it+1), i); // get next detour
+            if (det.size() < 2) {continue;}
             // and check for BW availability
             if (pathAvailable(det, bps, p)) {
                 // save this sub-path and set up full path if other WPs can also be linked
@@ -74,8 +76,9 @@ void Controller::deactivateSubflow(Flow* f) {
     }
 }
 // helper
-void Controller::setupSubflow(Flow* f) {
+void Controller::setupSubflow(Flow* f, int vID) {
     g->recordPriority(f->getPriority(), true);
+    // follow FlowChannels and add flows
     for (std::vector<cChannel*>::const_iterator ch_it  = f->getChannels().begin();
                                                 ch_it != f->getChannels().end();
                                               ++ch_it) {
@@ -89,6 +92,15 @@ void Controller::setupSubflow(Flow* f) {
         }
         // add new flow
         fc->addFlow(f);
+    }
+    // walk Path and setCached
+    for (Path::const_iterator p_it=f->getPath().begin(); p_it!=f->getPath().end()-1; ++p_it) { // exclude last cModule which is a User, not Logic
+        Logic* l = check_and_cast<Logic*>((*p_it)->getModule());
+        if (l->hasCache()){
+            if (!l->isOrigin()) {
+                l->setCached(vID, true);
+            }
+        }
     }
     return;
 }
@@ -110,7 +122,7 @@ bool Controller::requestVID(Path waypoints, int vID) {
         vdl->addSubflow(*subflow);
         if (res.first) {
             subflow->setActive(true);
-            setupSubflow(subflow);
+            setupSubflow(subflow, vID);
             SubflowStreams[subflow] = vdl;
         }
         else {

@@ -1,3 +1,4 @@
+#pragma once
 #include <omnetpp.h>
 #include "global.h"
 #include "Flow.h"
@@ -35,7 +36,7 @@ class Controller : public cSimpleModule {
         //
         std::map<Flow*, Stream*> SubflowStreams;
         void deactivateSubflow(Flow* f);
-        void setupSubflow(Flow* f);
+        void setupSubflow(Flow* f, int vID);
         std::map<cMessage*, Stream*> endStreams;
         //std::map<FlowChannel*, std::vector<Flow*> > channelFlows;
         std::pair<bool, Path> waypointsAvailable(Path waypoints, uint64_t bps, Priority p);
