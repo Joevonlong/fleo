@@ -5,7 +5,7 @@
 ### How do I get set up? ###
 
 * Summary of set up
-    * Install OMNeT++
+    * Install OMNeT++ from https://omnetpp.org/
     * Download this repository into a subfolder in OMNeT++'s samples folder. eg. omnetpp-4.6/samples/fleo/
     * In this subfolder, run "opp_makemake -f --deep" and then "make"
     * The executable created defaults to the subfolder's name (eg. "fleo" using the same example)
