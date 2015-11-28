@@ -24,4 +24,4 @@ This README would normally document whatever steps are necessary to get your app
 
 ### Who do I talk to? ###
 
-* g.anggono at student.unsw.edu.au
+* g.anggono AT student.unsw.edu.au
