@@ -12,7 +12,7 @@
 * Traffic model
     * Place YouTube and Daum video metadata from http://an.kaist.ac.kr/traces/IMC2007.html in datasets/tubes/
     * run py/parse_yt_daum.py
-* Topologies from Rocketfuel
+* Convert *Rocketfuel* topologies into .ned format
     * Place ISP Maps (rocketfuel_maps_cch.tar.gz) from http://research.cs.washington.edu/networking/rocketfuel/ in datasets/rocketfuel
     * run py/read_rf.py
 
