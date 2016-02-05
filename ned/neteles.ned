@@ -1,11 +1,13 @@
 simple Global {
     parameters:
+        @display("b=0,0,rectangle,black,black,0");
         int bufferBlock = default(14s) @unit(s);
         int bufferMin = default(7s) @unit(s);
 }
 
 simple Controller {
 	parameters:
+	    @display("b=0,0,rectangle,black,black,0");
 		int detourAttempts = default(1); // 1 means shortest (Dijkstra's) only
 }
 
