@@ -206,11 +206,11 @@ void FlowChannel::removeFlow(Flow* f) {
         throw cRuntimeError("Priority of flow to remove not found");
     }
     if (f->getBps() + it->second > getDatarate()) {
-        throw cRuntimeError("Resultant available bandwidth exceeds original capacity");
+        throw cRuntimeError("FlowChannel::removeFlow: Resultant available bandwidth exceeds original capacity");
     }
     // remove from list of tracked flows
     if (currentFlows.erase(f) != 1) {
-        throw cRuntimeError("Flow to remove not found");
+        //throw cRuntimeError("FlowChannel::removeFlow: Flow to remove not found");
     }
     // release bandwidth for the flow (to deprecate?)
     addUsedBps(-f->getBps());
