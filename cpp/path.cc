@@ -166,11 +166,11 @@ void dequeueAndSearch(searchState *state) {
     return;
 }
 
+/**
+ * Begins or resumes a search, returning only the first path in the detour
+ * queue, but after queueing all its detours.
+ */
 Path getDetour(Node *srcNode, Node *dstNode, size_t index) {
-    /**
-     * Begins or resumes a search, returning only the first path in the detour
-     * queue, but after queueing all its detours.
-     */
     // create mapping if it does not exist
     if (!searchStates.count(std::make_pair(srcNode, dstNode))) {
         searchState *newState = new searchState;
