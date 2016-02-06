@@ -125,7 +125,7 @@ Path getShortestPathBfs(cModule *srcMod, cModule *dstMod) {
 std::map<std::pair<Node*, Node*>, PathList> pathsAroundShortestCache; // TODO find more suitable place for this eg. controller
 // search state stored here: mapping from src-dst pair
 // to search-state (searching queue+set; searched vector+set)
-std::map<std::pair<Node*, Node*>, searchState> searchStates;
+std::map<std::pair<Node*, Node*>, searchState*> searchStates;
 
 void dequeueAndSearch(searchState *state) {
     Path path = state->searchingQ.front();
@@ -173,14 +173,14 @@ Path getDetour(Node *srcNode, Node *dstNode, size_t index) {
      */
     // create mapping if it does not exist
     if (!searchStates.count(std::make_pair(srcNode, dstNode))) {
-        searchState newState;
+        searchState *newState = new searchState;
         // starting with the shortest path
-        newState.searchingQ.push_back(getShortestPathBfs(srcNode, dstNode));
-        newState.searchingSet.insert(newState.searchingQ.front());
+        newState->searchingQ.push_back(getShortestPathBfs(srcNode, dstNode));
+        newState->searchingSet.insert(newState->searchingQ.front());
         searchStates[std::make_pair(srcNode, dstNode)] = newState;
     }
     // fetch current search-state
-    searchState* currentState = &searchStates[std::make_pair(srcNode, dstNode)];
+    searchState *currentState = searchStates[std::make_pair(srcNode, dstNode)];
     while (!currentState->searchingQ.empty()) {
         if (index < currentState->searchingQ.size() + currentState->searched.size()) {
             // start counting from searched...
