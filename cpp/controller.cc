@@ -31,7 +31,7 @@ void Controller::handleMessage(cMessage *msg) {
 void Controller::finish() {
 }
 
-// helper function
+// Returns true if path has bandwidth bps at priority p available
 bool pathAvailable(Path path, uint64_t bps, Priority p) {
     for (Path::iterator node = path.begin(); node != path.end()-1; ++node) {
         if (!availableNodePair(*node, *(node+1), bps, p)) {
@@ -41,7 +41,13 @@ bool pathAvailable(Path path, uint64_t bps, Priority p) {
     // no node pairs returned false, thus the path is available
     return true;
 }
-// helper function
+/**
+ * Searches for a path with bandwidth bps and priority p, that runs though the
+ * given waypoints in order.
+ * Tries a number of paths equal to detourAttempts to link each pair of
+ * waypoints.
+ * Returns a pair <true, path> if successful, and <false, _> otherwise.
+ */
 std::pair<bool, Path> Controller::waypointsAvailable(Path waypoints, uint64_t bps, Priority p) {
     Path fullPath;
     for (Path::iterator wp_it = waypoints.begin(); wp_it != waypoints.end()-1; ++wp_it) { // for each waypoint up till 2nd last
@@ -112,6 +118,13 @@ bool Controller::requestVID(Path waypoints, int vID) {
     // get priority levels to assign to subflows
     std::vector<uint64_t> bitrates = getBitRates(vID);
     Priority baseFlowPriority = bitrates.size(); // magic-y number
+    // do parameter check for multicast vs unicast
+    // begin multicast flow setup
+    if (false) {
+        // build multicast tree (availability check already included)
+        // set up flows etc.
+    }
+    // else, begin unicast flow setup
     // check which subflows can be established
     for (size_t i=0; i<bitrates.size(); ++i) {
         std::pair<bool, Path> res = waypointsAvailable(waypoints, bitrates[i], baseFlowPriority-i);
