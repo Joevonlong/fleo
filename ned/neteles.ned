@@ -9,6 +9,7 @@ simple Controller {
 	parameters:
 	    @display("b=0,0,rectangle,black,black,0");
 		int detourAttempts = default(1); // 1 means shortest (Dijkstra's) only
+		bool multicast = default(false); // experimental
 }
 
 channel FlowChannel extends ned.DatarateChannel
