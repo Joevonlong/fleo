@@ -24,14 +24,13 @@ network MulticastTestbed
             name = "pop0";
             loc = "there";
             rn = 2;
-            // crashes on adding cache
-            //hasCache = true;
+            hasCache = true;
         }
         pop1: PoP {
             name = "pop1";
             loc = "somewhere";
             rn = 2;
-            //hasCache = true;
+            hasCache = true;
         }
         user0: User{name="user"; loc="there"; rn=3;};
         user1: User{name="user"; loc="there"; rn=3;};
