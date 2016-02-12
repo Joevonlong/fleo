@@ -1,6 +1,5 @@
-packet Reply extends cPacket
+packet Reply
 {
     int sourceID;
     int destinationID;
 }
-

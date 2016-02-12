@@ -1,4 +1,4 @@
-packet MyPacket extends cPacket
+packet MyPacket
 {
     int sourceID;
     int destinationID;
@@ -12,4 +12,3 @@ packet MyPacket extends cPacket
     short state;
     uint64_t bitsPending;
 }
-
