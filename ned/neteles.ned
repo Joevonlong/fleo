@@ -180,8 +180,8 @@ simple User
         string name = default("");
         string loc = default("");
         int rn = default(-1);
-        volatile double initIdleTime @unit(s);   // delay before first request
-        volatile double idleTime @unit(s);   // delay before subsequent requests
+        volatile double initIdleTime = default(0s) @unit(s);   // delay before first request
+        volatile double idleTime = default(1d) @unit(s);   // delay before subsequent requests
         int cacheTries = default(2); // replicas to try before origin
         double requestSize = default(-1B) @unit(B); // negative bits: use tubes data
         @signal[idle](type="simtime");
