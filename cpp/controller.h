@@ -2,6 +2,7 @@
 #include <omnetpp.h>
 #include "global.h"
 #include "Flow.h"
+#include "ChannelTree.h"
 #include "Stream.h"
 
 struct RequestData {

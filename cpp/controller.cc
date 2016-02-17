@@ -1,5 +1,6 @@
 #include "controller.h"
 #include "parse.h"
+#include "routing.h"
 #include "path.h"
 #include "flowchannel.h"
 #include "logic.h"
@@ -70,6 +71,15 @@ std::pair<bool, Path> Controller::waypointsAvailable(Path waypoints, uint64_t bp
     return std::make_pair(true, fullPath);
 }
 
+/**
+ * Reduces the given set of Paths into a PathTree
+ */
+
+/**
+ * Given a single source and a set of destinations,
+ * returns the shallowest multicast tree (what data type???) found.
+ */
+
 // helperhelper
 void Controller::deactivateSubflow(Flow* f) {
     //Stream* s = SubflowStreams[f]; // TODO change to DL
@@ -120,9 +130,31 @@ bool Controller::requestVID(Path waypoints, int vID) {
     Priority baseFlowPriority = bitrates.size(); // magic-y number
     // do parameter check for multicast vs unicast
     // begin multicast flow setup
-    if (false) {
-        // build multicast tree (availability check already included)
-        // set up flows etc.
+    if (par("multicast").boolValue()) {
+        // assume source is first origin:
+        Node* rootNode = topo.getNodeFor(simulation.getModule(completeCacheIDs.front()));
+        // assume all replica locations are destinations:
+        std::vector<Node*> leafNodes;
+        for (std::vector<int>::iterator it = incompleteCacheIDs.begin();
+                it != incompleteCacheIDs.end(); ++it) {
+            leafNodes.push_back(topo.getNodeFor(simulation.getModule(*it)));
+        }
+        // build multicast tree (while checking availability)
+        ChannelTree* chTree = ChannelTree();
+        for (std::vector<Node*>::iterator l_it = leafNodes.begin();
+                l_it != leafNodes.end(); ++l_it) {
+            // (ignore waypoints arg: user should not provide/have such info anyway)
+            Path st; st.clear(); // source-sink
+            st.push_back(rootNode); st.push_back(*l_it);
+            for (size_t i=0; i<bitrates.size(); ++i) {
+                std::pair<bool, Path> res = waypointsAvailable(st, bitrates[i], baseFlowPriority-i);
+                if (res.first) {
+                    //convert nodes to channels first... chTree->addChannels(res.second);
+                }
+            }
+            // set up flows etc.
+        }
+        error("NYI");
     }
     // else, begin unicast flow setup
     // check which subflows can be established
