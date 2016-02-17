@@ -94,7 +94,7 @@ void Flow::updateChannels() {
 
 void Flow::updateLag() {
     lag = 0;
-    for (std::vector<cChannel*>::iterator ch_it = channels.begin(); ch_it != channels.end()-1; ++ch_it) {
-        lag += ((FlowChannel*)(*ch_it))->getDelay();
+    for (std::vector<cChannel*>::iterator ch_it = channels.begin(); ch_it != channels.end(); ++ch_it) {
+        lag += (check_and_cast<FlowChannel*>(*ch_it))->getDelay();
     }
 }
