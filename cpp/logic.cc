@@ -267,6 +267,9 @@ void Logic::registerSelfIfCache() {
         if (isOrigin()) {
             completeCacheIDs.push_back(getId());
         }
+        else {
+            incompleteCacheIDs.push_back(getId());
+        }
     }
 }
 
