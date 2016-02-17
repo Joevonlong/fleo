@@ -12,16 +12,21 @@
 #include "Flow.h"
 #include "flowchannel.h"
 
+typedef std::set<FlowChannel*> FlowChannelTree;
+
 class ChannelTree {
 public:
     ChannelTree();
     virtual ~ChannelTree();
     bool isActive() const;
     void setActive(bool active);
-    const std::vector<cTopology::Node*>& getPath() const;
-    void setPath(const std::vector<cTopology::Node*>& path);
-    const std::vector<cChannel*>& getChannels();
-    void setChannels(const std::vector<cChannel*>& channels);
+    const std::vector<cTopology::Node*>& getPath();
+    const FlowChannelTree& getChannels() const;
+    void setChannels(const FlowChannelTree& channels);
+    // 3 ways to add channels
+    void addChannels(const FlowChannelTree& channels);
+    void addChannels(Flow& flow);
+    void addChannels(const std::vector<cChannel*>& channels);
     const simtime_t& getLag();
     uint64_t getBps() const;
     void setBps(uint64_t bps);
@@ -34,7 +39,7 @@ public:
 protected:
     bool active; // whether flow is actually moving
     std::vector<cTopology::Node*> path; // no use anymore? relegate to secondary?
-    std::vector<cChannel*> channels;
+    FlowChannelTree channels;
     simtime_t lag; // round-trip-time / latency / lag / delay
     uint64_t bps;
     uint64_t bpsMin;
@@ -44,7 +49,7 @@ protected:
     bool updated;
     simtime_t last_updated;
     void update();
-    void updateChannels();
+    void updateNodes();
     void updateLag();
 };
 

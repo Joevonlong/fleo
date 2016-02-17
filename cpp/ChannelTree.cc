@@ -23,26 +23,38 @@ void ChannelTree::setActive(bool active) {
     this->active = active;
 }
 
-const std::vector<cTopology::Node*>& ChannelTree::getPath() const {
+const std::vector<cTopology::Node*>& ChannelTree::getPath() {
+    updateNodes();
     return path;
 }
 
-void ChannelTree::setPath(const std::vector<cTopology::Node*>& path) {
-    this->path = path;
-    updated = false;
-}
-
-const std::vector<cChannel*>& ChannelTree::getChannels() {
-    update();
+const FlowChannelTree& ChannelTree::getChannels() const {
     return channels;
 }
 
-void ChannelTree::setChannels(const std::vector<cChannel*>& channels) {
+void ChannelTree::setChannels(const FlowChannelTree& channels) {
     this->channels = channels;
+    updated = false;
+}
+
+void ChannelTree::addChannels(const FlowChannelTree& channels) {
+    for (FlowChannelTree::iterator fct_it = channels.begin(); fct_it != channels.end(); ++fct_it) {
+        this->channels.insert(*fct_it);
+    }
+}
+
+void ChannelTree::addChannels(Flow& flow) {
+    addChannels(flow.getChannels());
+}
+
+void ChannelTree::addChannels(const std::vector<cChannel*>& channels) {
+    for (std::vector<cChannel*>::const_iterator cv_it = channels.begin(); cv_it != channels.end(); ++cv_it) {
+        this->channels.insert(check_and_cast<FlowChannel*>(*cv_it));
+    }
 }
 
 const simtime_t& ChannelTree::getLag() {
-    update();
+    updateLag();
     return lag;
 }
 
@@ -80,14 +92,20 @@ void ChannelTree::setPriority(Priority priority) {
 
 void ChannelTree::update() {
     if (updated) {return;}
-    updateChannels();
+    updateNodes();
     updateLag();
     last_updated = simTime();
     updated = true;
 }
 
-void ChannelTree::updateChannels() {
+void ChannelTree::updateNodes() {
+    // NYI
 }
 
 void ChannelTree::updateLag() {
+    // NYI
+    /*lag = 0;
+    for (FlowChannelTree::iterator fct_it = channels.begin(); fct_it != channels.end()-1; ++fct_it) {
+        //lag += (check_and_cast<FlowChannel*>(*fct_it))->getDelay();
+    }*/
 }
