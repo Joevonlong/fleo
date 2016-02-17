@@ -19,6 +19,7 @@ extern short flowStart;
 
 extern std::vector<int> cacheIDs;
 extern std::vector<int> completeCacheIDs;
+extern std::vector<int> incompleteCacheIDs;
 extern std::map<std::string, int> locCaches;
 
 class Global : public cSimpleModule

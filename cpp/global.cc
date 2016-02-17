@@ -27,6 +27,7 @@ short flowStart = 5;
 
 std::vector<int> cacheIDs;
 std::vector<int> completeCacheIDs;
+std::vector<int> incompleteCacheIDs;
 std::map<std::string, int> locCaches;
 
 int Global::numInitStages () const {return 3;}
