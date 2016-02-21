@@ -6,6 +6,9 @@ typedef std::vector<cTopology::Node*> Path;
 typedef std::vector<Path> PathList;
 typedef int Priority;
 
+class FlowChannel;
+typedef std::set<FlowChannel*> FlowChannels;
+
 class Flow {
 public:
     Flow();
@@ -14,7 +17,11 @@ public:
     void setActive(bool active);
     const Path& getPath() const;
     void setPath(const Path& path);
-    const std::vector<cChannel*>& getChannels();
+    const FlowChannels& getChannels();
+    void setChannels(const FlowChannels& channels);
+    void addChannels(const FlowChannels& channels);
+    void addChannels(Flow& flow);
+    void addChannels(Path path);
     const simtime_t& getLag();
     uint64_t getBps() const;
     void setBps(uint64_t bps);
@@ -27,7 +34,7 @@ public:
 protected:
     bool active; // whether flow is actually moving
     Path path;
-    std::vector<cChannel*> channels;
+    FlowChannels channels;
     simtime_t lag; // round-trip-time / latency / lag / delay
     uint64_t bps;
     uint64_t bpsMin;

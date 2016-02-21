@@ -31,13 +31,42 @@ void Flow::setPath(const Path& path) {
     updated = false;
 }
 
-const std::vector<cChannel*>& Flow::getChannels() {
-    update();
+const FlowChannels& Flow::getChannels() {
     return channels;
 }
 
+void Flow::setChannels(const FlowChannels& channels) {
+    this->channels = channels;
+    updated = false;
+}
+
+void Flow::addChannels(const FlowChannels& channels) {
+    for (FlowChannels::iterator fc_it  = channels.begin();
+                                fc_it != channels.end();
+                              ++fc_it) {
+        this->channels.insert(*fc_it);
+    }
+}
+void Flow::addChannels(Flow& flow) {
+    addChannels(flow.getChannels());
+}
+void Flow::addChannels(Path path) {
+    for (Path::iterator p_it = path.begin(); p_it != path.end()-1; ++p_it) {
+        for (int i=0; i<(*p_it)->getNumOutLinks(); ++i) {
+            if ((*p_it)->getLinkOut(i)->getRemoteNode() == *(p_it+1)) {
+                channels.insert(
+                    check_and_cast<FlowChannel*>(
+                        (*p_it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel()
+                    )
+                );
+                break;
+            }
+        }
+    }
+}
+
 const simtime_t& Flow::getLag() {
-    update();
+    updateLag();
     return lag;
 }
 
@@ -78,11 +107,12 @@ void Flow::update() {
 }
 
 void Flow::updateChannels() {
+    cRuntimeError("Flow::updateChannels(): not to be used");
     channels.clear();
     for (Path::iterator p_it = path.begin(); p_it != path.end()-1; ++p_it) {
         for (int i=0; i<(*p_it)->getNumOutLinks(); ++i) {
             if ((*p_it)->getLinkOut(i)->getRemoteNode() == *(p_it+1)) {
-                channels.push_back((*p_it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel());
+                //channels.push_back((*p_it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel());
                 break;
             }
         }
@@ -94,7 +124,7 @@ void Flow::updateChannels() {
 
 void Flow::updateLag() {
     lag = 0;
-    for (std::vector<cChannel*>::iterator ch_it = channels.begin(); ch_it != channels.end(); ++ch_it) {
-        lag += (check_and_cast<FlowChannel*>(*ch_it))->getDelay();
+    for (FlowChannels::iterator fc_it = channels.begin(); fc_it != channels.end(); ++fc_it) {
+        lag += (*fc_it)->getDelay();
     }
 }
