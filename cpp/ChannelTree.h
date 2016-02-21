@@ -26,6 +26,7 @@ public:
     // 3 ways to add channels
     void addChannels(const FlowChannelTree& channels);
     void addChannels(Flow& flow);
+    void addChannels(Path path);
     void addChannels(const std::vector<cChannel*>& channels);
     const simtime_t& getLag();
     uint64_t getBps() const;

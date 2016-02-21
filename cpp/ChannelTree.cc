@@ -47,6 +47,21 @@ void ChannelTree::addChannels(Flow& flow) {
     addChannels(flow.getChannels());
 }
 
+void ChannelTree::addChannels(Path path) {
+    for (Path::iterator p_it = path.begin(); p_it != path.end()-1; ++p_it) {
+        for (int i=0; i<(*p_it)->getNumOutLinks(); ++i) {
+            if ((*p_it)->getLinkOut(i)->getRemoteNode() == *(p_it+1)) {
+                channels.insert(
+                    check_and_cast<FlowChannel*>(
+                        (*p_it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel()
+                    )
+                );
+                break;
+            }
+        }
+    }
+}
+
 void ChannelTree::addChannels(const std::vector<cChannel*>& channels) {
     for (std::vector<cChannel*>::const_iterator cv_it = channels.begin(); cv_it != channels.end(); ++cv_it) {
         this->channels.insert(check_and_cast<FlowChannel*>(*cv_it));
