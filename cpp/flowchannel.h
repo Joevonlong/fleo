@@ -47,3 +47,5 @@ class FlowChannel : public cDatarateChannel {
         double per;
         simtime_t txfinishtime;
 };
+
+typedef std::set<FlowChannel*> FlowChannels;

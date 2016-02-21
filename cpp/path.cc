@@ -492,9 +492,9 @@ Flow* createFlow(Flow* f) {
  * Detach flow from all its channels, then delete it.
  */
 bool revokeFlow(Flow* f) {
-    for (std::vector<cChannel*>::const_iterator c_it  = f->getChannels().begin();
-                                                c_it != f->getChannels().end();
-                                              ++c_it) {
+    for (FlowChannels::const_iterator c_it  = f->getChannels().begin();
+                                      c_it != f->getChannels().end();
+                                    ++c_it) {
         ((FlowChannel*)*c_it)->removeFlow(f);
     }
     delete f;
