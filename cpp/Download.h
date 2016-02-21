@@ -10,6 +10,7 @@
 
 #include <omnetpp.h>
 #include "Flow.h"
+#include "ChannelTree.h"
 
 class Download {
 public:
@@ -18,8 +19,12 @@ public:
     const std::list<Flow*>& getSubflows() const;
     void setSubflows(const std::list<Flow*>& subflows);
     void addSubflow(Flow& subflow);
+    const std::list<ChannelTree*>& getSubtrees() const;
+    void setSubtrees(const std::list<ChannelTree*>& subtrees);
+    void addSubtree(ChannelTree& subtree);
 protected:
     std::list<Flow*> subflows;
+    std::list<ChannelTree*> subtrees;
     uint64_t bits;
     uint64_t bitsTransferred;
     uint64_t bitsRemaining;

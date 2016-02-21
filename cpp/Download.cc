@@ -28,6 +28,18 @@ void Download::addSubflow(Flow& flow) {
     subflows.push_back(&flow);
 }
 
+const std::list<ChannelTree*>& Download::getSubtrees() const {
+    return subtrees;
+}
+
+void Download::setSubtrees(const std::list<ChannelTree*>& subtrees) {
+    this->subtrees = subtrees;
+}
+
+void Download::addSubtree(ChannelTree& subtree) {
+    subtrees.push_back(&subtree);
+}
+
 void Download::update() {
     last_updated = simTime();
     updated = true;
