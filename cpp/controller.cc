@@ -1,7 +1,6 @@
 #include "controller.h"
 #include "parse.h"
 #include "routing.h"
-#include "path.h"
 #include "flowchannel.h"
 #include "logic.h"
 
@@ -72,22 +71,52 @@ std::pair<bool, Path> Controller::waypointsAvailable(Path waypoints, uint64_t bp
 }
 
 /**
- * Reduces the given set of Paths into a PathTree
+ * Merges FlowChannel's traversed by Path into FlowChannels
  */
+void Controller::MergePathIntoFlowChannels(FlowChannels* fcs, Path* path) {
+    for (Path::iterator p_it = path->begin(); p_it != path->end()-1; ++p_it) {
+        for (int i=0; i<(*p_it)->getNumOutLinks(); ++i) {
+            if ((*p_it)->getLinkOut(i)->getRemoteNode() == *(p_it+1)) {
+                fcs->insert(
+                    check_and_cast<FlowChannel*>(
+                        (*p_it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel()
+                    )
+                );
+                break;
+            }
+        }
+    }
+}
 
 /**
- * Given a single source and a set of destinations,
- * returns the shallowest multicast tree (what data type???) found.
+ * Returns the (heuristically) shallowest multicast tree
+ * that has the required bandwidth at the given priority
+ * between the given source and destinations.
  */
+std::pair<bool, FlowChannels> Controller::treeAvailable(Node *root, std::vector<Node*> leaves, uint64_t bps, Priority p) {
+    FlowChannels chs;
+    Path st;
+    for (std::vector<Node*>::iterator l_it = leaves.begin(); l_it != leaves.end(); ++l_it) {
+        st.clear();
+        st.push_back(root); st.push_back(*l_it);
+        std::pair<bool, Path> res = waypointsAvailable(st, bps, p); // retries in here
+        if (!res.first) { // could not reach a leaf
+            return std::make_pair(false, chs);
+        }
+        MergePathIntoFlowChannels(&chs, &res.second);
+        //chs.insert(Path2FlowChannels(res.second));
+    }
+    return std::make_pair(true, chs);
+}
 
 // helperhelper
 void Controller::deactivateSubflow(Flow* f) {
     //Stream* s = SubflowStreams[f]; // TODO change to DL
     f->setActive(false);
     g->recordPriority(f->getPriority(), false);
-    for (std::vector<cChannel*>::const_iterator c_it  = f->getChannels().begin();
-                                                c_it != f->getChannels().end();
-                                              ++c_it) {
+    for (FlowChannels::const_iterator c_it  = f->getChannels().begin();
+                                      c_it != f->getChannels().end();
+                                    ++c_it) {
         check_and_cast<FlowChannel*>(*c_it)->removeFlow(f);
     }
 }
@@ -95,9 +124,9 @@ void Controller::deactivateSubflow(Flow* f) {
 void Controller::setupSubflow(Flow* f, int vID) {
     g->recordPriority(f->getPriority(), true);
     // follow FlowChannels and add flows
-    for (std::vector<cChannel*>::const_iterator ch_it  = f->getChannels().begin();
-                                                ch_it != f->getChannels().end();
-                                              ++ch_it) {
+    for (FlowChannels::const_iterator ch_it  = f->getChannels().begin();
+                                      ch_it != f->getChannels().end();
+                                    ++ch_it) {
         FlowChannel *fc = check_and_cast<FlowChannel*>(*ch_it);
         // cancel lower priority flows if necessary
         while (fc->getAvailableBps() < f->getBps()) {
@@ -129,8 +158,8 @@ bool Controller::requestVID(Path waypoints, int vID) {
     std::vector<uint64_t> bitrates = getBitRates(vID);
     Priority baseFlowPriority = bitrates.size(); // magic-y number
     // do parameter check for multicast vs unicast
-    // begin multicast flow setup
     if (par("multicast").boolValue()) {
+        // begin multicast flow setup:
         // assume source is first origin:
         Node* rootNode = topo.getNodeFor(simulation.getModule(completeCacheIDs.front()));
         // assume all replica locations are destinations:
@@ -139,21 +168,21 @@ bool Controller::requestVID(Path waypoints, int vID) {
                 it != incompleteCacheIDs.end(); ++it) {
             leafNodes.push_back(topo.getNodeFor(simulation.getModule(*it)));
         }
-        // build multicast tree (while checking availability)
-        ChannelTree* chTree = ChannelTree();
-        for (std::vector<Node*>::iterator l_it = leafNodes.begin();
-                l_it != leafNodes.end(); ++l_it) {
-            // (ignore waypoints arg: user should not provide/have such info anyway)
-            Path st; st.clear(); // source-sink
-            st.push_back(rootNode); st.push_back(*l_it);
-            for (size_t i=0; i<bitrates.size(); ++i) {
-                std::pair<bool, Path> res = waypointsAvailable(st, bitrates[i], baseFlowPriority-i);
-                if (res.first) {
-                    //convert nodes to channels first... chTree->addChannels(res.second);
+        // check availability of multicast substreams
+        for (size_t i=0; i<bitrates.size(); ++i) {
+            std::pair<bool, FlowChannels> res = treeAvailable(rootNode, leafNodes, bitrates[i], baseFlowPriority-i);
+            if (res.first) {
+                // tree found for substream
+                FlowChannels* fcs = new FlowChannels;
+                delete fcs;
+            }
+            else {
+                if (i==0) {
+                    //not even lowest quality -> whole req fails
                 }
             }
-            // set up flows etc.
         }
+        // set up flows etc.
         error("NYI");
     }
     // else, begin unicast flow setup

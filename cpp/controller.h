@@ -2,6 +2,7 @@
 #include <omnetpp.h>
 #include "global.h"
 #include "Flow.h"
+#include "path.h"
 #include "ChannelTree.h"
 #include "Stream.h"
 
@@ -40,5 +41,7 @@ class Controller : public cSimpleModule {
         void setupSubflow(Flow* f, int vID);
         std::map<cMessage*, Stream*> endStreams;
         //std::map<FlowChannel*, std::vector<Flow*> > channelFlows;
+        void MergePathIntoFlowChannels(FlowChannels* fcs, Path* path);
         std::pair<bool, Path> waypointsAvailable(Path waypoints, uint64_t bps, Priority p);
+        std::pair<bool, FlowChannels> treeAvailable(Node *root, std::vector<Node*> leaves, uint64_t bps, Priority p);
 };
