@@ -75,12 +75,12 @@ void FlowChannel::setUsedBps(uint64_t bps) {
     else if (bps < 0) {
         throw cRuntimeError("Setting bandwidth usage to negative");
     }
-    EV << "FlowChannel::setUsedBps: " << getFullPath() << "\t" << bps << "\t"  << par("used").doubleValue() << endl;
+    EV << "FlowChannel::setUsedBps: " << getFullPath() << "\tnow:" << bps << "\tbefore:"  << par("used").doubleValue() << endl;
     par("used").setDoubleValue(bps);
 }
 
 void FlowChannel::addUsedBps(int64_t bps) {
-    EV << "FlowChannel::addUsedBps: " << getFullPath() << "\t" << bps << "\t" << par("used").doubleValue() << endl;
+    EV << "FlowChannel::addUsedBps: " << getFullPath() << "\tadding:" << bps << "\tto:" << par("used").doubleValue() << endl;
     setUsedBps(par("used").doubleValue() + bps);
 }
 //
