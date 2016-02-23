@@ -171,43 +171,52 @@ bool Controller::requestVID(Path waypoints, int vID) {
         // check availability of multicast substreams
         for (size_t i=0; i<bitrates.size(); ++i) {
             std::pair<bool, FlowChannels> res = treeAvailable(rootNode, leafNodes, bitrates[i], baseFlowPriority-i);
+            Flow* subflow = new Flow;
+            subflow->setBps(bitrates[i]);
+            subflow->setPriority(baseFlowPriority-i);
+            subflow->setChannels(res.second);//subflow->setPath(res.second);
+            vdl->addSubflow(*subflow);
             if (res.first) {
-                // tree found for substream
-                FlowChannels* fcs = new FlowChannels;
-                delete fcs;
+                subflow->setActive(true);
+                error("NYI");//setupSubflow(subflow, vID);
+                SubflowStreams[subflow] = vdl;
             }
             else {
-                if (i==0) {
-                    //not even lowest quality -> whole req fails
+                if (i==0) { //not even lowest quality -> whole req fails
+                    delete subflow;
+                    delete vdl;
+                    return false;
                 }
+                subflow->setActive(false);
+                break; // do not attempt lower priority subflows
             }
         }
-        // set up flows etc.
-        error("NYI");
-    }
-    // else, begin unicast flow setup
-    // check which subflows can be established
-    for (size_t i=0; i<bitrates.size(); ++i) {
-        std::pair<bool, Path> res = waypointsAvailable(waypoints, bitrates[i], baseFlowPriority-i);
-        Flow* subflow = new Flow;
-        subflow->setBps(bitrates[i]);
-        subflow->setPriority(baseFlowPriority-i);
-        subflow->setPath(res.second);
-        vdl->addSubflow(*subflow);
-        if (res.first) {
-            subflow->setActive(true);
-            setupSubflow(subflow, vID);
-            SubflowStreams[subflow] = vdl;
-        }
-        else {
-            if (i==0) { // not even lowest quality subflow
-                delete subflow;
-                delete vdl;
-                return false;
+    } // endif multicast
+    else { // begin unicast flow setup:
+        // check which subflows can be established
+        for (size_t i=0; i<bitrates.size(); ++i) {
+            std::pair<bool, Path> res = waypointsAvailable(waypoints, bitrates[i], baseFlowPriority-i);
+            Flow* subflow = new Flow;
+            subflow->setBps(bitrates[i]);
+            subflow->setPriority(baseFlowPriority-i);
+            subflow->setPath(res.second);
+            vdl->addSubflow(*subflow);
+            if (res.first) {
+                subflow->setActive(true);
+                setupSubflow(subflow, vID);
+                SubflowStreams[subflow] = vdl;
             }
-            subflow->setActive(false);
+            else {
+                if (i==0) { // not even lowest quality subflow
+                    delete subflow;
+                    delete vdl;
+                    return false;
+                }
+                subflow->setActive(false);
+                break; // do not attempt lower priority subflows
+            }
         }
-    }
+    } // endif unicast
     // add event to queue
     cMessage* endMsg = new cMessage("end-of-stream");
     scheduleAt(simTime()+vdl->getViewtime(), endMsg);

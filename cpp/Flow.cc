@@ -28,7 +28,9 @@ const Path& Flow::getPath() const {
 }
 void Flow::setPath(const Path& path) {
     this->path = path;
-    updated = false;
+    setChannels(FlowChannels());
+    addChannels(path);
+    updated = false; // lag not updated
 }
 
 const FlowChannels& Flow::getChannels() {
