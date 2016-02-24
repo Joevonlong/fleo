@@ -199,9 +199,9 @@ bool Controller::requestVID(Path waypoints, int vID) {
             Flow* subflow = new Flow;
             subflow->setBps(bitrates[i]);
             subflow->setPriority(baseFlowPriority-i);
-            subflow->setPath(res.second);
             vdl->addSubflow(*subflow);
             if (res.first) {
+                subflow->setPath(res.second);
                 subflow->setActive(true);
                 setupSubflow(subflow, vID);
                 SubflowStreams[subflow] = vdl;
