@@ -8,6 +8,8 @@ network OneToOne
             loc = "here";
             rn = 0;
             hasCache = true;
+            completeCache = true;
+            cache.capacity = -1B;
             cacheRank = 1;
             @display("i=block/routing,green");
         }
@@ -16,7 +18,7 @@ network OneToOne
             loc = "here";
             rn = 3;
         }
-    connections:
+    connections allowunconnected:
         user.out --> FlowChannel {  delay = 1ms; datarate = 1Mbps; } --> beyond.in++;
         user.in <-- FlowChannel {  delay = 1ms; datarate = 1Mbps; } <-- beyond.out++;
 }
