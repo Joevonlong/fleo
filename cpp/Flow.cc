@@ -53,6 +53,9 @@ void Flow::addChannels(Flow& flow) {
     addChannels(flow.getChannels());
 }
 void Flow::addChannels(Path path) {
+    if (path.size() == 0) {
+        throw cRuntimeError("Flow::addChannels: Adding channels for empty path.");
+    }
     for (Path::iterator p_it = path.begin(); p_it != path.end()-1; ++p_it) {
         for (int i=0; i<(*p_it)->getNumOutLinks(); ++i) {
             if ((*p_it)->getLinkOut(i)->getRemoteNode() == *(p_it+1)) {
