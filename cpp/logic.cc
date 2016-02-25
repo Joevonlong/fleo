@@ -256,7 +256,7 @@ bool Logic::isOrigin() {
     return ((Cache*)getParentModule()->getSubmodule("cache"))->isOrigin();
 }
 void Logic::setCached(int customID, bool b) {
-    ((Cache*)getParentModule()->getSubmodule("cache"))->setCached(customID, b);
+    check_and_cast<Cache*>(getParentModule()->getSubmodule("cache"))->setCached(customID, b);
 }
 
 // inserts logic's ID as value with location as key,
