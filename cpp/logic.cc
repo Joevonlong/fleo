@@ -250,10 +250,10 @@ void Logic::handleMessage(cMessage *msg) {
 }
 
 bool Logic::hasCache() {
-    return ((Cache*)getParentModule()->getSubmodule("cache"))->hasCache();
+    return check_and_cast<Cache*>(getParentModule()->getSubmodule("cache"))->hasCache();
 }
 bool Logic::isOrigin() {
-    return ((Cache*)getParentModule()->getSubmodule("cache"))->isOrigin();
+    return check_and_cast<Cache*>(getParentModule()->getSubmodule("cache"))->isOrigin();
 }
 void Logic::setCached(int customID, bool b) {
     check_and_cast<Cache*>(getParentModule()->getSubmodule("cache"))->setCached(customID, b);
