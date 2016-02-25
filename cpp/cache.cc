@@ -39,6 +39,11 @@ bool Cache::isCached(int customID) {
     else {return false;}
 }
 
+/**
+ * Assumes LRU algorithm:
+ * - Resetting a cached customID to true refreshes its recent-ness.
+ * - If disk is full upon caching customID, Will evict least recent ID(s).
+ */
 void Cache::setCached(int customID, bool b) {
     if (capacity == origin) {return; error("setCached used on origin server");}
     if (capacity == noCache) {error("setCached used on node without cache");}
@@ -60,7 +65,7 @@ void Cache::setCached(int customID, bool b) {
         else {push(customID);}
         while (diskUsed > capacity) {
             // assume LRU replacement
-            EV << "Cache full. Evicting by LRU ";
+            EV << "Cache full. Evicting by LRU...\n";
             removeLeastRecent();
         }
     }
