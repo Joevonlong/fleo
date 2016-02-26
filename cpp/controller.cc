@@ -145,11 +145,6 @@ void Controller::setupSubflow(Flow* f, int vID) {
         // add new flow
         fc->addFlow(f);
     }
-    // walk Path and setCached
-    for (Path::const_iterator p_it=f->getPath().begin(); p_it!=f->getPath().end()-1; ++p_it) { // exclude last cModule which is a User, not Logic
-        checkAndCache((*p_it)->getModule(), vID);
-    }
-    // replace by walking channels instead...
     // walk FlowChannels and setCached at their output gates
     for (FlowChannels::const_iterator ch_it  = f->getChannels().begin();
                                       ch_it != f->getChannels().end();
