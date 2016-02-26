@@ -18,7 +18,6 @@ void Controller::handleMessage(cMessage *msg) {
     EV << "Controller::handleMessage\n";
     if (endFlows.count(msg) == 1) {
         return; // deprecate
-        end(msg);
     }
     else if (endStreams.count(msg) == 1) {
         endStream(msg);
@@ -315,32 +314,6 @@ bool Controller::userCallsThis(Path path, uint64_t bits) {
     rescheduleEnds();
 
     return true;
-}
-*/
-
-/*
-void Controller::end(cMessage* endMsg) {
-    //Enter_Method("end()");
-    Flow *f = endFlows[endMsg];
-    // since we assume shortest path only, we need only look at first channel
-    FlowChannel *fc1 = (FlowChannel*)f->channels.front();
-    fc1->shareBWexcept(flowEnds, f);
-    fc1->spreadUpdates();
-    // remove flow from its channels
-    for (std::vector<cChannel*>::iterator c_it = f->channels.begin(); c_it != f->channels.end(); ++c_it) {
-        ((FlowChannel*)(*c_it))->removeFlowV2(f);
-    }
-    // delete flow and associated self-timer
-    endFlows.erase(endMsg);
-    flowEnds.erase(f);
-    // pass msg to user (last module in path) to record transfer time
-    sendDirect(endMsg, (*(f->path.end()-1))->getModule(), "directInput", -1);
-    // delete endMsg;
-    delete f;
-    //
-    rescheduleEnds();
-    // record statistics
-    // inform user of completion? already called from user
 }
 */
 

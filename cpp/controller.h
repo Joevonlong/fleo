@@ -20,7 +20,6 @@ class Controller : public cSimpleModule {
         bool userCallsThis_FixedBw(Path waypoints, uint64_t bits, uint64_t bps);
         bool userCallsThis(Path path, uint64_t bits);
         bool requestVID(Path waypoints, int vID);
-        void end(cMessage* endMsg);
         void endStream(cMessage* endMsg);
     protected:
         virtual int numInitStages() const;
