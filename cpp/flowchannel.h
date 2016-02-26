@@ -49,3 +49,4 @@ class FlowChannel : public cDatarateChannel {
 };
 
 typedef std::set<FlowChannel*> FlowChannels;
+extern void printFlowChannels(FlowChannels fcs);

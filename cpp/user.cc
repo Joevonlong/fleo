@@ -106,6 +106,7 @@ void User::sendRequestSPO() {
     }
     // reverse since data flow moves from server/replica to user
     std::reverse(waypointNodes.begin(), waypointNodes.end());
+    EV << "Path to user: ";
     printPath(waypointNodes);
     global->recordFlowSuccess(controller->requestVID(waypointNodes, vID));
     return;

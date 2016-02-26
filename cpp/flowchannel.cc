@@ -54,6 +54,13 @@ void FlowChannel::processMessage(cMessage *msg, simtime_t t, result_t &result) {
 //~ void FlowChannel::handleParameterChange (const char *parname) {
 //~ }
 
+void printFlowChannels(FlowChannels fcs) {
+    for (FlowChannels::iterator it = fcs.begin(); it != fcs.end(); ++it) {
+        EV << (*it)->getFullPath() << " > ";
+    }
+    EV << ".\n";
+}
+
 // Bandwidth methods:
 uint64_t FlowChannel::getAvailableBps() {
     // should be equal to getAvailableBW(INT_MIN)

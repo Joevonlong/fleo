@@ -14,7 +14,7 @@ void printPath(Path path) {
     for (Path::iterator it = path.begin(); it != path.end(); ++it) {
         EV << (*it)->getModule()->getFullPath() << " > ";
     }
-    EV << endl;
+    EV << ".\n";
 }
 void printPaths(PathList paths) {
     for (PathList::iterator it = paths.begin(); it != paths.end(); ++it) {
