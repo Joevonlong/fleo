@@ -193,7 +193,7 @@ bool Controller::requestVID(Path waypoints, int vID) {
             if (res.first) {
                 subflow->setChannels(res.second);
                 subflow->setActive(true);
-                error("NYI");//setupSubflow(subflow, vID);
+                setupSubflow(subflow, vID);
                 SubflowStreams[subflow] = vdl;
             }
             else {
