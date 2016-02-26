@@ -45,6 +45,7 @@ bool Cache::isCached(int customID) {
  * - If disk is full upon caching customID, Will evict least recent ID(s).
  */
 void Cache::setCached(int customID, bool b) {
+    EV << getFullPath() << ": ";
     if (capacity == origin) {
         EV << "Warning: Cache::setCached used on origin server\n";
         return;
