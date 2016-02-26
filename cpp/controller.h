@@ -37,6 +37,7 @@ class Controller : public cSimpleModule {
         std::map<Flow*, cMessage*> flowEnds;
         //
         std::map<Flow*, Stream*> SubflowStreams;
+        void checkAndCache(cModule* mod, int vID);
         void deactivateSubflow(Flow* f);
         void setupSubflow(Flow* f, int vID);
         std::map<cMessage*, Stream*> endStreams;

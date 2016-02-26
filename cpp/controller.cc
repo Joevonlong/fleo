@@ -109,6 +109,14 @@ std::pair<bool, FlowChannels> Controller::treeAvailable(Node *root, std::vector<
     return std::make_pair(true, chs);
 }
 
+void Controller::checkAndCache(cModule* mod, int vID) {
+    Logic* l = check_and_cast<Logic*>(mod);
+    if (l->hasCache()){
+        if (!l->isOrigin()) {
+            l->setCached(vID, true);
+        }
+    }
+}
 // helperhelper
 void Controller::deactivateSubflow(Flow* f) {
     //Stream* s = SubflowStreams[f]; // TODO change to DL
@@ -127,7 +135,7 @@ void Controller::setupSubflow(Flow* f, int vID) {
     for (FlowChannels::const_iterator ch_it  = f->getChannels().begin();
                                       ch_it != f->getChannels().end();
                                     ++ch_it) {
-        FlowChannel *fc = check_and_cast<FlowChannel*>(*ch_it);
+        FlowChannel *fc = *ch_it;
         // cancel lower priority flows if necessary
         while (fc->getAvailableBps() < f->getBps()) {
             if (fc->getLowestPriorityFlow()->getPriority() >= f->getPriority()) {
@@ -140,11 +148,24 @@ void Controller::setupSubflow(Flow* f, int vID) {
     }
     // walk Path and setCached
     for (Path::const_iterator p_it=f->getPath().begin(); p_it!=f->getPath().end()-1; ++p_it) { // exclude last cModule which is a User, not Logic
-        Logic* l = check_and_cast<Logic*>((*p_it)->getModule());
-        if (l->hasCache()){
-            if (!l->isOrigin()) {
-                l->setCached(vID, true);
-            }
+        checkAndCache((*p_it)->getModule(), vID);
+    }
+    // replace by walking channels instead...
+    // walk FlowChannels and setCached at their output gates
+    for (FlowChannels::const_iterator ch_it  = f->getChannels().begin();
+                                      ch_it != f->getChannels().end();
+                                    ++ch_it) {
+        FlowChannel *fc = *ch_it;
+        cModule* fcDest = fc->getSourceGate()->getPathEndGate()->getOwnerModule();
+        // if Logic, setCached; elif User, ignore; else, should not reach this error
+        if (fcDest->getNedTypeName() == std::string("Logic")) {
+            checkAndCache(fcDest, vID);
+        }
+        else if (fcDest->getNedTypeName() == std::string("User")) {
+            // terminates at end-user and not cache: do nothing
+        }
+        else {
+            error("Controller::setupSubflow: unknown NED type: %s", fcDest->getNedTypeName());
         }
     }
     return;
@@ -174,9 +195,9 @@ bool Controller::requestVID(Path waypoints, int vID) {
             Flow* subflow = new Flow;
             subflow->setBps(bitrates[i]);
             subflow->setPriority(baseFlowPriority-i);
-            subflow->setChannels(res.second);//subflow->setPath(res.second);
             vdl->addSubflow(*subflow);
             if (res.first) {
+                subflow->setChannels(res.second);
                 subflow->setActive(true);
                 error("NYI");//setupSubflow(subflow, vID);
                 SubflowStreams[subflow] = vdl;
