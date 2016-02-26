@@ -45,8 +45,14 @@ bool Cache::isCached(int customID) {
  * - If disk is full upon caching customID, Will evict least recent ID(s).
  */
 void Cache::setCached(int customID, bool b) {
-    if (capacity == origin) {return; error("setCached used on origin server");}
-    if (capacity == noCache) {return; error("setCached used on node without cache");}
+    if (capacity == origin) {
+        EV << "Warning: Cache::setCached used on origin server\n";
+        return;
+    }
+    if (capacity == noCache) {
+        EV << "Warning: Cache::setCached used on node without cache\n";
+        return;
+    }
     if (getVideoBitSize(customID) > capacity) {
         EV << "Item #" << customID << " of size " << getVideoBitSize(customID)
            << " is larger than cache (" << capacity << "). Refusing.\n";
@@ -61,6 +67,8 @@ void Cache::setCached(int customID, bool b) {
             // and then update mapping
             idToIndex[customID] = leastRecent.end();
             --idToIndex[customID]; // end-1
+            EV << "Refreshed item #" << customID
+               << " of size " << getVideoBitSize(customID) << endl;
         }
         else {push(customID);}
         while (diskUsed > capacity) {
