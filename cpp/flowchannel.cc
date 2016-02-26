@@ -56,7 +56,7 @@ void FlowChannel::processMessage(cMessage *msg, simtime_t t, result_t &result) {
 
 void printFlowChannels(FlowChannels fcs) {
     for (FlowChannels::iterator it = fcs.begin(); it != fcs.end(); ++it) {
-        EV << (*it)->getFullPath() << " > ";
+        EV << (*it)->getSourceGate()->getFullPath() << " > ";
     }
     EV << ".\n";
 }
