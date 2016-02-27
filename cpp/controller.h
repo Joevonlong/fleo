@@ -17,8 +17,6 @@ struct RequestData {
 // finds, assigns, tracks, and revokes flows
 class Controller : public cSimpleModule {
     public:
-        bool userCallsThis_FixedBw(Path waypoints, uint64_t bits, uint64_t bps);
-        bool userCallsThis(Path path, uint64_t bits);
         bool requestVID(Path waypoints, int vID);
         void endStream(cMessage* endMsg);
     protected:
