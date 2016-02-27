@@ -48,6 +48,11 @@ bool pathAvailable(Path path, uint64_t bps, Priority p) {
  * Returns a pair <true, path> if successful, and <false, _> otherwise.
  */
 std::pair<bool, Path> Controller::waypointsAvailable(Path waypoints, uint64_t bps, Priority p) {
+    // checking arguments
+    if (waypoints.size() < 2) {
+        error("Controller::waypointsAvailable: given less than 2 waypoints");
+    }
+    //
     Path fullPath;
     for (Path::iterator wp_it = waypoints.begin(); wp_it != waypoints.end()-1; ++wp_it) { // for each waypoint up till 2nd last
         bool waypointsLinked = false;
@@ -103,7 +108,6 @@ std::pair<bool, FlowChannels> Controller::treeAvailable(Node *root, std::vector<
             return std::make_pair(false, chs);
         }
         MergePathIntoFlowChannels(&chs, &res.second);
-        //chs.insert(Path2FlowChannels(res.second));
     }
     return std::make_pair(true, chs);
 }
@@ -165,7 +169,11 @@ void Controller::setupSubflow(Flow* f, int vID) {
     return;
 }
 bool Controller::requestVID(Path waypoints, int vID) {
-    Enter_Method("requestVID()");
+    Enter_Method_Silent("requestVID()");
+    // checking arguments
+    if (waypoints.size() < 2) {
+        error("Controller::requestVID: given less than 2 waypoints");
+    }
     // initialise stream
     Stream* vdl = new Stream;
     vdl->setViewtime(getVideoSeconds(vID));
@@ -174,6 +182,8 @@ bool Controller::requestVID(Path waypoints, int vID) {
     Priority baseFlowPriority = bitrates.size(); // magic-y number
     // do parameter check for multicast vs unicast
     if (par("multicast").boolValue()) {
+        // TODO check if content is already cached (can assume all caches return the same result)
+
         // begin multicast flow setup:
         // assume source is first origin:
         Node* rootNode = topo.getNodeFor(simulation.getModule(completeCacheIDs.front()));
@@ -182,16 +192,24 @@ bool Controller::requestVID(Path waypoints, int vID) {
         for (std::vector<int>::iterator it = incompleteCacheIDs.begin();
                 it != incompleteCacheIDs.end(); ++it) {
             leafNodes.push_back(topo.getNodeFor(simulation.getModule(*it)));
-        }
+        } // Cannot simply add user as leaf since it might be routed directly to root,
+        // so keep only last 2 waypoints: to user from its cache... (1)
+        waypoints.erase(waypoints.begin(), waypoints.begin()+waypoints.size()-2);
         // check availability of multicast substreams
         for (size_t i=0; i<bitrates.size(); ++i) {
             std::pair<bool, FlowChannels> res = treeAvailable(rootNode, leafNodes, bitrates[i], baseFlowPriority-i);
+            // (1)... so that we can add the unicast route from user to its cache.
+            std::pair<bool, Path> res2 = waypointsAvailable(waypoints, bitrates[i], baseFlowPriority-i);
+            //
+            //printFlowChannels(res.second);
             Flow* subflow = new Flow;
             subflow->setBps(bitrates[i]);
             subflow->setPriority(baseFlowPriority-i);
             vdl->addSubflow(*subflow);
-            if (res.first) {
+            if (res.first && res2.first) {
                 subflow->setChannels(res.second);
+                subflow->addChannels(res2.second);
+                printFlowChannels(subflow->getChannels());
                 subflow->setActive(true);
                 setupSubflow(subflow, vID);
                 SubflowStreams[subflow] = vdl;
