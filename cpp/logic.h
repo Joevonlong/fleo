@@ -13,6 +13,7 @@ public:
     std::deque<Logic*> getRequestWaypoints(int vID, int tries);
     bool hasCache();
     bool isOrigin();
+    int64_t checkCache(int customID);
     void setCached(int customID, bool b);
 protected:
     Global *global;
@@ -25,7 +26,6 @@ protected:
     int nearestCompleteCache;
     double distToCompleteCache;
     void registerSelfIfCache();
-    int64_t checkCache(int customID);
     void requestFromCache(int cacheID, int customID);
     //
 private:

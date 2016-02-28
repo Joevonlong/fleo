@@ -3,6 +3,7 @@
 #include "routing.h"
 #include "flowchannel.h"
 #include "logic.h"
+#include "cache.h"
 
 Define_Module(Controller);
 
@@ -181,27 +182,27 @@ bool Controller::requestVID(Path waypoints, int vID) {
     std::vector<uint64_t> bitrates = getBitRates(vID);
     Priority baseFlowPriority = bitrates.size(); // magic-y number
     // do parameter check for multicast vs unicast
-    if (par("multicast").boolValue()) {
-        // TODO check if content is already cached (can assume all caches return the same result)
-
-        // begin multicast flow setup:
+    if (par("multicast").boolValue()) { // begin multicast flow setup:
+        // only last 2 waypoints are now needed: to user from its cache
+        waypoints.erase(waypoints.begin(), waypoints.begin()+waypoints.size()-2);
         // assume source is first origin:
         Node* rootNode = topo.getNodeFor(simulation.getModule(completeCacheIDs.front()));
-        // assume all replica locations are destinations:
         std::vector<Node*> leafNodes;
-        for (std::vector<int>::iterator it = incompleteCacheIDs.begin();
-                it != incompleteCacheIDs.end(); ++it) {
-            leafNodes.push_back(topo.getNodeFor(simulation.getModule(*it)));
-        } // Cannot simply add user as leaf since it might be routed directly to root,
-        // so keep only last 2 waypoints: to user from its cache... (1)
-        waypoints.erase(waypoints.begin(), waypoints.begin()+waypoints.size()-2);
+        // check if content is already cached, assuming the cache we're given return the same result as all others
+        bool cached = check_and_cast<Cache*>(check_and_cast<Logic*>(waypoints.front()->getModule())->getParentModule()->getSubmodule("cache"))->isCached(vID);
+        if (!cached) {
+            // assume all replica locations are destinations:
+            for (std::vector<int>::iterator it = incompleteCacheIDs.begin();
+                    it != incompleteCacheIDs.end(); ++it) {
+                leafNodes.push_back(topo.getNodeFor(simulation.getModule(*it)));
+            } // Cannot simply add user as leaf since it might be routed directly to root... (1)
+        }
         // check availability of multicast substreams
         for (size_t i=0; i<bitrates.size(); ++i) {
             std::pair<bool, FlowChannels> res = treeAvailable(rootNode, leafNodes, bitrates[i], baseFlowPriority-i);
-            // (1)... so that we can add the unicast route from user to its cache.
+            // (1)... so we add the unicast route from user to its cache.
             std::pair<bool, Path> res2 = waypointsAvailable(waypoints, bitrates[i], baseFlowPriority-i);
             //
-            //printFlowChannels(res.second);
             Flow* subflow = new Flow;
             subflow->setBps(bitrates[i]);
             subflow->setPriority(baseFlowPriority-i);
