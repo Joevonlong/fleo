@@ -155,7 +155,7 @@ void Controller::setupSubflow(Flow* f, int vID) {
                                       ch_it != f->getChannels().end();
                                     ++ch_it) {
         FlowChannel *fc = *ch_it;
-        cModule* fcDest = fc->getSourceGate()->getPathEndGate()->getOwnerModule();
+        cModule* fcDest = fc->getSourceGate()->getPathStartGate()->getOwnerModule();
         // if Logic, setCached; elif User, ignore; else, should not reach this error
         if (fcDest->getNedTypeName() == std::string("Logic")) {
             checkAndCache(fcDest, vID);
