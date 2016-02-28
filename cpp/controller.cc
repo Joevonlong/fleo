@@ -154,7 +154,7 @@ void Controller::setupSubflow(Flow* f, int vID) {
     for (FlowChannels::const_iterator ch_it  = f->getChannels().begin();
                                       ch_it != f->getChannels().end();
                                     ++ch_it) {
-        FlowChannel *fc = *ch_it;
+        FlowChannel* fc = *ch_it;
         cModule* fcDest = fc->getSourceGate()->getPathStartGate()->getOwnerModule();
         // if Logic, setCached; elif User, ignore; else, should not reach this error
         if (fcDest->getNedTypeName() == std::string("Logic")) {
@@ -166,6 +166,19 @@ void Controller::setupSubflow(Flow* f, int vID) {
         else {
             error("Controller::setupSubflow: unknown NED type: %s", fcDest->getNedTypeName());
         }
+        // TODO remove repetition
+        fcDest = fc->getSourceGate()->getPathEndGate()->getOwnerModule();
+        // if Logic, setCached; elif User, ignore; else, should not reach this error
+        if (fcDest->getNedTypeName() == std::string("Logic")) {
+            checkAndCache(fcDest, vID);
+        }
+        else if (fcDest->getNedTypeName() == std::string("User")) {
+            // terminates at end-user and not cache: do nothing
+        }
+        else {
+            error("Controller::setupSubflow: unknown NED type: %s", fcDest->getNedTypeName());
+        }
+        //
     }
     return;
 }
