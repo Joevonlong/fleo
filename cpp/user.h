@@ -22,7 +22,6 @@ protected:
     cMessage* underflowTimer;
     cOutVector underflowVector;
     
-    void sendRequest();
     void sendRequestSPO();
     //void endRequest(MyPacket *pkt);
     simtime_t requestStartTime;

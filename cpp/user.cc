@@ -130,66 +130,6 @@ void User::sendRequestSPO() {
     return;
 }
 
-void User::sendRequest()
-{
-    // temp
-    /*
-    Path ret; int i=0;
-    do {
-        ret = getDetour(this, simulation.getModule(nearestCache), i++);
-        EV << i << ": "; printPath(ret);
-    } while (i < 1000);
-    error("stopping here");
-    return;
-    */
-    // end temp
-    // new flow based...
-    /**
-     * TODO trigger connection from replica to replica/origin if content not in cache
-     */
-    int vID = getRandCustomVideoID();
-    std::deque<Logic*> waypoints = ((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID, cacheTries); // note: doesn't include User itself
-    // output for debugging
-    EV << "waypoints: ";
-    for (std::deque<Logic*>::iterator it = waypoints.begin(); it != waypoints.end(); ++it) {
-        EV << (*it)->getFullPath() << " > ";
-    }
-    EV << endl;
-    // end output
-    // Add user node to head...
-    Path waypointNodes;
-    waypointNodes.push_back(topo.getNodeFor(this));
-    // ... and convert the rest to nodes.
-    for (std::deque<Logic*>::iterator logic_it = waypoints.begin(); logic_it != waypoints.end(); ++logic_it) {
-        waypointNodes.push_back(topo.getNodeFor(*logic_it));
-    }
-    // reverse since data flow moves from server/replica to user
-    std::reverse(waypointNodes.begin(), waypointNodes.end());
-    // Then look for a possible Flow for each node-pair
-    /**
-     * trying a proper multiflow/waypoints check instead
-     */
-    PathList setMeUp = waypointsToAvailablePaths(waypointNodes, getBitRate(vID, 1), 1);
-    if (setMeUp.size() == 0) {
-        EV << "could not find bandwidth to serve request\n";
-        global->recordFlowSuccess(false);
-    }
-    else {
-        PathList::iterator setup_it = setMeUp.begin();
-        cMessage *vidComplete = new cMessage("video transfer complete"); // one self timer for each expiry (no need to link all flows together?)
-        scheduleAt(simTime()+getVideoSeconds(vID), vidComplete);
-        // [buggy] Flow* f = createFlow(*setup_it, getBitRate(vID, 1), 1);
-        //printPath(f->getPath());
-        //flowMap[vidComplete] = f;
-        // cache at replicas too
-        for (std::deque<Logic*>::iterator it = waypoints.begin(); it != waypoints.end(); ++it) {
-            (*it)->setCached(vID, true);
-        }
-        global->recordFlowSuccess(true);
-    }
-    return;
-}
-
 void User::handleMessage(cMessage *msg)
 {
     if (msg == idleTimer) { // if idle timer is back
