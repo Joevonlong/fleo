@@ -150,35 +150,19 @@ void Controller::setupSubflow(Flow* f, int vID) {
         // add new flow
         fc->addFlow(f);
     }
-    // walk FlowChannels and setCached at their output gates
-    for (FlowChannels::const_iterator ch_it  = f->getChannels().begin();
-                                      ch_it != f->getChannels().end();
-                                    ++ch_it) {
-        FlowChannel* fc = *ch_it;
-        cModule* fcDest = fc->getSourceGate()->getPathStartGate()->getOwnerModule();
-        // if Logic, setCached; elif User, ignore; else, should not reach this error
-        if (fcDest->getNedTypeName() == std::string("Logic")) {
-            checkAndCache(fcDest, vID);
+    // try setCached at all modules
+    for (std::set<cModule*>::const_iterator m_it  = f->getModules().begin();
+                                            m_it != f->getModules().end();
+                                          ++m_it) {
+        if ((*m_it)->getNedTypeName() == std::string("Logic")) {
+            checkAndCache(*m_it, vID);
         }
-        else if (fcDest->getNedTypeName() == std::string("User")) {
+        else if ((*m_it)->getNedTypeName() == std::string("User")) {
             // terminates at end-user and not cache: do nothing
         }
         else {
-            error("Controller::setupSubflow: unknown NED type: %s", fcDest->getNedTypeName());
+            error("Controller::setupSubflow: unknown NED type: %s", (*m_it)->getNedTypeName());
         }
-        // TODO remove repetition
-        fcDest = fc->getSourceGate()->getPathEndGate()->getOwnerModule();
-        // if Logic, setCached; elif User, ignore; else, should not reach this error
-        if (fcDest->getNedTypeName() == std::string("Logic")) {
-            checkAndCache(fcDest, vID);
-        }
-        else if (fcDest->getNedTypeName() == std::string("User")) {
-            // terminates at end-user and not cache: do nothing
-        }
-        else {
-            error("Controller::setupSubflow: unknown NED type: %s", fcDest->getNedTypeName());
-        }
-        //
     }
     return;
 }
