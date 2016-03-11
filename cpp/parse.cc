@@ -78,15 +78,28 @@ uint64_t getVideoSeconds(int customID) {
     return lengths[customID];
 }
 
+std::vector<std::string> getVideoResolutions(int customID) {
+    std::vector<std::string> resolutions;
+    resolutions.push_back("360p");
+    resolutions.push_back("480p");
+    resolutions.push_back("720p");
+    return resolutions;
+}
+
 uint64_t getVideoBitSize(int customID) {
     return lengths[customID]*bitRate;
 }
 
-uint64_t getBitRate(int customID, int quality) {
+uint64_t getBitRate(int customID, std::string resolution) {
     // should return additional bitrate due to given quality only
     // ie. does not include bitrate of lower qualities
     // to expand on in future...
-    return bitRate;
+    if (resolution == "360p") {return bitRate;}
+    if (resolution == "480p") {return bitRate*2;}
+    if (resolution == "720p") {return bitRate*4;}
+    EV << "getBitRate: unrecognised resolution: " << resolution << endl;
+    throw cRuntimeError("");
+    return 0;
 }
 
 std::vector<uint64_t> getBitRates(int customID) {
