@@ -57,9 +57,9 @@ void Flow::addChannels(Path path) {
     if (path.size() == 0) {
         throw cRuntimeError("Flow::addChannels: Adding channels for empty path.");
     }
-    size_t oldChannelsSize = channels.size();
     for (Path::iterator p_it = path.begin(); p_it != path.end()-1; ++p_it) {
-        for (int i=0; i<(*p_it)->getNumOutLinks(); ++i) {
+        int i;
+        for (i=0; i<(*p_it)->getNumOutLinks(); ++i) {
             if ((*p_it)->getLinkOut(i)->getRemoteNode() == *(p_it+1)) {
                 channels.insert(
                     check_and_cast<FlowChannel*>(
@@ -69,9 +69,9 @@ void Flow::addChannels(Path path) {
                 break;
             }
         }
-    }
-    if (oldChannelsSize+path.size()-1 != channels.size()) {
-        throw cRuntimeError("Flow::addChannels: Could not link entire path");
+        if (i == (*p_it)->getNumOutLinks()) {
+            throw cRuntimeError("Flow::addChannels: path argument is not fully linked");
+        }
     }
 }
 
