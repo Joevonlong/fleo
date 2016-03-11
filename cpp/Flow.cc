@@ -23,14 +23,15 @@ void Flow::setActive(bool active) {
     this->active = active;
 }
 
-const Path& Flow::getPath() const {
-    return path;
+const std::set<cModule*>& Flow::getModules() {
+    update();
+    return modules;
 }
 void Flow::setPath(const Path& path) {
     this->path = path;
     setChannels(FlowChannels());
     addChannels(path);
-    updated = false; // lag not updated
+    updated = false;
 }
 
 const FlowChannels& Flow::getChannels() {
@@ -56,6 +57,7 @@ void Flow::addChannels(Path path) {
     if (path.size() == 0) {
         throw cRuntimeError("Flow::addChannels: Adding channels for empty path.");
     }
+    size_t oldChannelsSize = channels.size();
     for (Path::iterator p_it = path.begin(); p_it != path.end()-1; ++p_it) {
         for (int i=0; i<(*p_it)->getNumOutLinks(); ++i) {
             if ((*p_it)->getLinkOut(i)->getRemoteNode() == *(p_it+1)) {
@@ -68,10 +70,13 @@ void Flow::addChannels(Path path) {
             }
         }
     }
+    if (oldChannelsSize+path.size()-1 != channels.size()) {
+        throw cRuntimeError("Flow::addChannels: Could not link entire path");
+    }
 }
 
 const simtime_t& Flow::getLag() {
-    updateLag();
+    update();
     return lag;
 }
 
@@ -105,25 +110,17 @@ void Flow::setPriority(Priority priority) {
 
 void Flow::update() {
     if (updated) {return;}
-    updateChannels();
+    updateModules();
     updateLag();
     last_updated = simTime();
     updated = true;
 }
 
-void Flow::updateChannels() {
-    cRuntimeError("Flow::updateChannels(): not to be used");
-    channels.clear();
-    for (Path::iterator p_it = path.begin(); p_it != path.end()-1; ++p_it) {
-        for (int i=0; i<(*p_it)->getNumOutLinks(); ++i) {
-            if ((*p_it)->getLinkOut(i)->getRemoteNode() == *(p_it+1)) {
-                //channels.push_back((*p_it)->getLinkOut(i)->getLocalGate()->getTransmissionChannel());
-                break;
-            }
-        }
-    }
-    if (channels.size() != path.size()-1) {
-        throw cRuntimeError("Flow::updateChannels: Could not link all nodes");
+void Flow::updateModules() {
+    modules.clear();
+    for (FlowChannels::iterator fc_it = channels.begin(); fc_it != channels.end(); ++fc_it) {
+        modules.insert((*fc_it)->getSourceGate()->getPathStartGate()->getOwnerModule());
+        modules.insert((*fc_it)->getSourceGate()->getPathEndGate()->getOwnerModule());
     }
 }
 

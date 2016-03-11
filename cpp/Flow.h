@@ -15,7 +15,7 @@ public:
     virtual ~Flow();
     bool isActive() const;
     void setActive(bool active);
-    const Path& getPath() const;
+    const std::set<cModule*>& getModules();
     void setPath(const Path& path);
     const FlowChannels& getChannels();
     void setChannels(const FlowChannels& channels);
@@ -34,6 +34,7 @@ public:
 protected:
     bool active; // whether flow is actually moving
     Path path;
+    std::set<cModule*> modules;
     FlowChannels channels;
     simtime_t lag; // round-trip-time / latency / lag / delay
     uint64_t bps;
@@ -46,6 +47,6 @@ protected:
     bool updated;
     simtime_t last_updated;
     void update();
-    void updateChannels();
+    void updateModules();
     void updateLag();
 };
