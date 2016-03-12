@@ -14,6 +14,7 @@ protected:
     virtual void handleMessage(cMessage *msg);
     double capacity;
     double diskUsed;
+    bool autoEvictLowerPriorities;
     std::list<int> leastRecent; // push does not invalidate list iterators, unlike deque.
     std::map<int, std::list<int>::iterator> idToIndex; // maps video ID to LRU list's index (for speed)
     void push(int customID);

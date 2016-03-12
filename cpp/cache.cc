@@ -16,6 +16,7 @@ void Cache::initialize() {
     }
     capacity = par("capacity").doubleValue();
     diskUsed = 0;
+    autoEvictLowerPriorities = par("autoEvictLowerPriorities").boolValue();
 }
 
 void Cache::handleMessage(cMessage* msg) {

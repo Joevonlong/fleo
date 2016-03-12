@@ -75,6 +75,7 @@ simple Buffer
 simple Cache {
     parameters:
         double capacity @unit(B) = default(1.5TiB);
+        bool autoEvictLowerPriorities = default(true);
 }
 
 simple Logic
