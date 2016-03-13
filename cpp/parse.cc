@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <fstream>
+#include <algorithm>
 #include <omnetpp.h>
 #include "parse.h"
 
 const uint64_t bitRate = 800000;
+
+std::vector<VideoMetadata*> allMeta;
 
 unsigned long arraySize;
 int viewsTotal;
@@ -13,28 +16,38 @@ uint64_t* lengths;
 int* cumulativeViews;
 
 void loadVideoLengthFile() {
-    unsigned long tmp;
+    unsigned long views;
     std::ifstream freqFile; // default: input from file
     freqFile.open("datasets/freqs_yt_sci.txt");
 
     // parse first line (metadata)
-    freqFile >> arraySize >> tmp >> viewsTotal;
+    freqFile >> arraySize >> views >> viewsTotal; // views used as temp var here
     videoIDs = std::vector<std::string>(arraySize);
     lengths = new uint64_t[arraySize];
     cumulativeViews = new int[arraySize];
+    allMeta.reserve(arraySize);
 
     // parse subsequent lines
     unsigned long i = 0;
-    while (freqFile >> videoIDs[i] >> lengths[i] >> tmp) {
-        //EV << lengths[i] << '\t' << cumulativeViews[i] << endl;
+    while (freqFile >> videoIDs[i] >> lengths[i] >> views) {
+        VideoMetadata* vmd = new VideoMetadata;
+        vmd->customID = i;
+        vmd->name = videoIDs[i];
+        vmd->duration = lengths[i];
+        vmd->bitRates.push_back(bitRate); vmd->bitRates.push_back(bitRate); vmd->bitRates.push_back(bitRate*2);
+        vmd->resolutions.push_back("360p"); vmd->resolutions.push_back("480p"); vmd->resolutions.push_back("720p");
+        allMeta[i] = vmd;
         // keep rolling sum to avoid repeated subtractions in getVideoSize()
         if (i != 0) {
-            cumulativeViews[i] = cumulativeViews[i-1] + tmp;
+            cumulativeViews[i] = cumulativeViews[i-1] + views;
         }
         else {
-            cumulativeViews[i] = tmp;
+            cumulativeViews[i] = views;
         }
         i++;
+    }
+    if (i > arraySize) {
+        throw cRuntimeError("loadVideoLengthFile: More video entries than expected");
     }
     freqFile.close();
 }
@@ -79,41 +92,48 @@ uint64_t getVideoSeconds(int customID) {
 }
 
 std::vector<std::string> getVideoResolutions(int customID) {
-    std::vector<std::string> resolutions;
-    resolutions.push_back("360p");
-    resolutions.push_back("480p");
-    resolutions.push_back("720p");
-    return resolutions;
+    return allMeta[customID]->resolutions;
 }
 
+/**
+ * BitSize of all qualities.
+ */
 uint64_t getVideoBitSize(int customID) {
-    return lengths[customID]*bitRate;
+    uint64_t totalBitRate = 0;
+    for (size_t i = 0; i < allMeta[customID]->bitRates.size(); ++i) {
+        totalBitRate += allMeta[customID]->bitRates[i];
+    }
+    return allMeta[customID]->duration.dbl() * totalBitRate;
+}
+
+uint64_t getAdditionalVideoBitSize(int customID, std::string resolution) {
+    return allMeta[customID]->duration.dbl() * getAdditionalBitRate(customID, resolution);
 }
 
 uint64_t getAdditionalBitRate(int customID, std::string resolution) {
     // should return additional bitrate due to given quality only
     // ie. does not include bitrate of lower qualities
     // to expand on in future...
-    if (resolution == "360p") {return bitRate;}
-    if (resolution == "480p") {return bitRate;}
-    if (resolution == "720p") {return bitRate*2;}
+    for (size_t i = 0; i < allMeta[customID]->resolutions.size(); ++i) {
+        if (allMeta[customID]->resolutions[i] == resolution) {
+            return allMeta[customID]->bitRates[i];
+        }
+    }
     EV << "getBitRate: unrecognised resolution: " << resolution << endl;
     throw cRuntimeError("");
     return 0;
 }
 
+/**
+ * Each bitrate past the first is the additional, not cumulative,
+ * bitrate nequired for the next quality.
+ * Using magic numbers taken from YouTube for now...
+ */
 std::vector<uint64_t> getBitRates(int customID) {
-    // Each bitrate past the first is the additional, not cumulative,
-    // bitrate nequired for the next quality.
-    // Using magic numbers taken from YouTube for now...
-    std::vector<uint64_t> bitRates;
-    bitRates.push_back(800000); // ~360p
-    bitRates.push_back(800000); // ~480p-360p
-    bitRates.push_back(1600000); // ~720p-480p
-    return bitRates;
+    return allMeta[customID]->bitRates;
 }
 
 int getQualities(int customID) {
     // number of quality levels
-    return 3;
+    return allMeta[customID]->resolutions.size();
 }
