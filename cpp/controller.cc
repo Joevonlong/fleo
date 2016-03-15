@@ -183,6 +183,8 @@ bool Controller::requestVID(Path waypoints, int vID) {
     Priority baseFlowPriority = bitrates.size(); // magic-y number
     // do parameter check for multicast vs unicast
     if (multicast) { // begin multicast flow setup:
+        Stream* trunkVDL = new Stream;
+        Stream* branchVDL = new Stream;
         // only last 2 waypoints are now needed: to user from its cache
         waypoints.erase(waypoints.begin(), waypoints.begin()+waypoints.size()-2);
         // assume source is first origin:
@@ -199,32 +201,61 @@ bool Controller::requestVID(Path waypoints, int vID) {
         }
         // check availability of multicast substreams
         for (size_t i=0; i<bitrates.size(); ++i) {
-            std::pair<bool, FlowChannels> res = treeAvailable(rootNode, leafNodes, bitrates[i], baseFlowPriority-i);
+            std::pair<bool, FlowChannels> branchRes = treeAvailable(rootNode, leafNodes, bitrates[i], baseFlowPriority-i);
+            std::pair<bool, FlowChannels> trunkRes; trunkRes.first = branchRes.first;
+            if (!cached) { // tree isn't empty: subtract trunk
+                trunkRes = treeAvailable(rootNode, std::vector<Node*>(1,waypoints.front()), bitrates[i], baseFlowPriority-i);
+                branchRes.second.erase(trunkRes.second.begin(), trunkRes.second.end());
+                throw cRuntimeError("breakpoint");
+            }
             // (1)... so we add the unicast route from user to its cache.
-            std::pair<bool, Path> res2 = waypointsAvailable(waypoints, bitrates[i], baseFlowPriority-i);
+            std::pair<bool, Path> localRes = waypointsAvailable(waypoints, bitrates[i], baseFlowPriority-i);
             //
-            Flow* subflow = new Flow;
-            subflow->setBps(bitrates[i]);
-            subflow->setPriority(baseFlowPriority-i);
-            vdl->addSubflow(*subflow);
-            if (res.first && res2.first) {
-                subflow->setChannels(res.second);
-                subflow->addChannels(res2.second);
-                printFlowChannels(subflow->getChannels());
-                subflow->setActive(true);
-                setupSubflow(subflow, vID);
-                SubflowStreams[subflow] = vdl;
+            Flow* trunkSubflow = new Flow;
+            Flow* branchSubflow = new Flow;
+            trunkSubflow->setBps(bitrates[i]);
+            branchSubflow->setBps(bitrates[i]);
+            trunkSubflow->setPriority(baseFlowPriority-i);
+            branchSubflow->setPriority(baseFlowPriority-i+branchPriorityModifier);
+            trunkVDL->addSubflow(*trunkSubflow);
+            branchVDL->addSubflow(*branchSubflow);
+            if (branchRes.first && localRes.first) {
+                if (!cached) {
+                    trunkSubflow->setChannels(trunkRes.second);
+                }
+                trunkSubflow->addChannels(localRes.second);
+                branchSubflow->setChannels(branchRes.second);
+                printFlowChannels(trunkSubflow->getChannels());
+                printFlowChannels(branchSubflow->getChannels());
+                trunkSubflow->setActive(true);
+                branchSubflow->setActive(true);
+                setupSubflow(trunkSubflow, vID);
+                setupSubflow(branchSubflow, vID);
+                SubflowStreams[trunkSubflow] = trunkVDL;
+                SubflowStreams[branchSubflow] = branchVDL;
             }
             else {
                 if (i==0) { //not even lowest quality -> whole req fails
-                    delete subflow;
+                    delete trunkSubflow; delete branchSubflow;
+                    delete trunkVDL; delete branchVDL;
                     delete vdl;
                     return false;
                 }
-                subflow->setActive(false);
+                trunkSubflow->setActive(false);
+                branchSubflow->setActive(false);
                 break; // do not attempt lower priority subflows
             }
         }
+        // add event to queue
+        cMessage* trunkEndMsg = new cMessage("end-of-stream");
+        cMessage* branchEndMsg = new cMessage("end-of-stream");
+        scheduleAt(simTime()+trunkVDL->getViewtime(), trunkEndMsg);
+        scheduleAt(simTime()+branchVDL->getViewtime(), branchEndMsg);
+        // and point it back to the request
+        endStreams[trunkEndMsg] = trunkVDL;
+        endStreams[branchEndMsg] = branchVDL;
+        // success
+        return true;
     } // endif multicast
     else { // begin unicast flow setup:
         // check which subflows can be established
@@ -250,14 +281,14 @@ bool Controller::requestVID(Path waypoints, int vID) {
                 break; // do not attempt lower priority subflows
             }
         }
+        // add event to queue
+        cMessage* endMsg = new cMessage("end-of-stream");
+        scheduleAt(simTime()+vdl->getViewtime(), endMsg);
+        // and point it back to the request
+        endStreams[endMsg] = vdl;
+        // success
+        return true;
     } // endif unicast
-    // add event to queue
-    cMessage* endMsg = new cMessage("end-of-stream");
-    scheduleAt(simTime()+vdl->getViewtime(), endMsg);
-    // and point it back to the request
-    endStreams[endMsg] = vdl;
-    // success
-    return true;
 }
 
 void Controller::endStream(cMessage* endMsg) {
