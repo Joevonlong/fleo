@@ -26,6 +26,11 @@ class Controller : public cSimpleModule {
         virtual void finish();
     private:
         Global* g;
+        // ned parameters
+        int detourAttempts;
+        bool multicast;
+        int branchPriorityModifier;
+        // end of ned parameters
         void rescheduleEnds();
         void shareBandwidth(std::set<Flow*> flows);
         std::map<Priority, std::list<Flow*> > flowsAtPriority;

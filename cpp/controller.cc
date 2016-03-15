@@ -13,6 +13,9 @@ int Controller::numInitStages() const {
 
 void Controller::initialize(int stage) {
     g = (Global*)getParentModule()->getSubmodule("global");;
+    detourAttempts = par("detourAttempts").longValue();
+    multicast = par("multicast").boolValue();
+    branchPriorityModifier = par("branchPriorityModifier").longValue();
 }
 
 void Controller::handleMessage(cMessage *msg) {
@@ -57,7 +60,7 @@ std::pair<bool, Path> Controller::waypointsAvailable(Path waypoints, uint64_t bp
     Path fullPath;
     for (Path::iterator wp_it = waypoints.begin(); wp_it != waypoints.end()-1; ++wp_it) { // for each waypoint up till 2nd last
         bool waypointsLinked = false;
-        for (int i=0; i<par("detourAttempts").longValue(); ++i) { // for some number of attempts
+        for (int i=0; i<detourAttempts; ++i) { // for some number of attempts
             Path det = getDetour(*wp_it, *(wp_it+1), i); // get next detour
             if (det.size() == 0) {break;} // no more detours
             // and check for BW availability
@@ -179,7 +182,7 @@ bool Controller::requestVID(Path waypoints, int vID) {
     std::vector<uint64_t> bitrates = getBitRates(vID);
     Priority baseFlowPriority = bitrates.size(); // magic-y number
     // do parameter check for multicast vs unicast
-    if (par("multicast").boolValue()) { // begin multicast flow setup:
+    if (multicast) { // begin multicast flow setup:
         // only last 2 waypoints are now needed: to user from its cache
         waypoints.erase(waypoints.begin(), waypoints.begin()+waypoints.size()-2);
         // assume source is first origin:

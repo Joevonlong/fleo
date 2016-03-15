@@ -11,6 +11,8 @@ simple Controller {
 		int detourAttempts = default(1); // 1 means shortest (Dijkstra's) only
 		bool splittableStreams = default(true);
 		bool multicast = default(false); // experimental
+		int branchPriorityModifier = default(-5); // used during multicast for
+		// channels not directly being used (eg. predictive caching)
 }
 
 channel FlowChannel extends ned.DatarateChannel
@@ -74,7 +76,7 @@ simple Buffer
 
 simple Cache {
     parameters:
-        double capacity @unit(B) = default(1.5TiB);
+        double capacity @unit(B) = default(6TiB);
 }
 
 simple Logic
