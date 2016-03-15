@@ -1,0 +1,6 @@
+/.computed
+*.pyc
+*.anf
+/Makefile
+/results/
+/out/
