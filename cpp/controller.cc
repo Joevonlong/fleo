@@ -184,7 +184,9 @@ bool Controller::requestVID(Path waypoints, int vID) {
     // do parameter check for multicast vs unicast
     if (multicast) { // begin multicast flow setup:
         Stream* trunkVDL = new Stream;
+        trunkVDL->setViewtime(getVideoSeconds(vID));
         Stream* branchVDL = new Stream;
+        branchVDL->setViewtime(getVideoSeconds(vID));
         // only last 2 waypoints are now needed: to user from its cache
         waypoints.erase(waypoints.begin(), waypoints.begin()+waypoints.size()-2);
         // assume source is first origin:
