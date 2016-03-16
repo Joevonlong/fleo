@@ -203,10 +203,12 @@ bool Controller::requestVID(Path waypoints, int vID) {
         for (size_t i=0; i<bitrates.size(); ++i) {
             std::pair<bool, FlowChannels> branchRes = treeAvailable(rootNode, leafNodes, bitrates[i], baseFlowPriority-i);
             std::pair<bool, FlowChannels> trunkRes; trunkRes.first = branchRes.first;
-            if (!cached) { // tree isn't empty: subtract trunk
+            if (!cached) { // tree shouldn't be empty: subtract trunk
                 trunkRes = treeAvailable(rootNode, std::vector<Node*>(1,waypoints.front()), bitrates[i], baseFlowPriority-i);
-                branchRes.second.erase(trunkRes.second.begin(), trunkRes.second.end());
-                throw cRuntimeError("breakpoint");
+                for (auto it=trunkRes.second.begin(); it!= trunkRes.second.end(); ++it) {
+                    branchRes.second.erase(*it);
+                }
+                //throw cRuntimeError("breakpoint");
             }
             // (1)... so we add the unicast route from user to its cache.
             std::pair<bool, Path> localRes = waypointsAvailable(waypoints, bitrates[i], baseFlowPriority-i);
