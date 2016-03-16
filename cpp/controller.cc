@@ -146,7 +146,7 @@ void Controller::setupSubflow(Flow* f, int vID) {
         // cancel lower priority flows if necessary
         while (fc->getAvailableBps() < f->getBps()) {
             if (fc->getLowestPriorityFlow()->getPriority() >= f->getPriority()) {
-                throw cRuntimeError("revoked flow of higher priority than new flow");
+                throw cRuntimeError("Controller::setupSubflow: revoked flow of higher priority than new flow");
             }
             deactivateSubflow(fc->getLowestPriorityFlow());
         }
