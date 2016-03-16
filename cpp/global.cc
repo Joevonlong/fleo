@@ -176,7 +176,8 @@ void Global::recordPriority(int p, bool add) {
         else {lowPriorityVec.record(--lowP);}
     }
     else {
-        error("Global::recordPriority: unknown priority");
+        EV << "Global::recordPriority: unknown priority: " << p << endl;
+        //error("Global::recordPriority: unknown priority");
     }
 }
 
