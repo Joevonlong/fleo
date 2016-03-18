@@ -193,9 +193,11 @@ Path getDetour(Node *srcNode, Node *dstNode, size_t index) {
             }
         }
         else { // find detours until total (searched+queue) adds up to requested index
-            EV << currentState->searchingSet.size() << ", " << currentState->searchedSet.size() << "\t";
+            EV << "State of detour search: " << currentState->searchedSet.size() << " paths searched with "
+               << currentState->searchingSet.size() << " pending. Now searching more...\n";
             dequeueAndSearch(currentState);
-            EV << currentState->searchingSet.size() << ", " << currentState->searchedSet.size() << endl;
+            EV << "State of detour search: " << currentState->searchedSet.size() << " paths searched with "
+               << currentState->searchingSet.size() << " pending.\n";
         }
     }
     // out of detours to search and index not reached: terminate search
