@@ -185,8 +185,6 @@ bool Controller::requestVID(Path waypoints, int vID) {
     if (multicast) { // begin multicast flow setup:
         Stream* trunkVDL = new Stream;
         trunkVDL->setViewtime(getVideoSeconds(vID));
-        Stream* branchVDL = new Stream;
-        branchVDL->setViewtime(getVideoSeconds(vID));
         // only last 2 waypoints are now needed: to user from its cache
         waypoints.erase(waypoints.begin(), waypoints.begin()+waypoints.size()-2);
         // assume source is first origin:
@@ -201,62 +199,84 @@ bool Controller::requestVID(Path waypoints, int vID) {
                 leafNodes.push_back(topo.getNodeFor(simulation.getModule(*it)));
             } // Cannot simply add user as leaf since it might be routed directly to root... (1)
         }
-        // check availability of multicast substreams
+        // set up local cache-to-user first, and origin-to-local cache if not cached
+        std::pair<bool, FlowChannels> trunkRes;
         for (size_t i=0; i<bitrates.size(); ++i) {
-            std::pair<bool, FlowChannels> branchRes = treeAvailable(rootNode, leafNodes, bitrates[i], baseFlowPriority-i);
-            std::pair<bool, FlowChannels> trunkRes; trunkRes.first = branchRes.first;
-            if (!cached) { // tree shouldn't be empty: subtract trunk
+            trunkRes.first = true;
+            if (!cached) { // find from origin to local cache
                 trunkRes = treeAvailable(rootNode, std::vector<Node*>(1,waypoints.front()), bitrates[i], baseFlowPriority-i);
-                for (auto it=trunkRes.second.begin(); it!= trunkRes.second.end(); ++it) {
-                    branchRes.second.erase(*it);
-                }
-                //throw cRuntimeError("breakpoint");
             }
             // (1)... so we add the unicast route from user to its cache.
             std::pair<bool, Path> localRes = waypointsAvailable(waypoints, bitrates[i], baseFlowPriority-i);
             //
             Flow* trunkSubflow = new Flow;
-            Flow* branchSubflow = new Flow;
             trunkSubflow->setBps(bitrates[i]);
-            branchSubflow->setBps(bitrates[i]);
             trunkSubflow->setPriority(baseFlowPriority-i);
-            branchSubflow->setPriority(baseFlowPriority-i+branchPriorityModifier);
             trunkVDL->addSubflow(*trunkSubflow);
-            branchVDL->addSubflow(*branchSubflow);
-            if (branchRes.first && localRes.first) {
+            if (trunkRes.first && localRes.first) {
                 if (!cached) {
                     trunkSubflow->setChannels(trunkRes.second);
                 }
                 trunkSubflow->addChannels(localRes.second);
-                branchSubflow->setChannels(branchRes.second);
                 printFlowChannels(trunkSubflow->getChannels());
-                printFlowChannels(branchSubflow->getChannels());
                 trunkSubflow->setActive(true);
-                branchSubflow->setActive(true);
                 setupSubflow(trunkSubflow, vID);
-                setupSubflow(branchSubflow, vID);
                 SubflowStreams[trunkSubflow] = trunkVDL;
-                SubflowStreams[branchSubflow] = branchVDL;
             }
             else {
                 if (i==0) { //not even lowest quality -> whole req fails
-                    delete trunkSubflow; delete branchSubflow;
-                    delete trunkVDL; delete branchVDL;
+                    delete trunkSubflow;
+                    delete trunkVDL;
                     delete vdl;
                     return false;
                 }
                 trunkSubflow->setActive(false);
+                break; // do not attempt lower priority subflows
+            }
+        }
+        // add trunk and local events to queue
+        cMessage* trunkEndMsg = new cMessage("end-of-stream");
+        scheduleAt(simTime()+trunkVDL->getViewtime(), trunkEndMsg);
+        // and point it back to the request
+        endStreams[trunkEndMsg] = trunkVDL;
+        ////////////////////////////////////////////////////////////////
+        if (cached) {
+            return true; // do not set up branches if cached
+        }
+        // start setting up branches
+        Stream* branchVDL = new Stream;
+        branchVDL->setViewtime(getVideoSeconds(vID));
+        for (size_t i=0; i<bitrates.size(); ++i) {
+            std::pair<bool, FlowChannels> branchRes = treeAvailable(rootNode, leafNodes, bitrates[i], baseFlowPriority-i);
+            if (!cached) { // tree shouldn't be empty: subtract trunk
+                for (auto it=trunkRes.second.begin(); it!= trunkRes.second.end(); ++it) {
+                    branchRes.second.erase(*it);
+                }
+            }
+            Flow* branchSubflow = new Flow;
+            branchSubflow->setBps(bitrates[i]);
+            branchSubflow->setPriority(baseFlowPriority-i+branchPriorityModifier);
+            branchVDL->addSubflow(*branchSubflow);
+            if (branchRes.first) {
+                branchSubflow->setChannels(branchRes.second);
+                printFlowChannels(branchSubflow->getChannels());
+                branchSubflow->setActive(true);
+                setupSubflow(branchSubflow, vID);
+                SubflowStreams[branchSubflow] = branchVDL;
+            }
+            else {
+                if (i==0) { //not even lowest quality -> predictive caching fails
+                    delete branchSubflow;
+                    delete branchVDL;
+                }
                 branchSubflow->setActive(false);
                 break; // do not attempt lower priority subflows
             }
         }
-        // add event to queue
-        cMessage* trunkEndMsg = new cMessage("end-of-stream");
+        // add branch event to queue
         cMessage* branchEndMsg = new cMessage("end-of-stream");
-        scheduleAt(simTime()+trunkVDL->getViewtime(), trunkEndMsg);
         scheduleAt(simTime()+branchVDL->getViewtime(), branchEndMsg);
         // and point it back to the request
-        endStreams[trunkEndMsg] = trunkVDL;
         endStreams[branchEndMsg] = branchVDL;
         // success
         return true;
