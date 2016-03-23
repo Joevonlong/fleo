@@ -185,26 +185,32 @@ Path getDetour(Node *srcNode, Node *dstNode, size_t index) {
     // fetch current search-state
     searchState *currentState = searchStates[std::make_pair(srcNode, dstNode)];
     while (!currentState->searchingQ.empty()) {
+        // requested index falls within current total (searched+queue)
         if (index < currentState->searchingQ.size() + currentState->searched.size()) {
-            // start counting from searched...
-            if (index < currentState->searched.size()) {
-                return currentState->searched[index];
-            }
-            // ... before searchingQ
-            else {
-                return currentState->searchingQ[index - currentState->searched.size()];
-            }
+            break;
         }
-        else { // find detours until total (searched+queue) adds up to requested index
+        // find detours until total (searched+queue) adds up to requested index
+        else {
             EV << "State of detour search: " << currentState->searchedSet.size() << " paths searched with "
                << currentState->searchingSet.size() << " pending. Now searching more...\n";
             dequeueAndSearch(currentState);
             EV << "State of detour search: " << currentState->searchedSet.size() << " paths searched with "
                << currentState->searchingSet.size() << " pending.\n";
         }
+        // or out of potential detours to search.
+    }
+    // start counting from searched...
+    if (index < currentState->searched.size()) {
+        return currentState->searched[index];
+    }
+    // ... before searchingQ
+    else if (index < currentState->searchingQ.size() + currentState->searched.size()) {
+        return currentState->searchingQ[index - currentState->searched.size()];
     }
     // out of detours to search and index not reached: terminate search
-    return Path();
+    else {
+        return Path();
+    }
 }
 Path getDetour(cModule *srcMod, cModule *dstMod, size_t index) {
     Node* srcNode = topo.getNodeFor(srcMod);
