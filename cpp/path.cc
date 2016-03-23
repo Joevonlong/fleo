@@ -61,21 +61,24 @@ bool fillChannels(Flow* f) {
 }
 */
 
-Path getShortestPathDijkstra(cModule *srcMod, cModule *dstMod) {
+Path getShortestPathDijkstra(Node *srcNode, Node *dstNode) {
     /**
      * useful for checking correctness of my BFS function
      */
     // initialise
     Path ret;
-    Node* current = topo.getNodeFor(srcMod);
-    Node* target = topo.getNodeFor(dstMod);
     // run Dijkstra's algorithm
-    topo.calculateUnweightedSingleShortestPathsTo(target);
-    while (current != target) {
-        ret.push_back(current);
-        current = current->getPath(0)->getRemoteNode();
-    } ret.push_back(current); // once more to push target onto path
+    topo.calculateUnweightedSingleShortestPathsTo(dstNode);
+    while (srcNode != dstNode) {
+        ret.push_back(srcNode);
+        srcNode = srcNode->getPath(0)->getRemoteNode();
+    } ret.push_back(srcNode); // once more to push target onto path
     return ret;
+}
+Path getShortestPathDijkstra(cModule *srcMod, cModule *dstMod) {
+    Node* srcNode = topo.getNodeFor(srcMod);
+    Node* dstNode = topo.getNodeFor(dstMod);
+    return getShortestPathDijkstra(srcNode, dstNode);
 }
 Path getShortestPathBfs(Node *srcNode, Node *dstNode) {
     /**
