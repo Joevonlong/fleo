@@ -202,7 +202,7 @@ bool Controller::requestVID(Path waypoints, int vID) {
         // set up local cache-to-user first, and origin-to-local cache if not cached
         std::pair<bool, FlowChannels> trunkRes;
         for (size_t i=0; i<bitrates.size(); ++i) {
-            trunkRes.first = true;
+            trunkRes.first = true; trunkRes.second = FlowChannels();
             if (!cached) { // find from origin to local cache
                 trunkRes = treeAvailable(rootNode, std::vector<Node*>(1,waypoints.front()), bitrates[i], baseFlowPriority-i);
             }
@@ -218,6 +218,7 @@ bool Controller::requestVID(Path waypoints, int vID) {
                     trunkSubflow->setChannels(trunkRes.second);
                 }
                 trunkSubflow->addChannels(localRes.second);
+                EV << "Trunk channels:\n";
                 printFlowChannels(trunkSubflow->getChannels());
                 trunkSubflow->setActive(true);
                 setupSubflow(trunkSubflow, vID);
@@ -247,12 +248,17 @@ bool Controller::requestVID(Path waypoints, int vID) {
         Stream* branchVDL = new Stream;
         branchVDL->setViewtime(getVideoSeconds(vID));
         for (size_t i=0; i<bitrates.size(); ++i) {
-            std::pair<bool, FlowChannels> branchRes = treeAvailable(rootNode, leafNodes, bitrates[i], baseFlowPriority-i);
+            std::pair<bool, FlowChannels> branchRes = treeAvailable(rootNode, leafNodes, bitrates[i], baseFlowPriority-i+branchPriorityModifier);
+            EV << "Branch channels before subtraction:\n";
+            printFlowChannels(branchRes.second);
             if (!cached) { // tree shouldn't be empty: subtract trunk
                 for (auto it=trunkRes.second.begin(); it!= trunkRes.second.end(); ++it) {
                     branchRes.second.erase(*it);
                 }
             }
+            EV << "Branch channels after subtraction:\n";
+            printFlowChannels(branchRes.second);
+            EV << "branch success: " << branchRes.first << endl;
             Flow* branchSubflow = new Flow;
             branchSubflow->setBps(bitrates[i]);
             branchSubflow->setPriority(baseFlowPriority-i+branchPriorityModifier);
@@ -268,6 +274,7 @@ bool Controller::requestVID(Path waypoints, int vID) {
                 if (i==0) { //not even lowest quality -> predictive caching fails
                     delete branchSubflow;
                     delete branchVDL;
+                    return true; // not false because to reach here, trunk has already succeeded
                 }
                 branchSubflow->setActive(false);
                 break; // do not attempt lower priority subflows
