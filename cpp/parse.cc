@@ -71,15 +71,13 @@ uint64_t getVideoSize() {
 }
 
 int getRandCustomVideoID() {
-    int i = 0;
     // intuniform returns SIM_API int which is signed 32 bits. If total views
     // exceed 2.1 bil this would fail.
     // YT ent has 3.7 bil views. could try to hack in unsigned int or move to
     // different randomiser.
     int view = intuniform(1, viewsTotal); // crashes if unsigned
-    while (view >= cumulativeViews[i]) {
-        i++;
-    }
+    int i;
+    for (i = 0; cumulativeViews[i] <= view; ++i) {}
     return i;
 }
 
