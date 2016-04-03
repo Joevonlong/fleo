@@ -293,7 +293,7 @@ def write_to_ned():
         f.write('};\n')
 
     # connection section
-    f.write(' '*4+'connections:\n')
+    f.write(' '*4+'connections allowunconnected:\n')
     for (n1,n2) in asys.links:
         # look up latency
         loc1 = asys.uids[n1].loc
