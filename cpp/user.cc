@@ -89,6 +89,18 @@ void viewVideo(int customID, int cacheID) {
 void User::sendRequestSPO() {
     // using controller; implementing bandwidth sharing based on TCP behaviour
     int vID = getRandCustomVideoID();
+    if (true) { // do time-varying demand
+        short hour = simTime().dbl()/60/60;
+        hour %= 24;
+        EV << "Hour: " << hour << endl;
+        vID = (vID/24)*24+hour;
+        /*
+        do {
+            vID = getRandCustomVideoID();
+        } while (vID%24 != hour);
+        */
+    }
+    EV << "Requested video ID " << vID << endl;
     std::deque<Logic*> waypoints = ((Logic*)simulation.getModule(nearestCache))->getRequestWaypoints(vID, cacheTries); // note: doesn't include User itself
     // output for debugging
     EV << "waypoints: ";
