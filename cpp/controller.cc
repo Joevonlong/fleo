@@ -62,6 +62,8 @@ std::pair<bool, Path> Controller::waypointsAvailable(Path waypoints, uint64_t bp
         bool waypointsLinked = false;
         for (int i=0; i<detourAttempts; ++i) { // for some number of attempts
             Path det = getDetour(*wp_it, *(wp_it+1), i); // get next detour
+            EV << "Detour #" << i <<  " is ";
+            printPath(det);
             if (det.size() == 0) {break;} // no more detours
             // and check for BW availability
             if (pathAvailable(det, bps, p)) {
