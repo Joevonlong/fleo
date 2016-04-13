@@ -260,7 +260,6 @@ bool Controller::requestVID(Path waypoints, int vID) {
             }
             EV << "Branch channels after subtraction:\n";
             printFlowChannels(branchRes.second);
-            EV << "branch success: " << branchRes.first << endl;
             Flow* branchSubflow = new Flow;
             branchSubflow->setBps(bitrates[i]);
             branchSubflow->setPriority(baseFlowPriority-i+branchPriorityModifier);
