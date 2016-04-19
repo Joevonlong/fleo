@@ -103,8 +103,6 @@ void Global::initialize(int stage)
 
         topoSetup();
         loadVideoLengthFile();
-        EV << static_cast<double>(UINT64_MAX) << endl;
-        //loadAllLocs();
     }
     else if (stage == 1) {
     }
