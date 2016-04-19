@@ -182,7 +182,7 @@ bool Controller::requestVID(Path waypoints, int vID) {
     vdl->setViewtime(getVideoSeconds(vID));
     // get priority levels to assign to subflows
     std::vector<uint64_t> bitrates = getBitRates(vID);
-    Priority baseFlowPriority = bitrates.size(); // magic-y number
+    Priority baseFlowPriority = -1;//bitrates.size(); // magic-y number
     // do parameter check for multicast vs unicast
     if (multicast) { // begin multicast flow setup:
         Stream* trunkVDL = new Stream;

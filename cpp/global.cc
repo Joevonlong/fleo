@@ -161,15 +161,15 @@ void Global::recordRequestedLength(double len) {
 }
 
 void Global::recordPriority(int p, bool add) {
-    if (p==3) {
+    if (p==-1) {
         if (add) {highPriorityVec.record(++highP);}
         else {highPriorityVec.record(--highP);}
     }
-    else if (p==2) {
+    else if (p==-2) {
         if (add) {medPriorityVec.record(++medP);}
         else {medPriorityVec.record(--medP);}
     }
-    else if (p==1) {
+    else if (p==-3) {
         if (add) {lowPriorityVec.record(++lowP);}
         else {lowPriorityVec.record(--lowP);}
     }
