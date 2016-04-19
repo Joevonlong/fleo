@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <omnetpp.h>
 #include "parse.h"
+#include "global.h"
 
 const uint64_t bitRate = 800000;
 
@@ -27,6 +28,27 @@ void loadVideoLengthFile() {
     cumulativeViews = new int[arraySize];
     allMeta.reserve(arraySize);
 
+    // prepare default metadata
+    int defaultNumQualities = ((Global*)simulation.getModuleByPath("global"))->par("defaultNumQualities").longValue();
+    std::vector<uint64_t> defaultBitRates;
+    std::vector<std::string> defaultResolutions;
+    switch (defaultNumQualities) {
+        case 3:
+            defaultBitRates.push_back(bitRate*2);
+            defaultResolutions.push_back("720p");
+        case 2:
+            defaultBitRates.push_back(bitRate);
+            defaultResolutions.push_back("480p");
+        case 1:
+            defaultBitRates.push_back(bitRate);
+            defaultResolutions.push_back("360p");
+            break;
+        default:
+            throw cRuntimeError("loadVideoLengthFile: Unhandled value for defaultNumQualities");
+            break;
+    }
+    std::reverse(defaultBitRates.begin(), defaultBitRates.end());
+    std::reverse(defaultResolutions.begin(), defaultResolutions.end());
     // parse subsequent lines
     unsigned long i = 0;
     while (freqFile >> videoIDs[i] >> lengths[i] >> views) {
@@ -34,8 +56,8 @@ void loadVideoLengthFile() {
         vmd->customID = i;
         vmd->name = videoIDs[i];
         vmd->duration = lengths[i];
-        vmd->bitRates.push_back(bitRate); vmd->bitRates.push_back(bitRate); vmd->bitRates.push_back(bitRate*2);
-        vmd->resolutions.push_back("360p"); vmd->resolutions.push_back("480p"); vmd->resolutions.push_back("720p");
+        vmd->bitRates = defaultBitRates;
+        vmd->resolutions = defaultResolutions;
         allMeta[i] = vmd;
         // keep rolling sum to avoid repeated subtractions in getVideoSize()
         if (i != 0) {

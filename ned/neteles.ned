@@ -3,6 +3,7 @@ simple Global {
         @display("b=0,0,rectangle,black,black,0");
         int bufferBlock = default(14s) @unit(s);
         int bufferMin = default(7s) @unit(s);
+        int defaultNumQualities = default(3);
 }
 
 simple Controller {
