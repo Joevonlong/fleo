@@ -64,6 +64,8 @@ void Global::initialize(int stage)
         medP = 0;
         lowPriorityVec.setName("low priority flow vector");
         lowP = 0;
+        otherPriorityVec.setName("other priority flow vector");
+        otherP = 0;
 
         // whether at least one candidate path had bandwidth available for a flow
         flowSuccessVec.setName("flow setup success vector");
@@ -174,8 +176,8 @@ void Global::recordPriority(int p, bool add) {
         else {lowPriorityVec.record(--lowP);}
     }
     else {
-        EV << "Global::recordPriority: unknown priority: " << p << endl;
-        //error("Global::recordPriority: unknown priority");
+        if (add) {otherPriorityVec.record(++otherP);}
+        else {otherPriorityVec.record(--otherP);}
     }
 }
 

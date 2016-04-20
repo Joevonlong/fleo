@@ -47,6 +47,7 @@ protected:
     cOutVector highPriorityVec; double highP;
     cOutVector medPriorityVec; double medP;
     cOutVector lowPriorityVec; double lowP;
+    cOutVector otherPriorityVec; double otherP;
     cOutVector flowSuccessVec;
     cOutVector cacheHitVec;
     cOutVector netLoadVec; double currentNetLoad;
