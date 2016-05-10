@@ -90,8 +90,8 @@ void User::sendRequestSPO() {
     // using controller; implementing bandwidth sharing based on TCP behaviour
     int vID = getRandCustomVideoID();
     if (true) { // do time-varying demand
-        short windowSec = 3600*3;
-        short numWindows = 24;
+        short windowSec = 3600;
+        short numWindows = 1;
         short window = simTime().dbl()/windowSec;
         window %= numWindows;
         EV << "Window: " << window << endl;

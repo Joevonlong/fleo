@@ -37,8 +37,8 @@ network MulticastTestbed
         user2: User{name="user"; loc="somewhere"; rn=3;};
         user3: User{name="user"; loc="somewhere"; rn=3;};
     connections allowunconnected:
-        beyond.out++ --> Cat5 --> core.in++;
-        beyond.in++ <-- Cat5 <-- core.out++;
+        beyond.out++ --> Cat3 --> core.in++;
+        beyond.in++ <-- Cat3 <-- core.out++;
 
         core.out++ --> Cat5 --> pop0.in++;
         core.in++ <-- Cat5 <-- pop0.out++;
