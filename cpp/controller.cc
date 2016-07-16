@@ -140,6 +140,7 @@ void Controller::deactivateSubflow(Flow* f) {
 // helper
 void Controller::setupSubflow(Flow* f, int vID) {
     g->recordPriority(f->getPriority(), true);
+    g->recordFlowStarted(f->getPriority());
     // follow FlowChannels and add flows
     for (FlowChannels::const_iterator ch_it  = f->getChannels().begin();
                                       ch_it != f->getChannels().end();
@@ -150,6 +151,7 @@ void Controller::setupSubflow(Flow* f, int vID) {
             if (fc->getLowestPriorityFlow()->getPriority() >= f->getPriority()) {
                 throw cRuntimeError("Controller::setupSubflow: revoked flow of higher priority than new flow");
             }
+            g->recordFlowCancelled(fc->getLowestPriorityFlow()->getPriority());
             deactivateSubflow(fc->getLowestPriorityFlow());
         }
         // add new flow
@@ -227,6 +229,7 @@ bool Controller::requestVID(Path waypoints, int vID) {
                 SubflowStreams[trunkSubflow] = trunkVDL;
             }
             else {
+                g->recordFlowRefused(trunkSubflow->getPriority());
                 if (i==0) { //not even lowest quality -> whole req fails
                     delete trunkSubflow;
                     delete trunkVDL;
@@ -272,6 +275,7 @@ bool Controller::requestVID(Path waypoints, int vID) {
                 SubflowStreams[branchSubflow] = branchVDL;
             }
             else {
+                g->recordFlowRefused(branchSubflow->getPriority());
                 if (i==0) { //not even lowest quality -> predictive caching fails
                     delete branchSubflow;
                     delete branchVDL;
@@ -304,6 +308,7 @@ bool Controller::requestVID(Path waypoints, int vID) {
                 SubflowStreams[subflow] = vdl;
             }
             else {
+                g->recordFlowRefused(subflow->getPriority());
                 if (i==0) { // not even lowest quality subflow
                     delete subflow;
                     delete vdl;
@@ -332,6 +337,7 @@ void Controller::endStream(cMessage* endMsg) {
         // go through each active channel in *sf_it
         SubflowStreams.erase(*sf_it);
         if ((*sf_it)->isActive()) {
+            g->recordFlowCompleted((*sf_it)->getPriority());
             deactivateSubflow(*sf_it);
             delete *sf_it;
         }

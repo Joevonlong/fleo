@@ -68,7 +68,24 @@ void Global::initialize(int stage)
         otherP = 0;
 
         // whether at least one candidate path had bandwidth available for a flow
-        flowSuccessVec.setName("flow setup success vector");
+        flowSuccessVec.setName("user request success vector");
+
+        // track when flows of what priority were started
+        flowRefusedVec.setName("flow refused vector");
+        flowRefusedHist.setName("flow refused histogram");
+        flowRefusedHist.setRangeAutoLower(0, 1000);
+        // track when flows of what priority were started
+        flowStartedVec.setName("flow started vector");
+        flowStartedHist.setName("flow started histogram");
+        flowStartedHist.setRangeAutoLower(0, 1000);
+        // track when flows of what priority were cancelled
+        flowCancelledVec.setName("cancelled flow vector");
+        flowCancelledHist.setName("cancelled flow histogram");
+        flowCancelledHist.setRangeAutoLower(0, 1000);
+        // track when flows of what priority were completed
+        flowCompletedVec.setName("flow completed vector");
+        flowCompletedHist.setName("flow completed histogram");
+        flowCompletedHist.setRangeAutoLower(0, 1000);
 
         // whether content was already cached at replica when requested
         cacheHitVec.setName("cache hit vector");
@@ -185,6 +202,26 @@ void Global::recordFlowSuccess(bool successful) {
     flowSuccessVec.record(successful);
 }
 
+void Global::recordFlowRefused(int p) {
+    flowRefusedVec.record(p);
+    flowRefusedHist.collect(p);
+}
+
+void Global::recordFlowStarted(int p) {
+    flowStartedVec.record(p);
+    flowStartedHist.collect(p);
+}
+
+void Global::recordFlowCancelled(int p) {
+    flowCancelledVec.record(p);
+    flowCancelledHist.collect(p);
+}
+
+void Global::recordFlowCompleted(int p) {
+    flowCompletedVec.record(p);
+    flowCompletedHist.collect(p);
+}
+
 void Global::recordCacheHit(bool hit) {
     cacheHitVec.record(hit);
 }
@@ -217,6 +254,10 @@ void Global::finish() {
     userD2CHist.record();
     idleTimeHist.record();
     requestedLengthHist.record();
+    flowRefusedHist.record();
+    flowStartedHist.record();
+    flowCancelledHist.record();
+    flowCompletedHist.record();
     startupDelayHist.record();
     startupDelayL20Hist.record();
     hopsHist.record();

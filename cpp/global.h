@@ -29,7 +29,11 @@ public:
     void recordIdleTime(simtime_t t);
     void recordRequestedLength(double len);
     void recordPriority(int p, bool add);
-    void recordFlowSuccess(bool successful);
+    void recordFlowSuccess(bool successful); // success of user request only
+    void recordFlowRefused(int p);
+    void recordFlowStarted(int p);
+    void recordFlowCancelled(int p);
+    void recordFlowCompleted(int p);
     void recordCacheHit(bool hit);
     void recordNetLoad(double delta);
     void recordStartupDelay(simtime_t delay);
@@ -49,6 +53,10 @@ protected:
     cOutVector lowPriorityVec; double lowP;
     cOutVector otherPriorityVec; double otherP;
     cOutVector flowSuccessVec;
+    cOutVector flowRefusedVec; cDoubleHistogram flowRefusedHist;
+    cOutVector flowStartedVec; cDoubleHistogram flowStartedHist;
+    cOutVector flowCancelledVec; cDoubleHistogram flowCancelledHist;
+    cOutVector flowCompletedVec; cDoubleHistogram flowCompletedHist;
     cOutVector cacheHitVec;
     cOutVector netLoadVec; double currentNetLoad;
     cOutVector startupDelayVec; cDoubleHistogram startupDelayHist;
