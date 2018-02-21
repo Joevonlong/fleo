@@ -16,9 +16,9 @@
         * python parse_yt_daum.py
 * Convert *Rocketfuel* topologies into .ned format
     * Download "ISP Maps" (rocketfuel_maps_cch.tar.gz) and "Backbone topologies annotated with inferred weights and link latencies" (weights-dist.tar.gz) from http://research.cs.washington.edu/networking/rocketfuel/ into datasets/rocketfuel
-    * run py/read_rf.py in its directory, eg.
+    * run py/read_rf.py (followed by an AS number) in its directory, eg.
         * cd ~/omnetpp-4.6/samples/fleo/py
-        * python read_rf.py
+        * python read_rf.py 1755
 
 ### Who do I talk to? ###
 
