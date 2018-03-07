@@ -239,48 +239,6 @@ void User::handleMessage(cMessage *msg)
     }
 }
 
-/*
-void User::setupFlowTo(int destID) {
-    double minDatarate = DBL_MAX; // bit/ss
-    Logic *dest = check_and_cast<Logic*>(simulation.getModule(destID));
-    // walk from this to dest, finding smallest available BW
-    cTopology::Node *node = dest->topo.getNodeFor(this);
-    if (node == NULL) {
-        ev << "We (" << getFullPath() << ") are not included in the topology.\n";
-    }
-    else if (node->getNumPaths()==0) {
-        ev << "No path to destination.\n";
-    }
-    else {
-        while (node != dest->topo.getTargetNode()) {
-            // BUG in this loop but not first iteration
-            ev << "We are in " << node->getModule()->getFullPath() << endl;
-            ev << node->getDistanceToTarget() << " hops to go\n";
-            ev << "There are " << node->getNumPaths()
-               << " equally good directions, taking the first one\n";
-            cTopology::LinkOut *path = node->getPath(0);
-            ev << "Taking gate " << path->getLocalGate()->getFullName()
-               << " we arrive in " << path->getRemoteNode()->getModule()->getFullPath()
-               << " on its gate " << path->getRemoteGate()->getFullName() << endl;
-
-            
-            if (path->getLocalGate()->getChannel()->isTransmissionChannel()) {
-                EV << "rerqrewq\n";
-                //double nextDatarate = ((cDatarateChannel*)path->getLocalGate()->getTransmissionChannel())->getDatarate();
-                //minDatarate = std::min(minDatarate, nextDatarate);
-            }
-            else {
-                EV << "sdasd\n";
-            }
-            node = path->getRemoteNode();
-            
-        }
-        error("sdasd");
-    }
-    EV << "min rate is " << minDatarate << endl;
-}
-*/
-
 void User::finish()
 {
     //requestHistogram.record();

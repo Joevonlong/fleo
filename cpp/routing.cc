@@ -59,23 +59,4 @@ void topoSetup()
   //topo.extractByProperty("display");
   //topo.extractFromNetwork(selectFunction, NULL);
   EV << topo.getNumNodes() << " nodes in routing topology\n";
-  /*
-  EV << "topo nodes: " << topo.getNumNodes() << endl;
-  for (int i=0; i<topo.getNumNodes(); i++)
-    {
-      cTopology::Node *node = topo.getNode(i);
-      ev << "Node i=" << i << " is " << node->getModule()->getFullPath() << endl;
-      ev << " It has " << node->getNumOutLinks() << " conns to other nodes\n";
-      ev << " and " << node->getNumInLinks() << " conns from other nodes\n";
-
-      ev << " Connections to other modules are:\n";
-      for (int j=0; j<node->getNumOutLinks(); j++)
-        {
-          cTopology::Node *neighbour = node->getLinkOut(j)->getRemoteNode();
-          cGate *gate = node->getLinkOut(j)->getLocalGate();
-          ev << " " << neighbour->getModule()->getFullPath()
-             << " through gate " << gate->getFullName() << endl;
-        }
-    }
-  */
 }

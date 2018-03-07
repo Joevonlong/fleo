@@ -19,13 +19,6 @@ void Logic::initialize(int stage) {
     if (stage == 0) {
         global = (Global*)getParentModule()->getParentModule()
             ->getSubmodule("global");
-        /** DELME
-        // build paths to this node
-        topo.clear();
-        topo.extractByNedTypeName(cStringTokenizer("Buffer PoPLogic CoreLogic BeyondLogic Logic User").asVector());
-        cTopology::Node *thisNode = topo.getNodeFor(this);
-        topo.calculateUnweightedSingleShortestPathsTo(thisNode);
-        */
     }
     else if (stage == 1) {
         registerSelfIfCache();
@@ -294,61 +287,7 @@ void requestFromCache(int cacheID, int customID) {
     EV << "Requesting "<< customID << " from secondary cache.\n";
     Request *req = new Request("cache to cache", requestKind);
     req->setBitLength(1);
-    //req->
-//                Reply *reply = new Reply("reply", replyKind);
-//                EV << "reply size: " << vidBitSize << endl;
-//                reply->setBitLength(vidBitSize);
-//                reply->setSourceID(getId());
-//                reply->setDestinationID(req->getSourceID());
 }
-
-/** DELME
-std::vector<int> Logic::findAvailablePathFrom(User *user, double bpsWanted) {
-    std::vector<int> path;
-    // walk from user to this, finding smallest available BW
-    cTopology::Node *userNode = topo.getNodeFor(user);
-    if (userNode == NULL) {
-        error("User (%s) is not included in the topology.", getFullPath().c_str());
-    }
-    else if (userNode->getNumPaths()==0) {
-        error("No path to destination.");
-    }
-    else {
-        int usablePathIndex = -1;
-        ev << "There are " << userNode->getNumPaths()
-           << " equally good directions. Starting with the first one...\n";
-        // TODO if no shortest path available, try longer ones
-        for (int pathIndex = 0; pathIndex < userNode->getNumPaths(); pathIndex++) {
-            cTopology::Node *walker = userNode;
-            cTopology::LinkOut *path = walker->getPath(pathIndex);
-            bool usablePath = true;
-            while (walker != topo.getTargetNode()) {
-                if (path->getLocalGate()->findTransmissionChannel()) {
-                    double nextDatarate = path->getLocalGate()->getTransmissionChannel()->getNominalDatarate();
-                    if (nextDatarate < bpsWanted) {
-                        usablePath = false;
-                        break; // not enough bandwidth available: try next path
-                    }
-                }
-                else {EV << "Not a datarate channel\n";}
-                walker = path->getRemoteNode();
-            }
-            if (usablePath) {
-                usablePathIndex = pathIndex;
-                EV << "Found usable path: #" << pathIndex <<").\n";
-                break;
-            }
-        }
-        if (usablePathIndex == -1) {
-            // no paths have sufficient bandwidth...
-        }
-        else {
-            // return usable path...
-        }
-    }
-    return path;
-}
-*/
 
 std::deque<Logic*> Logic::getRequestWaypoints(int vID, int tries) {
     /**

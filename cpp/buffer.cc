@@ -58,13 +58,3 @@ void Buffer::handleMessage(cMessage* msg) {
         throw std::invalid_argument("unhandled message");
     }
 }
-
-//    if (upstream->isBusy()) {
-//      EV << "Busy. Scheduled for " << upstream->getTransmissionFinishTime() << "s\n";
-//      scheduleAt(upstream->getTransmissionFinishTime(), msg);
-//    }
-//    else {
-//      // EV << "Upstream free. Forwarding now.\n";
-//      send(msg, "gate$o", 0);
-//    }
-
