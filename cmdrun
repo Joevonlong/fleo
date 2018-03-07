@@ -1,3 +1,3 @@
 #!/bin/bash
+# rename executable if necessary, eg. fleo
 ./phd -u Cmdenv -c AS4755
-
