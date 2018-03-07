@@ -5,8 +5,7 @@ network Bifurcate
         int depth = default(1); // number of layers of routers (excludes dummy; minimum 1)
         bool coreRing = default(false);
     types:
-        channel coreLink extends Cat5 {}
-        channel accessLink extends Cat5 {}
+        channel coreLink extends OC12 {}
     submodules:
         global: Global;
         controller: Controller;
