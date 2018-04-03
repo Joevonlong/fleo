@@ -205,9 +205,11 @@ def read_lags():
         link_lag_avg[link] = sum(link_lags[link]) / float(len(link_lags[link]))
     def mean(ls):
         return sum(ls)/float(len(ls))
-    print("mean lag in file is:",
-        mean(
-            [mean(lags) for lags in link_lags.values()]
+    print("mean lag in file is:" +
+        str(
+            mean(
+                [mean(lags) for lags in link_lags.values()]
+            )
         )
     )
 
